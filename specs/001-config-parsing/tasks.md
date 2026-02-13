@@ -34,11 +34,11 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Write tests for target registry (IsValid, KnownTargets) in internal/target/registry_test.go
-- [ ] T005 [P] Implement target registry with known targets (claude, cursor, copilot, windsurf) and Target interface stub in internal/target/registry.go
-- [ ] T006 Define Formatter interface (FormatSuccess, FormatErrors, FormatWarnings methods) in internal/output/formatter.go
-- [ ] T007 [P] Write tests and implement HumanFormatter (indented error output with field path, expected, found, fix) in internal/output/human.go and internal/output/human_test.go
-- [ ] T008 [P] Write tests and implement JSONFormatter (structured JSON output per contracts/cli-commands.md) in internal/output/json.go and internal/output/json_test.go
+- [x] T004 [P] Write tests for target registry (IsValid, KnownTargets) in internal/target/registry_test.go
+- [x] T005 [P] Implement target registry with known targets (claude, cursor, copilot, windsurf) and Target interface stub in internal/target/registry.go
+- [x] T006 Define Formatter interface (FormatSuccess, FormatErrors, FormatWarnings methods) in internal/output/formatter.go
+- [x] T007 [P] Write tests and implement HumanFormatter (indented error output with field path, expected, found, fix) in internal/output/human.go and internal/output/human_test.go
+- [x] T008 [P] Write tests and implement JSONFormatter (structured JSON output per contracts/cli-commands.md) in internal/output/json.go and internal/output/json_test.go
 
 **Checkpoint**: Foundation ready - target registry, output formatters, and interfaces available for user stories
 
