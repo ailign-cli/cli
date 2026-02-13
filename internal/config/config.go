@@ -7,5 +7,5 @@ var SchemaJSON []byte
 
 // Config represents the parsed .ailign.yml configuration file.
 type Config struct {
-	Targets []string `yaml:"targets"`
+	Targets []string `yaml:"targets" json:"targets,omitempty"`
 }

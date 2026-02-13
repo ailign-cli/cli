@@ -31,3 +31,56 @@ func LoadFromFile(path string) (*Config, error) {
 
 	return &cfg, nil
 }
+
+// LoadAndValidate loads a config file, validates it against the schema,
+// and detects unknown fields. Returns the full validation result.
+func LoadAndValidate(path string) *ValidationResult {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return &ValidationResult{
+				Valid: false,
+				Errors: []ValidationError{{
+					FieldPath:   "",
+					Message:     fmt.Sprintf("config not found: %s", path),
+					Remediation: "Run \"ailign init\" to create a configuration file",
+					Severity:    "error",
+				}},
+			}
+		}
+		return &ValidationResult{
+			Valid: false,
+			Errors: []ValidationError{{
+				FieldPath:   "",
+				Message:     fmt.Sprintf("reading config: %v", err),
+				Remediation: "Check file permissions",
+				Severity:    "error",
+			}},
+		}
+	}
+
+	// Strip UTF-8 BOM if present
+	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
+
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return &ValidationResult{
+			Valid: false,
+			Errors: []ValidationError{{
+				FieldPath:   "",
+				Message:     fmt.Sprintf("parsing config: %v", err),
+				Remediation: "Check YAML syntax",
+				Severity:    "error",
+			}},
+		}
+	}
+
+	// Schema validation
+	result := Validate(&cfg)
+
+	// Unknown field detection
+	warnings := DetectUnknownFields(data)
+	result.Warnings = append(result.Warnings, warnings...)
+
+	return result
+}
