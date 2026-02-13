@@ -79,19 +79,19 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T016 [P] [US2] Write tests for ValidationError and ValidationResult types in internal/config/errors_test.go
-- [ ] T017 [P] [US2] Write tests for JSONSchema validator (valid config, missing targets, invalid target name, empty targets array, duplicate targets, unknown fields as warnings, multiple errors at once) in internal/config/validator_test.go
-- [ ] T018 [P] [US2] Write tests for `ailign validate` command (valid file → exit 0 + stdout, invalid file → exit 2 + stderr, missing file → exit 2, --format json output, --format human output) in internal/cli/validate_test.go
+- [x] T016 [P] [US2] Write tests for ValidationError and ValidationResult types in internal/config/errors_test.go
+- [x] T017 [P] [US2] Write tests for JSONSchema validator (valid config, missing targets, invalid target name, empty targets array, duplicate targets, unknown fields as warnings, multiple errors at once) in internal/config/validator_test.go
+- [x] T018 [P] [US2] Write tests for `ailign validate` command (valid file → exit 0 + stdout, invalid file → exit 2 + stderr, missing file → exit 2, --format json output, --format human output) in internal/cli/validate_test.go
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Define ValidationError struct (field_path, expected, actual, message, remediation, severity) and ValidationResult struct (valid, errors, warnings, config) in internal/config/errors.go
-- [ ] T020 [US2] Implement Validate function: marshal Config to JSON, validate against embedded JSONSchema, collect all errors in internal/config/validator.go
-- [ ] T021 [US2] Implement unknown field detection: compare parsed YAML keys against schema properties, emit warnings for unrecognized fields in internal/config/validator.go
-- [ ] T022 [US2] Implement error transformation: convert raw JSONSchema validation errors into user-friendly ValidationError structs with remediation guidance in internal/config/errors.go
-- [ ] T023 [US2] Integrate validation into root command PersistentPreRunE (load → validate → report errors/warnings → exit) in internal/cli/root.go
-- [ ] T024 [US2] Implement `ailign validate` command (load config, validate, format output via --format flag, exit 0 on success or 2 on failure) in internal/cli/validate.go
-- [ ] T025 [US2] Write integration tests for root command: valid config proceeds, invalid config exits 2 with all errors, warnings are emitted but don't block in internal/cli/root_test.go
+- [x] T019 [US2] Define ValidationError struct (field_path, expected, actual, message, remediation, severity) and ValidationResult struct (valid, errors, warnings, config) in internal/config/errors.go
+- [x] T020 [US2] Implement Validate function: marshal Config to JSON, validate against embedded JSONSchema, collect all errors in internal/config/validator.go
+- [x] T021 [US2] Implement unknown field detection: compare parsed YAML keys against schema properties, emit warnings for unrecognized fields in internal/config/validator.go
+- [x] T022 [US2] Implement error transformation: convert raw JSONSchema validation errors into user-friendly ValidationError structs with remediation guidance in internal/config/errors.go
+- [x] T023 [US2] Integrate validation into root command PersistentPreRunE (load → validate → report errors/warnings → exit) in internal/cli/root.go
+- [x] T024 [US2] Implement `ailign validate` command (load config, validate, format output via --format flag, exit 0 on success or 2 on failure) in internal/cli/validate.go
+- [x] T025 [US2] Write integration tests for root command: valid config proceeds, invalid config exits 2 with all errors, warnings are emitted but don't block in internal/cli/root_test.go
 
 **Checkpoint**: At this point, the CLI validates all configs against JSONSchema, reports actionable errors, and `ailign validate` works standalone. User Stories 1 AND 2 are both independently functional.
 
