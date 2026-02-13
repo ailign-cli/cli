@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ailign.dev/schemas/config/v1",
+  "title": "AIlign Configuration",
+  "description": "Schema for .ailign.yml configuration file",
+  "type": "object",
+  "required": ["targets"],
+  "properties": {
+    "targets": {
+      "type": "array",
+      "description": "AI tools to render instructions for",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["claude", "cursor", "copilot", "windsurf"]
+      },
+      "uniqueItems": true,
+      "examples": [
+        ["claude", "cursor"],
+        ["copilot"]
+      ]
+    }
+  }
+}

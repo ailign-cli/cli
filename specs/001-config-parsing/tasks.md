@@ -54,16 +54,16 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T009 [P] [US1] Write tests for Config struct (fields, defaults) in internal/config/config_test.go
-- [ ] T010 [P] [US1] Write tests for YAML loader (valid file, missing file, empty file, YAML parse error, tabs, BOM, symlinks, permission errors) in internal/config/loader_test.go
+- [x] T009 [P] [US1] Write tests for Config struct (fields, defaults) in internal/config/config_test.go
+- [x] T010 [P] [US1] Write tests for YAML loader (valid file, missing file, empty file, YAML parse error, tabs, BOM, symlinks, permission errors) in internal/config/loader_test.go
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Define Config struct with Targets field and YAML tags in internal/config/config.go
-- [ ] T012 [US1] Implement LoadFromFile function (read `.ailign.yml` from path, parse YAML into Config struct, handle file-not-found and parse errors) in internal/config/loader.go
-- [ ] T013 [US1] Copy JSONSchema definition from contracts/config-schema.json to internal/config/schema.json and embed via go:embed directive in internal/config/config.go
-- [ ] T014 [US1] Create root Cobra command with global `--format` flag and PersistentPreRunE that loads config from CWD in internal/cli/root.go
-- [ ] T015 [US1] Create CLI entry point that wires root command and executes in cmd/ailign/main.go
+- [x] T011 [US1] Define Config struct with Targets field and YAML tags in internal/config/config.go
+- [x] T012 [US1] Implement LoadFromFile function (read `.ailign.yml` from path, parse YAML into Config struct, handle file-not-found and parse errors) in internal/config/loader.go
+- [x] T013 [US1] Copy JSONSchema definition from contracts/config-schema.json to internal/config/schema.json and embed via go:embed directive in internal/config/config.go
+- [x] T014 [US1] Create root Cobra command with global `--format` flag and PersistentPreRunE that loads config from CWD in internal/cli/root.go
+- [x] T015 [US1] Create CLI entry point that wires root command and executes in cmd/ailign/main.go
 
 **Checkpoint**: At this point, the CLI can read a valid `.ailign.yml` and report errors for missing/malformed files. User Story 1 is fully functional and testable independently.
 
