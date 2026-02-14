@@ -63,12 +63,12 @@ description: "Task list template for feature implementation"
 
 Examples of foundational tasks (adjust based on your project):
 
-- [ ] T004 Setup database schema and migrations framework
-- [ ] T005 [P] Implement authentication/authorization framework
-- [ ] T006 [P] Setup API routing and middleware structure
-- [ ] T007 Create base models/entities that all stories depend on
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
+- [ ] T005 Setup database schema and migrations framework
+- [ ] T006 [P] Implement authentication/authorization framework
+- [ ] T007 [P] Setup API routing and middleware structure
+- [ ] T008 Create base models/entities that all stories depend on
+- [ ] T009 Configure error handling and logging infrastructure
+- [ ] T010 Setup environment configuration management
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -84,23 +84,23 @@ Examples of foundational tasks (adjust based on your project):
 
 > **NOTE: Verify .feature file exists and scenarios are concrete**
 
-- [ ] T010 [P] [US1] Verify/refine feature file at features/[story].feature
-- [ ] T011 [P] [US1] Write step definitions in features/[story]_test.go (expect RED)
+- [ ] T011 [P] [US1] Verify/refine feature file at features/[story].feature
+- [ ] T012 [P] [US1] Write step definitions in features/[story]_test.go (expect RED)
 
 ### TDD Unit Tests for User Story 1 (if applicable)
 
 > **NOTE: Write unit tests, ensure they FAIL before implementation**
 
-- [ ] T012 [P] [US1] Write unit tests for [component] in internal/[pkg]/[file]_test.go
+- [ ] T013 [P] [US1] Write unit tests for [component] in internal/[pkg]/[file]_test.go
 
 ### Implementation for User Story 1
 
-- [ ] T013 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T014 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T015 [US1] Implement [Service] in src/services/[service].py (depends on T013, T014)
-- [ ] T016 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T017 [US1] Add validation and error handling
-- [ ] T018 [US1] Verify step definitions pass (GREEN) by running godog
+- [ ] T014 [P] [US1] Create [Entity1] model in src/models/[entity1].py
+- [ ] T015 [P] [US1] Create [Entity2] model in src/models/[entity2].py
+- [ ] T016 [US1] Implement [Service] in src/services/[service].py (depends on T013, T014)
+- [ ] T017 [US1] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T018 [US1] Add validation and error handling
+- [ ] T019 [US1] Verify step definitions pass (GREEN) by running godog
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -116,20 +116,20 @@ Examples of foundational tasks (adjust based on your project):
 
 > **NOTE: Verify .feature file exists and scenarios are concrete**
 
-- [ ] T019 [P] [US2] Verify/refine feature file at features/[story].feature
-- [ ] T020 [P] [US2] Write step definitions in features/[story]_test.go (expect RED)
+- [ ] T020 [P] [US2] Verify/refine feature file at features/[story].feature
+- [ ] T021 [P] [US2] Write step definitions in features/[story]_test.go (expect RED)
 
 ### TDD Unit Tests for User Story 2 (if applicable)
 
-- [ ] T021 [P] [US2] Write unit tests for [component] in internal/[pkg]/[file]_test.go
+- [ ] T022 [P] [US2] Write unit tests for [component] in internal/[pkg]/[file]_test.go
 
 ### Implementation for User Story 2
 
-- [ ] T022 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T023 [US2] Implement [Service] in src/services/[service].py
-- [ ] T024 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T025 [US2] Integrate with User Story 1 components (if needed)
-- [ ] T026 [US2] Verify step definitions pass (GREEN) by running godog
+- [ ] T023 [P] [US2] Create [Entity] model in src/models/[entity].py
+- [ ] T024 [US2] Implement [Service] in src/services/[service].py
+- [ ] T025 [US2] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T026 [US2] Integrate with User Story 1 components (if needed)
+- [ ] T027 [US2] Verify step definitions pass (GREEN) by running godog
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -145,19 +145,19 @@ Examples of foundational tasks (adjust based on your project):
 
 > **NOTE: Verify .feature file exists and scenarios are concrete**
 
-- [ ] T027 [P] [US3] Verify/refine feature file at features/[story].feature
-- [ ] T028 [P] [US3] Write step definitions in features/[story]_test.go (expect RED)
+- [ ] T028 [P] [US3] Verify/refine feature file at features/[story].feature
+- [ ] T029 [P] [US3] Write step definitions in features/[story]_test.go (expect RED)
 
 ### TDD Unit Tests for User Story 3 (if applicable)
 
-- [ ] T029 [P] [US3] Write unit tests for [component] in internal/[pkg]/[file]_test.go
+- [ ] T030 [P] [US3] Write unit tests for [component] in internal/[pkg]/[file]_test.go
 
 ### Implementation for User Story 3
 
-- [ ] T030 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T031 [US3] Implement [Service] in src/services/[service].py
-- [ ] T032 [US3] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T033 [US3] Verify step definitions pass (GREEN) by running godog
+- [ ] T031 [P] [US3] Create [Entity] model in src/models/[entity].py
+- [ ] T032 [US3] Implement [Service] in src/services/[service].py
+- [ ] T033 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T034 [US3] Verify step definitions pass (GREEN) by running godog
 
 **Checkpoint**: All user stories should now be independently functional
 
