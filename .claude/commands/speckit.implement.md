@@ -52,6 +52,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **IF EXISTS**: Read contracts/ for API specifications and test requirements
    - **IF EXISTS**: Read research.md for technical decisions and constraints
    - **IF EXISTS**: Read quickstart.md for integration scenarios
+   - **IF EXISTS**: Read `features/*.feature` for BDD scenario expectations
 
 4. **Project Setup Verification**:
    - **REQUIRED**: Create/verify ignore files based on actual project setup:
@@ -105,8 +106,14 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 6. Execute implementation following the task plan:
    - **Phase-by-phase execution**: Complete each phase before moving to the next
-   - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together  
-   - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
+   - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together
+   - **Follow BDD+TDD approach**: Execute BDD and TDD test tasks before their corresponding implementation tasks
+   - **BDD outer loop**: At each user story phase:
+     1. Verify `.feature` file exists for the story
+     2. Run step definitions (expect RED for new scenarios)
+     3. Execute TDD inner loop (unit tests → implement)
+     4. Run step definitions again (expect GREEN)
+     5. Report BDD scenario status: X of Y scenarios passing
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
 
@@ -129,6 +136,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Verify all required tasks are completed
    - Check that implemented features match the original specification
    - Validate that tests pass and coverage meets requirements
+   - Run `go test ./features/... -v` to verify all BDD scenarios pass
+   - Report scenario pass/fail count alongside unit test results
    - Confirm the implementation follows the technical plan
    - Report final status with summary of completed work
 

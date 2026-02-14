@@ -92,10 +92,15 @@ tool at all.
 
 ### IV. Test-First Development
 
-**TDD is mandatory for all features.**
+**BDD+TDD dual-loop is mandatory for all features.**
 
-- Tests written -> User approved -> Tests fail -> Then implement
-- Red-Green-Refactor cycle strictly enforced
+- Outer loop (BDD): `.feature` file scenarios drive acceptance criteria
+  - Scenarios written during `/speckit.specify` as executable Gherkin
+  - Step definitions written before implementation (RED)
+  - Step definitions pass after implementation (GREEN)
+- Inner loop (TDD): Unit tests drive component design
+  - Tests written → Tests fail → Implement → Tests pass → Refactor
+  - Red-Green-Refactor cycle strictly enforced
 - Integration tests required for:
   - Renderer contracts (new tool support)
   - Package composition logic
@@ -103,12 +108,13 @@ tool at all.
   - CLI command workflows
 
 **Coverage requirements:**
-- Core libraries: >90% coverage
+- Core libraries: >90% unit test coverage
 - Renderers: 100% coverage (too critical to skip)
-- CLI commands: E2E integration tests
+- CLI commands: BDD scenarios + E2E integration tests
+- Every user story: At least one passing `.feature` scenario
 
-**Rationale:** AIlign modifies developer files. Bugs can break
-workflows. Tests are not optional.
+**Rationale:** BDD ensures we build the right thing (acceptance criteria).
+TDD ensures we build it right (code quality). Both are required.
 
 ### V. Composition Over Monolith
 
@@ -233,12 +239,14 @@ Start text-only, add security later.
 
 ### Feature Development
 
-1. **Spec first:** Write feature spec in `/features/[name]/spec.md`
+1. **Spec first:** Write feature spec in `specs/[name]/spec.md`
 2. **Constitution check:** Verify alignment with principles
 3. **Task breakdown:** Create `tasks.md` for complex features
-4. **TDD cycle:** Write tests -> Get approval -> Implement
-5. **Integration test:** Verify feature works end-to-end
-6. **Documentation:** Update user docs and examples
+4. **BDD outer loop:** Write/verify `.feature` files and step definitions (RED)
+5. **TDD inner loop:** Write unit tests -> Get approval -> Implement
+6. **BDD verification:** Step definitions pass (GREEN)
+7. **Integration test:** Verify feature works end-to-end
+8. **Documentation:** Update user docs and examples
 
 ### Code Review Requirements
 
@@ -323,6 +331,7 @@ These are explicitly forbidden as they violate core principles:
 - **Hidden failures** - Violates fail safe
 - **Unbounded content** - Violates size-aware design
 - **Shipping without tests** - Violates test-first
+- **Shipping without BDD scenarios** - Violates test-first (every user story needs executable acceptance criteria)
 
 ## Governance
 
