@@ -3,6 +3,8 @@ package config
 import (
 	"testing"
 
+	"github.com/santhosh-tekuri/jsonschema/v6"
+	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -293,4 +295,142 @@ func TestDetectUnknownFields_WarningsAreNotErrors(t *testing.T) {
 		assert.Equal(t, "warning", w.Severity,
 			"DetectUnknownFields should produce warnings, not errors")
 	}
+}
+
+func TestDetectUnknownFields_InvalidYAML(t *testing.T) {
+	rawYAML := []byte("bad: [yaml\n")
+
+	warnings := DetectUnknownFields(rawYAML)
+
+	// Invalid YAML should return no warnings (not crash)
+	assert.Empty(t, warnings)
+}
+
+// ---------------------------------------------------------------------------
+// instanceLocationToFieldPath() tests
+// ---------------------------------------------------------------------------
+
+func TestInstanceLocationToFieldPath_Empty(t *testing.T) {
+	assert.Equal(t, "", instanceLocationToFieldPath([]string{}))
+}
+
+func TestInstanceLocationToFieldPath_SingleField(t *testing.T) {
+	assert.Equal(t, "targets", instanceLocationToFieldPath([]string{"targets"}))
+}
+
+func TestInstanceLocationToFieldPath_FieldWithIndex(t *testing.T) {
+	assert.Equal(t, "targets[0]", instanceLocationToFieldPath([]string{"targets", "0"}))
+}
+
+func TestInstanceLocationToFieldPath_NestedFields(t *testing.T) {
+	assert.Equal(t, "packages.name", instanceLocationToFieldPath([]string{"packages", "name"}))
+}
+
+func TestInstanceLocationToFieldPath_NestedWithIndex(t *testing.T) {
+	assert.Equal(t, "packages[2].name", instanceLocationToFieldPath([]string{"packages", "2", "name"}))
+}
+
+// ---------------------------------------------------------------------------
+// errorToValidationError() tests — covers kind.Type and default branches
+// ---------------------------------------------------------------------------
+
+func TestValidate_InvalidSchemaReportsInternalError(t *testing.T) {
+	original := SchemaJSON
+	defer func() { SchemaJSON = original }()
+
+	SchemaJSON = []byte("not valid json")
+	cfg := &Config{Targets: []string{"claude"}}
+
+	result := Validate(cfg)
+
+	require.NotNil(t, result)
+	assert.False(t, result.Valid)
+	require.NotEmpty(t, result.Errors)
+	assert.Contains(t, result.Errors[0].Message, "internal error")
+	assert.Contains(t, result.Errors[0].Remediation, "bug")
+}
+
+func TestErrorToValidationError_TypeKind(t *testing.T) {
+	err := &jsonschema.ValidationError{
+		InstanceLocation: []string{"targets"},
+		ErrorKind:        &kind.Type{Got: "string", Want: []string{"array"}},
+	}
+
+	ve := errorToValidationError(err)
+
+	require.NotNil(t, ve)
+	assert.Equal(t, "targets", ve.FieldPath)
+	assert.Contains(t, ve.Message, "expected type")
+	assert.NotEmpty(t, ve.Remediation)
+}
+
+func TestErrorToValidationError_DefaultKind(t *testing.T) {
+	// Use a kind that isn't in the switch (e.g., kind.AdditionalProperties)
+	err := &jsonschema.ValidationError{
+		InstanceLocation: []string{"targets"},
+		ErrorKind:        &kind.FalseSchema{},
+	}
+
+	ve := errorToValidationError(err)
+
+	require.NotNil(t, ve)
+	assert.Equal(t, "targets", ve.FieldPath)
+	assert.NotEmpty(t, ve.Message)
+	assert.NotEmpty(t, ve.Remediation)
+}
+
+func TestErrorToValidationError_RequiredKind(t *testing.T) {
+	err := &jsonschema.ValidationError{
+		InstanceLocation: []string{},
+		ErrorKind:        &kind.Required{Missing: []string{"targets"}},
+	}
+
+	ve := errorToValidationError(err)
+
+	require.NotNil(t, ve)
+	assert.Equal(t, "targets", ve.FieldPath)
+	assert.Equal(t, "required field missing", ve.Message)
+}
+
+func TestErrorToValidationError_EnumKind(t *testing.T) {
+	err := &jsonschema.ValidationError{
+		InstanceLocation: []string{"targets", "0"},
+		ErrorKind: &kind.Enum{
+			Got:   "vscode",
+			Want:  []interface{}{"claude", "cursor", "copilot", "windsurf"},
+		},
+	}
+
+	ve := errorToValidationError(err)
+
+	require.NotNil(t, ve)
+	assert.Equal(t, "targets[0]", ve.FieldPath)
+	assert.Equal(t, "invalid target name", ve.Message)
+	assert.Equal(t, "vscode", ve.Actual)
+}
+
+func TestErrorToValidationError_MinItemsKind(t *testing.T) {
+	err := &jsonschema.ValidationError{
+		InstanceLocation: []string{"targets"},
+		ErrorKind:        &kind.MinItems{Got: 0, Want: 1},
+	}
+
+	ve := errorToValidationError(err)
+
+	require.NotNil(t, ve)
+	assert.Equal(t, "targets", ve.FieldPath)
+	assert.Equal(t, "targets array is empty", ve.Message)
+}
+
+func TestErrorToValidationError_UniqueItemsKind(t *testing.T) {
+	err := &jsonschema.ValidationError{
+		InstanceLocation: []string{"targets"},
+		ErrorKind:        &kind.UniqueItems{Duplicates: [2]int{0, 1}},
+	}
+
+	ve := errorToValidationError(err)
+
+	require.NotNil(t, ve)
+	assert.Equal(t, "targets", ve.FieldPath)
+	assert.Equal(t, "duplicate targets found", ve.Message)
 }

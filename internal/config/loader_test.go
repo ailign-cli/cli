@@ -151,3 +151,118 @@ func TestLoadFromFile_UnknownFieldsPreserved(t *testing.T) {
 	require.NotNil(t, cfg)
 	assert.Equal(t, []string{"claude"}, cfg.Targets)
 }
+
+// ---------------------------------------------------------------------------
+// LoadAndValidate() tests
+// ---------------------------------------------------------------------------
+
+func TestLoadAndValidate_ValidConfig(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	os.WriteFile(path, []byte("targets:\n  - claude\n  - cursor\n"), 0644)
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+	assert.Empty(t, result.Errors)
+	assert.Empty(t, result.Warnings)
+	require.NotNil(t, result.Config)
+	assert.Equal(t, []string{"claude", "cursor"}, result.Config.Targets)
+}
+
+func TestLoadAndValidate_MissingFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.False(t, result.Valid)
+	require.NotEmpty(t, result.Errors)
+	assert.Contains(t, result.Errors[0].Message, "not found")
+	assert.Contains(t, result.Errors[0].Remediation, "ailign init")
+}
+
+func TestLoadAndValidate_PermissionError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("file permission test not reliable on Windows")
+	}
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	os.WriteFile(path, []byte("targets:\n  - claude\n"), 0000)
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.False(t, result.Valid)
+	require.NotEmpty(t, result.Errors)
+	assert.Contains(t, result.Errors[0].Message, "reading config")
+}
+
+func TestLoadAndValidate_YAMLParseError(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	os.WriteFile(path, []byte("targets:\n  - claude\n bad: [yaml\n"), 0644)
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.False(t, result.Valid)
+	require.NotEmpty(t, result.Errors)
+	assert.Contains(t, result.Errors[0].Message, "parsing config")
+}
+
+func TestLoadAndValidate_InvalidConfig(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	os.WriteFile(path, []byte("targets:\n  - vscode\n"), 0644)
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.False(t, result.Valid)
+	require.NotEmpty(t, result.Errors)
+}
+
+func TestLoadAndValidate_UnknownFieldsAsWarnings(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	os.WriteFile(path, []byte("targets:\n  - claude\ncustom_field: value\n"), 0644)
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+	require.NotEmpty(t, result.Warnings)
+	assert.Equal(t, "custom_field", result.Warnings[0].FieldPath)
+	assert.Equal(t, "warning", result.Warnings[0].Severity)
+}
+
+func TestLoadAndValidate_UnicodeBOM(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	bom := []byte{0xEF, 0xBB, 0xBF}
+	content := append(bom, []byte("targets:\n  - claude\n")...)
+	os.WriteFile(path, content, 0644)
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+	require.NotNil(t, result.Config)
+	assert.Equal(t, []string{"claude"}, result.Config.Targets)
+}
+
+func TestLoadAndValidate_EmptyTargets(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	os.WriteFile(path, []byte("targets: []\n"), 0644)
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.False(t, result.Valid)
+	require.NotEmpty(t, result.Errors)
+}
