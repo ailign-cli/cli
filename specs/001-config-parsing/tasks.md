@@ -101,9 +101,9 @@
 
 **Purpose**: Final validation, coverage, and edge case verification
 
-- [ ] T026 Run full test suite and verify >90% coverage for internal/config/ package
-- [ ] T027 Validate quickstart.md steps work end-to-end (build binary, create config, run validate)
-- [ ] T028 Verify all edge cases from spec are covered by tests (tabs in YAML, Unicode BOM, file permission errors, symlinks, duplicate targets)
+- [x] T026 Run full test suite and verify >90% coverage for internal/config/ package
+- [x] T027 Validate quickstart.md steps work end-to-end (build binary, create config, run validate)
+- [x] T028 Verify all edge cases from spec are covered by tests (tabs in YAML, Unicode BOM, file permission errors, symlinks, duplicate targets)
 
 ---
 

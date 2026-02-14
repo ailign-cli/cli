@@ -40,10 +40,9 @@ configuration file only. The schema for this feature is limited to the
 
 ### User Story 1 - Parse Configuration File (Priority: P1)
 
-In order to declare which AI tools my repository targets, as a
-developer working in a repository, I want to be able to create a
-`.ailign.yml` config file that specifies target tools, and have the
-CLI parse it correctly.
+**In order to** declare which AI tools my repository targets
+**As a** developer working in a repository
+**I want to** parse a .ailign.yml config file
 
 The CLI reads and parses the `.ailign.yml` file from the working
 directory, making the configuration available for all subsequent
@@ -61,27 +60,21 @@ foundational capability that every command depends on.
 configuration values are correctly loaded. Delivers the core ability
 to configure AIlign per-repository.
 
-**Acceptance Scenarios**:
+**Acceptance Scenarios**: See [`features/parse-configuration-file.feature`](../../features/parse-configuration-file.feature)
 
-1. **Given** a repository with a valid `.ailign.yml` in the working
-   directory, **When** the CLI parses the configuration, **Then** all
-   declared targets are correctly loaded and accessible to other
-   commands.
-2. **Given** a repository with no `.ailign.yml` file, **When** the CLI
-   attempts to load configuration, **Then** it reports an error to
-   stderr explaining the file is missing and exits with code 2.
-3. **Given** a repository with an `.ailign.yml` file that is empty,
-   **When** the CLI attempts to parse it, **Then** it reports a
-   validation error to stderr indicating that the required `targets`
-   field is missing.
+| Scenario | Description |
+|----------|-------------|
+| Valid configuration is loaded | Targets are parsed and accessible |
+| Missing configuration file | Clear error on stderr, exit code 2 |
+| Empty configuration file | Validation error about missing targets field |
 
 ---
 
 ### User Story 2 - Schema Validation with Actionable Errors (Priority: P2)
 
-In order to catch mistakes before running `ailign pull`, as a
-developer, I want to be able to validate my config file syntax and
-schema and receive actionable error messages.
+**In order to** catch mistakes before running ailign pull
+**As a** developer
+**I want to** validate my config file against the schema
 
 The CLI validates the configuration against a defined schema before
 proceeding with any command. Additionally, a dedicated
@@ -101,29 +94,17 @@ developer frustration.
 with various violations (wrong types, missing fields, invalid formats)
 and verifying each produces a specific, helpful error message.
 
-**Acceptance Scenarios**:
+**Acceptance Scenarios**: See [`features/schema-validation.feature`](../../features/schema-validation.feature)
 
-1. **Given** a configuration file with an invalid target name (e.g.,
-   `vscode`), **When** the CLI validates the schema, **Then** it
-   reports the exact field path, the expected values, and what was
-   provided, to stderr.
-2. **Given** a configuration file with multiple validation errors,
-   **When** the CLI validates it, **Then** all errors are reported
-   at once (not just the first one), each with field path, expected
-   value, and remediation guidance.
-3. **Given** a configuration file with an unknown field not in the
-   schema, **When** the CLI validates it, **Then** it reports a
-   warning about the unrecognized field (to stderr) but does not
-   treat it as a fatal error.
-4. **Given** a configuration file where all fields are valid, **When**
-   the CLI validates the schema, **Then** no warnings or errors are
-   emitted and the CLI proceeds normally.
-5. **Given** a valid `.ailign.yml`, **When** the developer runs
-   `ailign validate`, **Then** the CLI reports success to stdout
-   and exits with code 0, without performing any other operations.
-6. **Given** an invalid `.ailign.yml`, **When** the developer runs
-   `ailign validate`, **Then** the CLI reports all validation errors
-   to stderr and exits with code 2.
+| Scenario | Description |
+|----------|-------------|
+| Invalid target name | Reports field path and suggests valid targets |
+| Multiple errors reported at once | All errors include field paths and remediation |
+| Unknown fields produce warnings | Warning about unknown field, validation succeeds |
+| Valid config via ailign validate | Reports success to stdout, exit code 0 |
+| Invalid config via ailign validate | Reports errors to stderr, exit code 2 |
+| Unicode BOM in config file | BOM-prefixed file parsed successfully |
+| Duplicate targets | Error about duplicate target entries |
 
 ---
 
