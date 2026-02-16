@@ -9,10 +9,15 @@ import (
 )
 
 func TestFeatures(t *testing.T) {
+	format := "pretty"
+	if output := os.Getenv("CUCUMBER_REPORT"); output != "" {
+		format = "cucumber:" + output
+	}
+
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
-			Format:   "pretty",
+			Format:   format,
 			Paths:    []string{"../"},
 			TestingT: t,
 		},
