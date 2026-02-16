@@ -111,18 +111,21 @@ func (w *testWorld) itExitsWithCode(code int) error {
 		}
 		return nil
 	}
-	if code == 0 {
+	switch code {
+	case 0:
 		if w.loadErr != nil {
 			return fmt.Errorf("expected exit code 0 (no error) but got error: %v", w.loadErr)
 		}
 		if w.result != nil && !w.result.Valid {
 			return fmt.Errorf("expected exit code 0 but validation failed")
 		}
-	} else if code == 2 {
+	case 2:
 		hasError := w.loadErr != nil || (w.result != nil && !w.result.Valid)
 		if !hasError {
 			return fmt.Errorf("expected exit code 2 (error) but no error occurred")
 		}
+	default:
+		return fmt.Errorf("unsupported expected exit code: %d", code)
 	}
 	return nil
 }

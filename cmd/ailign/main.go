@@ -12,7 +12,7 @@ func main() {
 	rootCmd := cli.NewRootCommand()
 	if err := rootCmd.Execute(); err != nil {
 		if !errors.Is(err, cli.ErrAlreadyReported) {
-			fmt.Fprintln(os.Stderr, err)
+			_, _ = fmt.Fprintln(os.Stderr, err)
 		}
 		os.Exit(2)
 	}

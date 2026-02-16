@@ -1,0 +1,55 @@
+name: Pull Request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  validate:
+    name: Validate
+    uses: ./.github/workflows/validate.yml
+    permissions:
+      contents: read
+      checks: write
+
+  label:
+    name: Label
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: srvaroa/labeler@v1.13.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  pr-size:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Check PR size
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! SIZE=$(gh pr view ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --json additions,deletions \
+            --jq '.additions + .deletions'); then
+            echo "::error::Failed to fetch PR size from GitHub API"
+            exit 1
+          fi
+
+          echo "### PR Size: ${SIZE} lines changed" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$SIZE" -gt 750 ]; then
+            echo "::error::PR size (${SIZE} lines) exceeds the hard limit of 750 lines. Split into smaller, independently deployable PRs."
+            echo "**Result:** FAILED — exceeds 750 line hard limit" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          elif [ "$SIZE" -gt 500 ]; then
+            echo "::warning::PR size (${SIZE} lines) exceeds the recommended limit of 500 lines. Consider splitting."
+            echo "**Result:** WARNING — exceeds 500 line soft limit" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "**Result:** OK" >> "$GITHUB_STEP_SUMMARY"
+          fi

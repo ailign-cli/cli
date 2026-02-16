@@ -101,6 +101,27 @@ ios/ or android/
 **Structure Decision**: [Document the selected structure and reference the real
 directories captured above]
 
+## PR Decomposition
+
+> **Each PR MUST be independently deployable and within CI size limits.**
+
+- **Hard limit**: 750 lines (additions + deletions). CI fails above this.
+- **Soft limit**: 500 lines. CI warns above this.
+- **Target**: <333 lines per PR (size:m or smaller).
+
+Split the implementation into PRs that each deliver a releasable increment:
+
+| PR | Scope | Est. Lines | Independently Deployable? |
+|----|-------|-----------|---------------------------|
+| [e.g., PR 1] | [Setup + foundational types] | [~200] | [Yes — compiles, tests pass] |
+| [e.g., PR 2] | [User Story 1 implementation] | [~300] | [Yes — feature usable end-to-end] |
+| [e.g., PR 3] | [User Story 2 implementation] | [~250] | [Yes — additive, no breaking changes] |
+
+**Splitting strategies** (in priority order):
+1. By user story (each story = 1 PR)
+2. By layer (types/models, then services, then CLI)
+3. By component (independent packages that don't depend on each other)
+
 ## Complexity Tracking
 
 > **Fill ONLY if Constitution Check has violations that must be justified**

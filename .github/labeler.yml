@@ -1,0 +1,56 @@
+version: 1
+labels:
+# --- Type labels (based on changed files) ---
+
+- label: "type:code"
+  files:
+  - "cmd/.*\\.go$"
+  - "internal/.*\\.go$"
+
+- label: "type:test"
+  files:
+  - ".*_test\\.go$"
+
+- label: "type:bdd"
+  files:
+  - "features/.*"
+
+- label: "type:docs"
+  files:
+  - ".*\\.md$"
+  - "specs/.*"
+
+- label: "type:build-definition"
+  files:
+  - "\\.github/.*"
+  - "go\\.(mod|sum)$"
+  - "Makefile$"
+  - "Dockerfile.*"
+  - "\\.golangci\\.yml$"
+  - "\\.goreleaser\\.yml$"
+
+# --- Version labels (based on PR title, conventional commits) ---
+
+- label: "version:major"
+  title: "^\\w+(!|\\(.*\\)!):"
+
+- label: "version:minor"
+  title: "^feat(\\(|:)"
+
+- label: "version:patch"
+  title: "^fix(\\(|:)"
+
+# --- Size labels (additions + deletions) ---
+
+- label: "size:s"
+  size:
+    below: 50
+
+- label: "size:m"
+  size:
+    above: 49
+    below: 333
+
+- label: "size:l"
+  size:
+    above: 332

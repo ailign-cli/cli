@@ -66,7 +66,7 @@ func NewRootCommand() *cobra.Command {
 func loadAndValidateConfig(cmd *cobra.Command) *config.ValidationResult {
 	cwd, err := os.Getwd()
 	if err != nil {
-		fmt.Fprintln(cmd.ErrOrStderr(), "Error: getting working directory:", err)
+		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Error: getting working directory:", err)
 		return &config.ValidationResult{Valid: false}
 	}
 
@@ -76,11 +76,11 @@ func loadAndValidateConfig(cmd *cobra.Command) *config.ValidationResult {
 	outResult := toOutputResult(result, ".ailign.yml")
 
 	if len(result.Warnings) > 0 {
-		fmt.Fprint(cmd.ErrOrStderr(), formatter.FormatWarnings(outResult))
+		_, _ = fmt.Fprint(cmd.ErrOrStderr(), formatter.FormatWarnings(outResult))
 	}
 
 	if !result.Valid {
-		fmt.Fprint(cmd.ErrOrStderr(), formatter.FormatErrors(outResult))
+		_, _ = fmt.Fprint(cmd.ErrOrStderr(), formatter.FormatErrors(outResult))
 		return result
 	}
 
