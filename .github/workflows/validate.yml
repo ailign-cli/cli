@@ -45,12 +45,22 @@ jobs:
         run: go install gotest.tools/gotestsum@latest
 
       - name: Run unit and BDD tests
+        env:
+          JUNIT_REPORT: ${{ github.workspace }}/bdd-results.xml
         run: gotestsum --junitfile test-results.xml -- ./... -count=1
 
-      - name: Test report
+      - name: Unit test report
         uses: dorny/test-reporter@v1
         if: always()
         with:
-          name: Test Results
+          name: Unit Test Results
           path: test-results.xml
+          reporter: java-junit
+
+      - name: BDD test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: BDD Test Results
+          path: bdd-results.xml
           reporter: java-junit
