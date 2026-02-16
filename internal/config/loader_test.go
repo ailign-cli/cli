@@ -112,11 +112,15 @@ func TestLoadFromFile_UnicodeBOM(t *testing.T) {
 }
 
 func TestLoadFromFile_Symlink(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink test not reliable on Windows without elevated privileges")
+	}
+
 	dir := t.TempDir()
 	realPath := filepath.Join(dir, "real-config.yml")
 	linkPath := filepath.Join(dir, ".ailign.yml")
 	os.WriteFile(realPath, []byte("targets:\n  - windsurf\n"), 0644)
-	os.Symlink(realPath, linkPath)
+	require.NoError(t, os.Symlink(realPath, linkPath))
 
 	cfg, err := LoadFromFile(linkPath)
 	require.NoError(t, err)
