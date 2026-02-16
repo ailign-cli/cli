@@ -103,6 +103,26 @@ func TestRootCommand_InvalidFormat_Rejected(t *testing.T) {
 	assert.Contains(t, err.Error(), "yaml")
 }
 
+func TestRootCommand_VersionDoesNotRequireConfig(t *testing.T) {
+	dir := t.TempDir() // No .ailign.yml
+
+	rootCmd := NewRootCommand()
+	rootCmd.Version = "1.2.3 (abc1234)"
+
+	stdoutBuf := new(bytes.Buffer)
+	rootCmd.SetOut(stdoutBuf)
+	rootCmd.SetArgs([]string{"--version"})
+
+	origDir, _ := os.Getwd()
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origDir) }()
+
+	err := rootCmd.Execute()
+	assert.NoError(t, err)
+	assert.Contains(t, stdoutBuf.String(), "1.2.3")
+	assert.Contains(t, stdoutBuf.String(), "abc1234")
+}
+
 func TestRootCommand_InvalidConfig_ReturnsError(t *testing.T) {
 	dir := t.TempDir() // No .ailign.yml
 

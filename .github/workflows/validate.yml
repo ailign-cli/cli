@@ -3,6 +3,9 @@ name: Validate
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint
@@ -24,15 +27,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
       - uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: "~> v2.13"
           args: check
 
   test:
     name: Test
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       checks: write
     steps:
       - uses: actions/checkout@v4
