@@ -3,3 +3,12 @@ repos:
     rev: v2.1.5
     hooks:
       - id: golangci-lint
+
+  - repo: local
+    hooks:
+      - id: goreleaser-check
+        name: goreleaser-check
+        entry: goreleaser check
+        language: system
+        files: \.goreleaser\.yml$
+        pass_filenames: false
