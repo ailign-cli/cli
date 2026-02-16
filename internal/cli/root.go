@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,11 @@ import (
 	"github.com/ailign/cli/internal/output"
 	"github.com/spf13/cobra"
 )
+
+// ErrAlreadyReported signals that the error has already been printed to stderr
+// by the command and should not be printed again by main(). main() should still
+// exit with a non-zero code.
+var ErrAlreadyReported = errors.New("error already reported")
 
 var (
 	formatFlag string
@@ -33,7 +39,7 @@ func NewRootCommand() *cobra.Command {
 
 			result := loadAndValidateConfig(cmd)
 			if !result.Valid {
-				os.Exit(2)
+				return ErrAlreadyReported
 			}
 
 			return nil

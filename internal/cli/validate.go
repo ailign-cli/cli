@@ -17,15 +17,13 @@ func newValidateCommand() *cobra.Command {
 
 func runValidate(cmd *cobra.Command, args []string) error {
 	result := loadAndValidateConfig(cmd)
-	formatter := getFormatter(formatFlag)
-	outResult := toOutputResult(result, ".ailign.yml")
-
 	if !result.Valid {
 		// Errors already printed by loadAndValidateConfig
-		return fmt.Errorf("validation failed")
+		return ErrAlreadyReported
 	}
 
-	// Print success to stdout
+	formatter := getFormatter(formatFlag)
+	outResult := toOutputResult(result, ".ailign.yml")
 	fmt.Fprint(cmd.OutOrStdout(), formatter.FormatSuccess(outResult))
 	return nil
 }

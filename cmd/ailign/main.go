@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -10,7 +11,9 @@ import (
 func main() {
 	rootCmd := cli.NewRootCommand()
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		if !errors.Is(err, cli.ErrAlreadyReported) {
+			fmt.Fprintln(os.Stderr, err)
+		}
 		os.Exit(2)
 	}
 }
