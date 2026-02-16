@@ -119,7 +119,9 @@ func compileSchema() (*jsonschema.Schema, error) {
 	}
 
 	compiler := jsonschema.NewCompiler()
-	compiler.AddResource("schema.json", schemaDoc)
+	if err := compiler.AddResource("schema.json", schemaDoc); err != nil {
+		return nil, fmt.Errorf("adding schema resource: %w", err)
+	}
 
 	return compiler.Compile("schema.json")
 }
