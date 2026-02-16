@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: srvaroa/labeler@v1.13.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
   pr-size:
     name: PR Size Check
@@ -30,10 +30,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          SIZE=$(gh pr view ${{ github.event.pull_request.number }} \
+          if ! SIZE=$(gh pr view ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
             --json additions,deletions \
-            --jq '.additions + .deletions')
+            --jq '.additions + .deletions'); then
+            echo "::error::Failed to fetch PR size from GitHub API"
+            exit 1
+          fi
 
           echo "### PR Size: ${SIZE} lines changed" >> "$GITHUB_STEP_SUMMARY"
 
