@@ -106,6 +106,37 @@ specs/[###-feature-name]/
 5. **Integration test** - Verify feature works end-to-end
 6. **Documentation** - Update user docs and examples
 
+### Pull Request Size Limits
+
+PRs are enforced by CI to stay small and independently
+deployable:
+
+- **Hard limit: 750 lines** (additions + deletions). CI fails.
+- **Soft limit: 500 lines**. CI warns.
+- **Ideal: <333 lines** (size:m label or smaller).
+
+When planning work (`/speckit.plan`, `/speckit.tasks`), split
+tasks into PRs that each deliver an independently releasable
+increment. Each PR must:
+
+- Pass all tests on its own (no broken intermediate states)
+- Be deployable/releasable without depending on future PRs
+- Have a clear, single purpose described by a conventional
+  commit title
+
+If a feature exceeds 500 lines, split it across multiple PRs
+by user story, layer, or component boundary.
+
+### CI/CD
+
+Pull requests are validated automatically by GitHub Actions:
+
+- **Lint** (`golangci-lint`) and **Test** (`go test ./...`)
+  run via a reusable validate workflow
+- **PR size check** enforces the limits above
+- **Auto-labeling** (srvaroa/labeler) applies type, version,
+  and size labels based on changed files and PR title
+
 ### Code Review Gates
 
 - Constitution compliance verified
@@ -186,6 +217,8 @@ Exception: Security vulnerabilities get immediate fixes.
 | Speckit commands | `.claude/commands/speckit.*.md` |
 | Bash helpers | `.specify/scripts/bash/` |
 | Feature specs | `specs/[###-feature-name]/` |
+| CI workflows | `.github/workflows/` |
+| Labeler config | `.github/labeler.yml` |
 | Vision | `vision.md` |
 | Scope | `scope.md` |
 
