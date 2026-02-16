@@ -28,6 +28,11 @@ func NewRootCommand() *cobra.Command {
 		Short: "Instruction governance & distribution for engineering organizations",
 		Long:  "AIlign manages AI coding assistant instructions across tools and repositories.",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Validate --format flag before any work
+			if formatFlag != "human" && formatFlag != "json" {
+				return fmt.Errorf("unknown output format %q: supported formats are \"human\" and \"json\"", formatFlag)
+			}
+
 			// Skip config loading for help and completion commands
 			if cmd.Name() == "help" || cmd.Name() == "completion" {
 				return nil
@@ -87,7 +92,10 @@ func getFormatter(format string) output.Formatter {
 	switch format {
 	case "json":
 		return &output.JSONFormatter{}
+	case "human":
+		return &output.HumanFormatter{}
 	default:
+		// PersistentPreRunE validates the flag, so this is defensive.
 		return &output.HumanFormatter{}
 	}
 }

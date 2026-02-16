@@ -91,3 +91,23 @@ func TestRootCommand_FormatFlag_ShortFlag(t *testing.T) {
 	assert.NotNil(t, flag)
 	assert.Equal(t, "format", flag.Name)
 }
+
+func TestRootCommand_InvalidFormat_Rejected(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, ".ailign.yml"),
+		[]byte("targets:\n  - claude\n"), 0644)
+
+	_, _, err := executeRootWithSubcommand([]string{"--format", "yaml", "check"}, dir)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown output format")
+	assert.Contains(t, err.Error(), "yaml")
+}
+
+func TestRootCommand_InvalidConfig_ReturnsError(t *testing.T) {
+	dir := t.TempDir() // No .ailign.yml
+
+	_, stderr, err := executeRootWithSubcommand([]string{"check"}, dir)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, ErrAlreadyReported)
+	assert.Contains(t, stderr, "not found")
+}
