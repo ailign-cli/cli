@@ -24,6 +24,6 @@ func runValidate(cmd *cobra.Command, args []string) error {
 
 	formatter := getFormatter(formatFlag)
 	outResult := toOutputResult(result, ".ailign.yml")
-	fmt.Fprint(cmd.OutOrStdout(), formatter.FormatSuccess(outResult))
+	_, _ = fmt.Fprint(cmd.OutOrStdout(), formatter.FormatSuccess(outResult))
 	return nil
 }
