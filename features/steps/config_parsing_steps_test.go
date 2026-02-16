@@ -124,6 +124,8 @@ func (w *testWorld) itExitsWithCode(code int) error {
 		if !hasError {
 			return fmt.Errorf("expected exit code 2 (error) but no error occurred")
 		}
+	default:
+		return fmt.Errorf("unsupported expected exit code: %d", code)
 	}
 	return nil
 }
