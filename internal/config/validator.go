@@ -156,11 +156,13 @@ func errorToValidationError(err *jsonschema.ValidationError) *ValidationError {
 
 	switch k := err.ErrorKind.(type) {
 	case *kind.Required:
-		_ = k
-		ve.FieldPath = "targets"
-		ve.Expected = "array of target names (claude, cursor, copilot, windsurf)"
+		missing := strings.Join(k.Missing, ", ")
+		if len(k.Missing) > 0 {
+			ve.FieldPath = k.Missing[0]
+		}
+		ve.Expected = "required"
 		ve.Message = "required field missing"
-		ve.Remediation = "Add a \"targets\" field with at least one target"
+		ve.Remediation = fmt.Sprintf("Add the required field(s): %s", missing)
 
 	case *kind.Enum:
 		ve.Expected = "one of claude, cursor, copilot, windsurf"
