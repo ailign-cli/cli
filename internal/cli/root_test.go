@@ -27,8 +27,8 @@ func executeRootWithSubcommand(args []string, dir string) (stdout string, stderr
 	rootCmd.SetArgs(args)
 
 	origDir, _ := os.Getwd()
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	execErr := rootCmd.Execute()
 	return stdoutBuf.String(), stderrBuf.String(), execErr
@@ -36,7 +36,7 @@ func executeRootWithSubcommand(args []string, dir string) (stdout string, stderr
 
 func TestRootCommand_ValidConfig_Proceeds(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, ".ailign.yml"),
+	_ = os.WriteFile(filepath.Join(dir, ".ailign.yml"),
 		[]byte("targets:\n  - claude\n  - cursor\n"), 0644)
 
 	_, stderr, err := executeRootWithSubcommand([]string{"check"}, dir)
@@ -46,7 +46,7 @@ func TestRootCommand_ValidConfig_Proceeds(t *testing.T) {
 
 func TestRootCommand_WarningsDoNotBlock(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, ".ailign.yml"),
+	_ = os.WriteFile(filepath.Join(dir, ".ailign.yml"),
 		[]byte("targets:\n  - claude\ncustom_field: value\n"), 0644)
 
 	_, stderr, err := executeRootWithSubcommand([]string{"check"}, dir)
@@ -64,8 +64,8 @@ func TestRootCommand_HelpDoesNotRequireConfig(t *testing.T) {
 	rootCmd.SetArgs([]string{"--help"})
 
 	origDir, _ := os.Getwd()
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	err := rootCmd.Execute()
 	assert.NoError(t, err)
@@ -75,7 +75,7 @@ func TestRootCommand_HelpDoesNotRequireConfig(t *testing.T) {
 func TestRootCommand_FormatFlag_DefaultIsHuman(t *testing.T) {
 	rootCmd := NewRootCommand()
 	rootCmd.SetArgs([]string{"--help"})
-	rootCmd.Execute()
+	_ = rootCmd.Execute()
 
 	flag := rootCmd.PersistentFlags().Lookup("format")
 	assert.NotNil(t, flag)
@@ -85,7 +85,7 @@ func TestRootCommand_FormatFlag_DefaultIsHuman(t *testing.T) {
 func TestRootCommand_FormatFlag_ShortFlag(t *testing.T) {
 	rootCmd := NewRootCommand()
 	rootCmd.SetArgs([]string{"--help"})
-	rootCmd.Execute()
+	_ = rootCmd.Execute()
 
 	flag := rootCmd.PersistentFlags().ShorthandLookup("f")
 	assert.NotNil(t, flag)
@@ -94,7 +94,7 @@ func TestRootCommand_FormatFlag_ShortFlag(t *testing.T) {
 
 func TestRootCommand_InvalidFormat_Rejected(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, ".ailign.yml"),
+	_ = os.WriteFile(filepath.Join(dir, ".ailign.yml"),
 		[]byte("targets:\n  - claude\n"), 0644)
 
 	_, _, err := executeRootWithSubcommand([]string{"--format", "yaml", "check"}, dir)

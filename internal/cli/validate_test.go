@@ -25,8 +25,8 @@ func executeCommand(args []string, dir string) (stdout string, stderr string, ex
 	rootCmd.SetArgs(args)
 
 	origDir, _ := os.Getwd()
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	_ = os.Chdir(dir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	err := rootCmd.Execute()
 	code := 0

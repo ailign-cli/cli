@@ -85,8 +85,8 @@ func (w *testWorld) theDeveloperRunsValidate() error {
 	rootCmd.SetArgs([]string{"validate"})
 
 	origDir, _ := os.Getwd()
-	os.Chdir(w.dir)
-	defer os.Chdir(origDir)
+	_ = os.Chdir(w.dir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	err := rootCmd.Execute()
 	w.exitCode = 0
