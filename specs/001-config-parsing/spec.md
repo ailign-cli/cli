@@ -110,9 +110,9 @@ and verifying each produces a specific, helpful error message.
 
 ### Edge Cases
 
-- What happens when the configuration file contains valid YAML but
-  uses tabs instead of spaces? The CLI MUST parse it normally (tabs
-  are valid YAML).
+- What happens when the configuration file uses tabs for indentation?
+  The YAML specification forbids tabs for indentation (only spaces are
+  allowed). The CLI MUST report a clear parse error.
 - What happens when the configuration file has a Unicode BOM? The CLI
   MUST handle BOM-prefixed files gracefully.
 - What happens when the file permissions prevent reading? The CLI MUST
