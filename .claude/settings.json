@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty') && if [ -n \"$FILE_PATH\" ]; then pre-commit run --files \"$FILE_PATH\" 2>&1 || true; fi",
+            "command": "FILE_PATH=$(jq -r '.tool_input.file_path // empty') && if [ -n \"$FILE_PATH\" ]; then pre-commit run --files \"$FILE_PATH\" 2>&1; fi",
             "timeout": 30
           }
         ]
