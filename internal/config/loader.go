@@ -49,7 +49,7 @@ func LoadAndValidate(path string) *ValidationResult {
 			return &ValidationResult{
 				Valid: false,
 				Errors: []ValidationError{{
-					FieldPath:   "",
+					FieldPath:   ".ailign.yml",
 					Message:     fmt.Sprintf("config not found: %s", path),
 					Remediation: "Run \"ailign init\" to create a configuration file",
 					Severity:    "error",
@@ -59,7 +59,7 @@ func LoadAndValidate(path string) *ValidationResult {
 		return &ValidationResult{
 			Valid: false,
 			Errors: []ValidationError{{
-				FieldPath:   "",
+				FieldPath:   ".ailign.yml",
 				Message:     fmt.Sprintf("reading config: %v", err),
 				Remediation: "Check file permissions",
 				Severity:    "error",
@@ -72,7 +72,7 @@ func LoadAndValidate(path string) *ValidationResult {
 		return &ValidationResult{
 			Valid: false,
 			Errors: []ValidationError{{
-				FieldPath:   "",
+				FieldPath:   ".ailign.yml",
 				Message:     fmt.Sprintf("parsing config: %v", err),
 				Remediation: "Check YAML syntax",
 				Severity:    "error",

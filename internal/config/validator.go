@@ -25,7 +25,7 @@ func Validate(cfg *Config) *ValidationResult {
 	if err != nil {
 		result.Valid = false
 		result.Errors = append(result.Errors, ValidationError{
-			FieldPath:   "",
+			FieldPath:   "(internal)",
 			Message:     "failed to marshal config to JSON",
 			Remediation: "Check that the config file is well-formed YAML",
 			Severity:    "error",
@@ -37,7 +37,7 @@ func Validate(cfg *Config) *ValidationResult {
 	if err != nil {
 		result.Valid = false
 		result.Errors = append(result.Errors, ValidationError{
-			FieldPath:   "",
+			FieldPath:   "(internal)",
 			Message:     fmt.Sprintf("internal error: %v", err),
 			Remediation: "This is a bug in AIlign. Please report it.",
 			Severity:    "error",
@@ -49,7 +49,7 @@ func Validate(cfg *Config) *ValidationResult {
 	if err := json.Unmarshal(jsonData, &doc); err != nil {
 		result.Valid = false
 		result.Errors = append(result.Errors, ValidationError{
-			FieldPath:   "",
+			FieldPath:   "(internal)",
 			Message:     "failed to parse config as JSON",
 			Remediation: "Check that the config file is well-formed YAML",
 			Severity:    "error",
@@ -67,7 +67,7 @@ func Validate(cfg *Config) *ValidationResult {
 		} else {
 			result.Valid = false
 			result.Errors = append(result.Errors, ValidationError{
-				FieldPath:   "",
+				FieldPath:   "(internal)",
 				Message:     err.Error(),
 				Remediation: "Check the config file against the AIlign schema",
 				Severity:    "error",
@@ -170,15 +170,19 @@ func errorToValidationError(err *jsonschema.ValidationError) *ValidationError {
 
 	case *kind.MinItems:
 		ve.Expected = "at least 1 target"
+		ve.Actual = fmt.Sprintf("%d items", k.Got)
 		ve.Message = "targets array is empty"
 		ve.Remediation = "Add at least one target to the \"targets\" array"
 
 	case *kind.UniqueItems:
 		ve.Expected = "unique target names"
+		ve.Actual = fmt.Sprintf("duplicate items at indices %d and %d", k.Duplicates[0], k.Duplicates[1])
 		ve.Message = "duplicate targets found"
 		ve.Remediation = "Remove duplicate target entries"
 
 	case *kind.Type:
+		ve.Expected = fmt.Sprintf("type %v", k.Want)
+		ve.Actual = k.Got
 		ve.Message = fmt.Sprintf("expected type %v", k.Want)
 		ve.Remediation = "Check the config file against the AIlign schema"
 
