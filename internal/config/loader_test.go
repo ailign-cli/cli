@@ -89,12 +89,12 @@ func TestLoadFromFile_TabsAsIndentation(t *testing.T) {
 func TestLoadFromFile_TabsInValues(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	// Tabs in scalar values are valid YAML
-	os.WriteFile(path, []byte("targets:\n  - claude\n"), 0644)
+	// Tabs within quoted scalar values are valid YAML (only indentation tabs are forbidden)
+	os.WriteFile(path, []byte("targets:\n  - \"clau\tde\"\n"), 0644)
 
 	cfg, err := LoadFromFile(path)
 	require.NoError(t, err)
-	assert.Equal(t, []string{"claude"}, cfg.Targets)
+	assert.Equal(t, []string{"clau\tde"}, cfg.Targets)
 }
 
 func TestLoadFromFile_UnicodeBOM(t *testing.T) {
