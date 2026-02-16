@@ -22,10 +22,13 @@ One feature file per user story from spec.md.
 
 ```
 features/
-├── features_test.go                    # godog test runner (one per project)
-├── config_steps_test.go                # step definitions (shared testWorld)
 ├── parse-configuration-file.feature    # US1: config parsing
-└── schema-validation.feature           # US2: schema validation
+├── schema-validation.feature           # US2: schema validation
+└── steps/                              # Go step definitions
+    ├── suite_test.go                   # godog test runner (one per project)
+    ├── world_test.go                   # shared testWorld struct and helpers
+    ├── config_parsing_steps_test.go    # step definitions for config parsing
+    └── schema_validation_steps_test.go # step definitions for schema validation
 ```
 
 **Naming rules:**

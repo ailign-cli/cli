@@ -48,7 +48,10 @@ specs/[###-feature]/
 
 features/                    # BDD feature files (Gherkin) - at project root
 ├── [story-name].feature     # One per user story (/speckit.specify output)
-└── [story-name]_test.go     # Step definitions (Go test files)
+└── steps/                   # Go step definitions
+    ├── suite_test.go        # godog test runner
+    ├── world_test.go        # shared testWorld struct
+    └── [story]_steps_test.go # step definitions per feature
 ```
 
 ### Source Code (repository root)

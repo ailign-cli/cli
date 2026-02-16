@@ -327,8 +327,8 @@ enough to reuse but specific enough to be unambiguous.
 
 ## Writing Step Definitions in Go (godog)
 
-Step definitions live in `features/*_test.go` files as methods on
-a shared `testWorld` struct.
+Step definitions live in `features/steps/*_test.go` files as methods on
+a shared `testWorld` struct (defined in `features/steps/world_test.go`).
 
 ### Step Registration Pattern
 

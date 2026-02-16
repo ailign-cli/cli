@@ -85,7 +85,7 @@ Examples of foundational tasks (adjust based on your project):
 > **NOTE: Verify .feature file exists and scenarios are concrete**
 
 - [ ] T011 [P] [US1] Verify/refine feature file at features/[story].feature
-- [ ] T012 [P] [US1] Write step definitions in features/[story]_test.go (expect RED)
+- [ ] T012 [P] [US1] Write step definitions in features/steps/[story]_steps_test.go (expect RED)
 
 ### TDD Unit Tests for User Story 1 (if applicable)
 
@@ -117,7 +117,7 @@ Examples of foundational tasks (adjust based on your project):
 > **NOTE: Verify .feature file exists and scenarios are concrete**
 
 - [ ] T020 [P] [US2] Verify/refine feature file at features/[story].feature
-- [ ] T021 [P] [US2] Write step definitions in features/[story]_test.go (expect RED)
+- [ ] T021 [P] [US2] Write step definitions in features/steps/[story]_steps_test.go (expect RED)
 
 ### TDD Unit Tests for User Story 2 (if applicable)
 
@@ -146,7 +146,7 @@ Examples of foundational tasks (adjust based on your project):
 > **NOTE: Verify .feature file exists and scenarios are concrete**
 
 - [ ] T028 [P] [US3] Verify/refine feature file at features/[story].feature
-- [ ] T029 [P] [US3] Write step definitions in features/[story]_test.go (expect RED)
+- [ ] T029 [P] [US3] Write step definitions in features/steps/[story]_steps_test.go (expect RED)
 
 ### TDD Unit Tests for User Story 3 (if applicable)
 
