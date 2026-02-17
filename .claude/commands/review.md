@@ -94,13 +94,30 @@ Proposed commits (in order):
 ```bash
 git commit -m "$(cat <<'EOF'
 <type>: <description>
-
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 EOF
 )"
 ```
 
-### Step 6: Summary
+### Step 6: Distill learnings
+
+Take the analysis of the review comments and distill learnings:
+
+```
+## Learnings
+
+| Learning | Comments Addressed |
+| -------- | ------------------ |
+| <learning> | #1, #2 |
+| <learning> | #3, #4 |
+
+```
+
+Add the learnings at the appropriate place, which could be:
+- The specs of the feature
+- AI instructions
+- Other memory locations
+
+### Step 7: Summary
 
 After all commits, present a final summary:
 
