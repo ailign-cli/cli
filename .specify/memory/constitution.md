@@ -1,32 +1,30 @@
 <!--
   === Sync Impact Report ===
-  Version change: N/A (new) -> 1.0.0
-  Modified principles: N/A (initial creation)
+  Version change: 1.0.0 -> 1.1.0
+  Bump rationale: MINOR — new principle added (IX. Working Software)
+  Modified principles: None (existing I-VIII unchanged)
   Added sections:
-    - Core Principles (8 principles: I-VIII)
-    - Performance Standards
-    - Security Requirements
-    - Development Workflow
-    - Versioning & Breaking Changes
-    - Decision Framework
-    - Values Hierarchy
-    - Prohibited Patterns
-    - Governance
-  Removed sections: N/A
+    - Principle IX: Working Software
+  Removed sections: None
+  Updated sections:
+    - Values Hierarchy: added Working Software at position 3
+    - Decision Framework: added question 9 (Working Software)
+    - Prohibited Patterns: added two entries for IX violations
   Templates requiring updates:
     - .specify/templates/plan-template.md ✅ compatible
-      (Constitution Check section references "[Gates determined based on
-      constitution file]" — dynamic, no update needed)
+      (Constitution Check section uses dynamic "[Gates determined based on
+      constitution file]" — no update needed)
     - .specify/templates/spec-template.md ✅ compatible
-      (User stories, requirements, success criteria align with
-      principles IV, II, III)
+      (User stories, requirements, success criteria unaffected)
     - .specify/templates/tasks-template.md ✅ compatible
-      (Test-first workflow, parallel markers, checkpoints align
-      with principles IV, V)
-    - .specify/templates/agent-file-template.md ✅ compatible
+      (Test-first workflow, parallel markers, checkpoints unaffected)
     - .specify/templates/checklist-template.md ✅ compatible
+      (Generic template, dynamically populated)
+    - .specify/templates/agent-file-template.md ✅ compatible
+    - CLAUDE.md ⚠️ pending — references "8 core principles" must become "9"
     - README.md ✅ compatible (links to constitution.md)
-  Follow-up TODOs: None
+  Follow-up TODOs:
+    - Update CLAUDE.md "8 core principles" -> "9 core principles"
   === End Sync Impact Report ===
 -->
 # AIlign Constitution
@@ -193,6 +191,33 @@ breaks tools or loses critical content.
 
 **Rationale:** Teams use multiple tools. Lock-in kills adoption.
 
+### IX. Working Software
+
+**Functional, validated software is the primary measure of progress.**
+
+- Every commit that changes code or tests MUST include both
+  implementation and corresponding tests
+- Every commit MUST validate (lint, format, static checks pass)
+- Every commit SHOULD be able to build
+- Every Pull Request MUST include code implementation and test
+  implementation
+- Every Pull Request MUST validate (all checks pass)
+- Every Pull Request MUST build successfully
+- No "test-only" or "code-only" commits when both are needed
+  for the change to be meaningful
+
+**Anti-patterns:**
+- Commits with implementation but no tests
+- Commits with tests but no implementation (except RED-phase
+  TDD commits that are immediately followed by GREEN-phase)
+- PRs that break the build
+- PRs that skip validation
+
+**Rationale:** Working software is the primary measure of progress.
+A commit or PR that does not validate or build is not progress —
+it is technical debt. Keeping code and tests together ensures
+every increment is a verified, deliverable unit.
+
 ## Performance Standards
 
 ### Speed Requirements
@@ -261,6 +286,8 @@ Start text-only, add security later.
 - Coverage MUST meet thresholds
 - CLI help text MUST be updated
 - Examples MUST work
+- Every commit MUST validate and build (Principle IX)
+- Every PR MUST include implementation + tests (Principle IX)
 
 ## Versioning & Breaking Changes
 
@@ -298,6 +325,7 @@ When evaluating new features or design choices, ask:
    tools?
 7. **Testing:** Can we test this reliably?
 8. **Performance:** Does this meet speed requirements?
+9. **Working Software:** Does every increment validate and build?
 
 **If the answer to any question is "no" or "unclear," revisit the
 design.**
@@ -310,13 +338,15 @@ When principles conflict, prioritize in this order:
    Never leave system broken
 2. **Trust** (Transparency Over Magic) -
    Without trust, no adoption
-3. **Testing** (Test-First Development) -
+3. **Working Software** (Working Software) -
+   Non-validated code is not progress
+4. **Testing** (Test-First Development) -
    Quality is non-negotiable
-4. **Governance** (Governance as Foundation) -
+5. **Governance** (Governance as Foundation) -
    Required for enterprise
-5. **Performance** (Speed Requirements) -
+6. **Performance** (Speed Requirements) -
    Slow tools do not get used
-6. **Other principles** -
+7. **Other principles** -
    Important but can be optimized later
 
 ## Prohibited Patterns
@@ -331,7 +361,12 @@ These are explicitly forbidden as they violate core principles:
 - **Hidden failures** - Violates fail safe
 - **Unbounded content** - Violates size-aware design
 - **Shipping without tests** - Violates test-first
-- **Shipping without BDD scenarios** - Violates test-first (every user story needs executable acceptance criteria)
+- **Shipping without BDD scenarios** - Violates test-first
+  (every user story needs executable acceptance criteria)
+- **Code-only commits without tests** - Violates working software
+  (implementation and tests MUST ship together)
+- **PRs that do not build** - Violates working software
+  (every PR MUST be a validated, buildable increment)
 
 ## Governance
 
@@ -357,4 +392,4 @@ These are explicitly forbidden as they violate core principles:
 - Changes follow same rigor as code changes
 - Track amendments with version history
 
-**Version**: 1.0.0 | **Ratified**: 2025-02-13 | **Last Amended**: 2026-02-13
+**Version**: 1.1.0 | **Ratified**: 2025-02-13 | **Last Amended**: 2026-02-17
