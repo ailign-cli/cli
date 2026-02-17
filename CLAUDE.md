@@ -16,6 +16,7 @@ feature planning).
 - `scope.md` - MVP scope, key decisions, what's in/out
 - `.specify/memory/constitution.md` - Design principles (9 core
   principles, governance rules, prohibited patterns)
+- `.specify/memory/soul.md` - Agent culture and working style
 - `README.md` - Quick navigation and project overview
 
 ## Constitution (Non-Negotiable)
