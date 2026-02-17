@@ -136,6 +136,68 @@ func TestSync_EmptyOverlayWarning(t *testing.T) {
 	assert.Contains(t, result.Warnings[0], "empty")
 }
 
+// ---------------------------------------------------------------------------
+// Dry-run tests (T036)
+// ---------------------------------------------------------------------------
+
+func TestSync_DryRun_NoFilesWritten(t *testing.T) {
+	dir := resolveDir(t)
+	writeFile(t, filepath.Join(dir, "base.md"), "Content\n")
+
+	cfg := &config.Config{
+		Targets:       []string{"claude", "cursor"},
+		LocalOverlays: []string{"base.md"},
+	}
+	registry := target.NewDefaultRegistry()
+
+	result, err := Sync(dir, cfg, registry, SyncOptions{DryRun: true})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	assert.True(t, result.DryRun)
+
+	// Hub file should NOT exist
+	_, err = os.Stat(filepath.Join(dir, ".ailign", "instructions.md"))
+	assert.True(t, os.IsNotExist(err), "hub file should not be created in dry-run")
+
+	// Symlinks should NOT exist
+	for _, link := range result.Links {
+		_, err = os.Lstat(filepath.Join(dir, link.LinkPath))
+		assert.True(t, os.IsNotExist(err), "symlink %s should not be created in dry-run", link.LinkPath)
+	}
+
+	// Result should still report what would happen
+	assert.Equal(t, "written", result.HubStatus)
+	assert.Len(t, result.Links, 2)
+	for _, link := range result.Links {
+		assert.Equal(t, "created", link.Status)
+	}
+}
+
+func TestSync_DryRun_ExistingSymlinksDetected(t *testing.T) {
+	skipOnWindows(t)
+	dir := resolveDir(t)
+	writeFile(t, filepath.Join(dir, "base.md"), "Content\n")
+
+	cfg := &config.Config{
+		Targets:       []string{"cursor"},
+		LocalOverlays: []string{"base.md"},
+	}
+	registry := target.NewDefaultRegistry()
+
+	// Run real sync first
+	_, err := Sync(dir, cfg, registry, SyncOptions{})
+	require.NoError(t, err)
+
+	// Now dry-run should detect existing correct symlinks
+	result, err := Sync(dir, cfg, registry, SyncOptions{DryRun: true})
+	require.NoError(t, err)
+	assert.True(t, result.DryRun)
+
+	assert.Equal(t, "unchanged", result.HubStatus)
+	require.Len(t, result.Links, 1)
+	assert.Equal(t, "exists", result.Links[0].Status)
+}
+
 func TestSync_UnknownTarget(t *testing.T) {
 	dir := resolveDir(t)
 

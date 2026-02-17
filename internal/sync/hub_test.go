@@ -68,3 +68,55 @@ func TestWriteHub_UnchangedContent(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "unchanged", status)
 }
+
+// ---------------------------------------------------------------------------
+// CheckHubStatus tests
+// ---------------------------------------------------------------------------
+
+func TestCheckHubStatus_NonExistent(t *testing.T) {
+	dir := t.TempDir()
+	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
+
+	status, err := CheckHubStatus(hubPath, []byte("content"))
+	require.NoError(t, err)
+	assert.Equal(t, "written", status)
+}
+
+func TestCheckHubStatus_IdenticalContent(t *testing.T) {
+	dir := t.TempDir()
+	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
+
+	require.NoError(t, os.MkdirAll(filepath.Dir(hubPath), 0755))
+	require.NoError(t, os.WriteFile(hubPath, []byte("same content"), 0644))
+
+	status, err := CheckHubStatus(hubPath, []byte("same content"))
+	require.NoError(t, err)
+	assert.Equal(t, "unchanged", status)
+}
+
+func TestCheckHubStatus_DifferentContent(t *testing.T) {
+	dir := t.TempDir()
+	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
+
+	require.NoError(t, os.MkdirAll(filepath.Dir(hubPath), 0755))
+	require.NoError(t, os.WriteFile(hubPath, []byte("old content"), 0644))
+
+	status, err := CheckHubStatus(hubPath, []byte("new content"))
+	require.NoError(t, err)
+	assert.Equal(t, "written", status)
+}
+
+func TestCheckHubStatus_PermissionError(t *testing.T) {
+	skipOnWindows(t)
+	dir := t.TempDir()
+	hubPath := filepath.Join(dir, "noperm", "instructions.md")
+
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "noperm"), 0755))
+	require.NoError(t, os.WriteFile(hubPath, []byte("content"), 0644))
+	require.NoError(t, os.Chmod(hubPath, 0000))
+	defer func() { _ = os.Chmod(hubPath, 0644) }()
+
+	_, err := CheckHubStatus(hubPath, []byte("content"))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "reading existing hub file")
+}

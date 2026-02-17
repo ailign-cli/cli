@@ -133,23 +133,23 @@
 
 > **NOTE: Feature file exists at features/preview-sync-changes.feature (4 scenarios)**
 
-- [ ] T034 [US2] Review features/preview-sync-changes.feature and verify scenarios are concrete and aligned with CLI contracts
-- [ ] T035 [US2] Write step definitions for US2 scenarios in features/steps/preview_steps_test.go and register via `registerPreviewSteps(ctx, w)` in features/steps/suite_test.go (expect RED)
+- [X] T034 [US2] Review features/preview-sync-changes.feature and verify scenarios are concrete and aligned with CLI contracts
+- [X] T035 [US2] Write step definitions for US2 scenarios in features/steps/preview_steps_test.go and register via `registerPreviewSteps(ctx, w)` in features/steps/suite_test.go (expect RED)
 
 ### TDD Unit Tests for User Story 2
 
 > **NOTE: Write unit tests, ensure they FAIL before implementation**
 
-- [ ] T036 [P] [US2] Write unit tests for dry-run mode (no files written, correct result status, "would" prefix in human output) in internal/sync/sync_test.go
-- [ ] T037 [P] [US2] Write unit tests for dry-run output formatting (human: "would" language, JSON: dry_run=true) in internal/output/human_test.go and internal/output/json_test.go
+- [X] T036 [P] [US2] Write unit tests for dry-run mode (no files written, correct result status, "would" prefix in human output) in internal/sync/sync_test.go
+- [X] T037 [P] [US2] Write unit tests for dry-run output formatting (human: "would" language, JSON: dry_run=true) in internal/output/human_test.go and internal/output/json_test.go
 
 ### Implementation for User Story 2
 
-- [ ] T038 [US2] Add `--dry-run`/`-n` flag to sync command and pass DryRun option to sync engine in internal/cli/sync.go
-- [ ] T039 [US2] Implement dry-run mode in sync orchestration: compose and compute symlink status without writing files in internal/sync/sync.go
-- [ ] T040 [P] [US2] Add dry-run output formatting to HumanFormatter ("would be written", "would create symlink") in internal/output/human.go
-- [ ] T041 [P] [US2] Add dry-run output formatting to JSONFormatter (dry_run field set to true) in internal/output/json.go
-- [ ] T042 [US2] Verify US2 BDD step definitions pass (GREEN) by running `go test ./features/steps/ -v -run TestFeatures`
+- [X] T038 [US2] Add `--dry-run`/`-n` flag to sync command and pass DryRun option to sync engine in internal/cli/sync.go
+- [X] T039 [US2] Implement dry-run mode in sync orchestration: compose and compute symlink status without writing files in internal/sync/sync.go
+- [X] T040 [P] [US2] Add dry-run output formatting to HumanFormatter ("would be written", "would create symlink") in internal/output/human.go
+- [X] T041 [P] [US2] Add dry-run output formatting to JSONFormatter (dry_run field set to true) in internal/output/json.go
+- [X] T042 [US2] Verify US2 BDD step definitions pass (GREEN) by running `go test ./features/steps/ -v -run TestFeatures`
 
 **Checkpoint**: `ailign sync --dry-run` works. All 4 US2 BDD scenarios pass. No files are modified during dry-run. `go test ./...` passes.
 

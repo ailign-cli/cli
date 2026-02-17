@@ -146,6 +146,76 @@ func TestEnsureSymlink_PermissionError(t *testing.T) {
 	require.Error(t, err)
 }
 
+// ---------------------------------------------------------------------------
+// CheckSymlinkStatus tests
+// ---------------------------------------------------------------------------
+
+func TestCheckSymlinkStatus_NonExistent(t *testing.T) {
+	skipOnWindows(t)
+	dir := resolveDir(t)
+	linkPath := filepath.Join(dir, ".cursorrules")
+	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
+
+	status, err := CheckSymlinkStatus(linkPath, hubPath)
+	require.NoError(t, err)
+	assert.Equal(t, "created", status)
+}
+
+func TestCheckSymlinkStatus_ExistingCorrectSymlink(t *testing.T) {
+	skipOnWindows(t)
+	dir := resolveDir(t)
+	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
+	linkPath := filepath.Join(dir, ".cursorrules")
+
+	require.NoError(t, os.MkdirAll(filepath.Dir(hubPath), 0755))
+	require.NoError(t, os.WriteFile(hubPath, []byte("content"), 0644))
+
+	_, err := EnsureSymlink(linkPath, hubPath)
+	require.NoError(t, err)
+
+	status, err := CheckSymlinkStatus(linkPath, hubPath)
+	require.NoError(t, err)
+	assert.Equal(t, "exists", status)
+}
+
+func TestCheckSymlinkStatus_ExistingWrongSymlink(t *testing.T) {
+	skipOnWindows(t)
+	dir := resolveDir(t)
+	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
+	otherPath := filepath.Join(dir, "other.md")
+	linkPath := filepath.Join(dir, ".cursorrules")
+
+	require.NoError(t, os.WriteFile(otherPath, []byte("other"), 0644))
+	require.NoError(t, os.Symlink(otherPath, linkPath))
+
+	status, err := CheckSymlinkStatus(linkPath, hubPath)
+	require.NoError(t, err)
+	assert.Equal(t, "replaced", status)
+}
+
+func TestCheckSymlinkStatus_RegularFile(t *testing.T) {
+	skipOnWindows(t)
+	dir := resolveDir(t)
+	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
+	linkPath := filepath.Join(dir, ".cursorrules")
+
+	require.NoError(t, os.WriteFile(linkPath, []byte("regular file"), 0644))
+
+	status, err := CheckSymlinkStatus(linkPath, hubPath)
+	require.NoError(t, err)
+	assert.Equal(t, "replaced", status)
+}
+
+func TestCheckSymlinkStatus_InvalidPaths(t *testing.T) {
+	_, err := CheckSymlinkStatus("relative/path", "/absolute/hub")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "linkPath must be absolute")
+
+	_, err = CheckSymlinkStatus("/absolute/link", "relative/hub")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "hubPath must be absolute")
+}
+
 // skipOnWindows skips symlink tests on Windows where they require elevated privileges.
 func skipOnWindows(t *testing.T) {
 	t.Helper()

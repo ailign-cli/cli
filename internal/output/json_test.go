@@ -397,6 +397,37 @@ func TestJSONFormatSyncResult_LinksAlwaysArray(t *testing.T) {
 	assert.Equal(t, byte('['), raw["links"][0], "links must be a JSON array, not null")
 }
 
+func TestJSONFormatSyncResult_DryRun(t *testing.T) {
+	f := &JSONFormatter{}
+	result := SyncResult{
+		DryRun:       true,
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "written",
+		OverlayCount: 1,
+		Links: []LinkResult{
+			{Target: "claude", LinkPath: ".claude/instructions.md", Status: "created"},
+		},
+	}
+
+	out := f.FormatSyncResult(result)
+
+	var parsed struct {
+		DryRun bool `json:"dry_run"`
+		Hub    struct {
+			Status string `json:"status"`
+		} `json:"hub"`
+		Links []struct {
+			Status string `json:"status"`
+		} `json:"links"`
+	}
+	err := json.Unmarshal([]byte(out), &parsed)
+	assert.NoError(t, err)
+	assert.True(t, parsed.DryRun, "dry_run must be true")
+	assert.Equal(t, "written", parsed.Hub.Status)
+	assert.Len(t, parsed.Links, 1)
+	assert.Equal(t, "created", parsed.Links[0].Status)
+}
+
 func TestJSON_SeverityOmitted(t *testing.T) {
 	f := newJSONFormatter()
 	result := ValidationResult{
