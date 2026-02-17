@@ -7,6 +7,39 @@ import (
 	"path/filepath"
 )
 
+// CheckSymlinkStatus returns what EnsureSymlink would do without modifying any files.
+// Returns "created" (doesn't exist), "exists" (correct), or "replaced" (wrong target).
+func CheckSymlinkStatus(linkPath string, hubPath string) (string, error) {
+	if !filepath.IsAbs(linkPath) {
+		return "", fmt.Errorf("linkPath must be absolute, got: %s", linkPath)
+	}
+	if !filepath.IsAbs(hubPath) {
+		return "", fmt.Errorf("hubPath must be absolute, got: %s", hubPath)
+	}
+
+	relTarget, err := filepath.Rel(filepath.Dir(linkPath), hubPath)
+	if err != nil {
+		return "", fmt.Errorf("computing relative path: %w", err)
+	}
+
+	info, err := os.Lstat(linkPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "created", nil
+		}
+		return "", fmt.Errorf("checking existing path: %w", err)
+	}
+
+	if info.Mode()&os.ModeSymlink != 0 {
+		existingTarget, err := os.Readlink(linkPath)
+		if err == nil && existingTarget == relTarget {
+			return "exists", nil
+		}
+	}
+
+	return "replaced", nil
+}
+
 // EnsureSymlink creates or verifies a symlink from linkPath pointing to hubPath.
 // Both paths must be absolute. The symlink uses a relative path for portability.
 // Returns status: "created", "exists" (already correct), "replaced".

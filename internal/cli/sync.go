@@ -10,13 +10,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var dryRunFlag bool
+
 func newSyncCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Sync local instruction files to all configured targets",
 		Long:  "Composes local overlay files and creates symlinks from each target's instruction path to the central hub file (.ailign/instructions.md).",
 		RunE:  runSync,
 	}
+	cmd.Flags().BoolVarP(&dryRunFlag, "dry-run", "n", false,
+		"Preview changes without modifying any files")
+	return cmd
 }
 
 func runSync(cmd *cobra.Command, args []string) error {
@@ -32,7 +37,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 	}
 
 	registry := target.NewDefaultRegistry()
-	result, err := sync.Sync(cwd, cfg, registry, sync.SyncOptions{})
+	result, err := sync.Sync(cwd, cfg, registry, sync.SyncOptions{DryRun: dryRunFlag})
 	if err != nil {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Error: %s\n", err)
 		return ErrAlreadyReported
@@ -44,7 +49,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 	}
 
 	// Format and print result to stdout
-	syncResult := toSyncOutputResult(result, len(cfg.LocalOverlays))
+	syncResult := toSyncOutputResult(result, len(cfg.LocalOverlays), dryRunFlag)
 	sf := getSyncFormatter(formatFlag)
 	_, _ = fmt.Fprint(cmd.OutOrStdout(), sf.FormatSyncResult(syncResult))
 
@@ -58,7 +63,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func toSyncOutputResult(r *sync.SyncResult, overlayCount int) output.SyncResult {
+func toSyncOutputResult(r *sync.SyncResult, overlayCount int, dryRun bool) output.SyncResult {
 	links := make([]output.LinkResult, 0, len(r.Links))
 	for _, l := range r.Links {
 		links = append(links, output.LinkResult{
@@ -70,6 +75,7 @@ func toSyncOutputResult(r *sync.SyncResult, overlayCount int) output.SyncResult 
 	}
 
 	return output.SyncResult{
+		DryRun:       dryRun,
 		HubPath:      r.HubPath,
 		HubStatus:    r.HubStatus,
 		Links:        links,

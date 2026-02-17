@@ -8,6 +8,22 @@ import (
 	"path/filepath"
 )
 
+// CheckHubStatus returns what WriteHub would do without modifying any files.
+// Returns "written" if the hub would be created or updated, "unchanged" if identical.
+func CheckHubStatus(hubPath string, content []byte) (string, error) {
+	existing, err := os.ReadFile(hubPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "written", nil
+		}
+		return "", fmt.Errorf("reading existing hub file: %w", err)
+	}
+	if bytes.Equal(existing, content) {
+		return "unchanged", nil
+	}
+	return "written", nil
+}
+
 // WriteHub writes content to the hub file using write-temp-rename.
 // The temp file is fsynced before rename for crash safety; note that
 // the parent directory is not fsynced, so a power loss after rename

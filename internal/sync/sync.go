@@ -34,8 +34,13 @@ func Sync(baseDir string, cfg *config.Config, registry *target.Registry, opts Sy
 		return nil, err
 	}
 
-	// Write hub file
-	hubStatus, err := WriteHub(hubPath, composed.Content)
+	// Write or check hub file
+	var hubStatus string
+	if opts.DryRun {
+		hubStatus, err = CheckHubStatus(hubPath, composed.Content)
+	} else {
+		hubStatus, err = WriteHub(hubPath, composed.Content)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("writing hub file: %w", err)
 	}
@@ -47,7 +52,7 @@ func Sync(baseDir string, cfg *config.Config, registry *target.Registry, opts Sy
 		Warnings:  composed.Warnings,
 	}
 
-	// Create symlinks per target
+	// Create or check symlinks per target
 	for _, targetName := range cfg.Targets {
 		tgt, ok := registry.Get(targetName)
 		if !ok {
@@ -61,7 +66,12 @@ func Sync(baseDir string, cfg *config.Config, registry *target.Registry, opts Sy
 		}
 
 		linkPath := filepath.Join(baseDir, tgt.InstructionPath())
-		status, err := EnsureSymlink(linkPath, hubPath)
+		var status string
+		if opts.DryRun {
+			status, err = CheckSymlinkStatus(linkPath, hubPath)
+		} else {
+			status, err = EnsureSymlink(linkPath, hubPath)
+		}
 
 		link := LinkResult{
 			Target:   targetName,

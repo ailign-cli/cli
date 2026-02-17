@@ -23,4 +23,6 @@ type LinkResult struct {
 }
 
 // SyncOptions configures the sync operation.
-type SyncOptions struct{}
+type SyncOptions struct {
+	DryRun bool
+}
