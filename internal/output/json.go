@@ -89,13 +89,7 @@ func (f *JSONFormatter) FormatSyncResult(result SyncResult) string {
 	var created, existing, errCount int
 	links := make([]jsonLink, 0, len(result.Links))
 	for _, l := range result.Links {
-		jl := jsonLink{
-			Target:   l.Target,
-			LinkPath: l.LinkPath,
-			Status:   l.Status,
-			Error:    l.Error,
-		}
-		links = append(links, jl)
+		links = append(links, jsonLink(l))
 		switch l.Status {
 		case "created", "replaced":
 			created++
