@@ -7,9 +7,9 @@
 
 ### Decision: Hub-Spoke with Central Storage
 
-Use a central `.ailign/instructions.md` file as the hub. Each target
-gets a rendered file in the hub. Target-specific paths (e.g.,
-`.cursorrules`) become symlinks to the hub files.
+Use a central `.ailign/instructions.md` file as the hub. Target-specific
+paths (e.g., `.cursorrules`) become symlinks to this hub file; no
+additional `.ailign/rendered/` subdirectory or per-target hub files are created.
 
 ### Rationale
 
