@@ -15,7 +15,7 @@ Patterns discovered through code review and debugging. Follow these to avoid rep
 
 ## Go Serialization
 
-- **nil vs empty slice**: `make([]T, 0)` when JSON-serialized — `nil` marshals as `null`, empty slice as `[]`.
+- **nil vs empty slice**: Use an empty slice (`make([]T, 0)`) instead of `nil` when you want JSON arrays to serialize as `[]` rather than `null`.
 - **CreateTemp permissions**: `os.CreateTemp` uses 0600 — `os.Chmod` to 0644 before rename if file should be world-readable.
 
 ## Go Testing
@@ -24,7 +24,7 @@ Patterns discovered through code review and debugging. Follow these to avoid rep
 
 ## CI/CD
 
-- **Workflow permissions**: Explicit least-privilege permissions blocks on all GitHub Actions workflows. See `ci-rules.md`.
+- **Workflow permissions**: An explicit least-privilege `permissions:` block is required on all GitHub Actions workflows. See `ci-rules.md`.
 
 ## PR & Commit Workflow
 
