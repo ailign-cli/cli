@@ -6,9 +6,9 @@ and repositories.
 
 ## Project Status
 
-In design phase. No source code yet. Specifications being written.
-Technology stack not yet decided (will be determined during first
-feature planning).
+Go CLI with config parsing, schema validation, local instruction
+sync, and dry-run preview implemented. BDD + unit test coverage
+across all features.
 
 ## Key Documents
 
@@ -57,6 +57,34 @@ principles. When in conflict, follow the values hierarchy
 - Shipping without tests
 - Code-only commits without tests
 - PRs that do not build
+
+## Build & Development Commands
+
+```bash
+# Build
+go build ./...
+
+# Run all tests (unit + BDD)
+go test ./... -count=1
+
+# Run tests with verbose output and JUnit report
+gotestsum --junitfile test-results.xml -- ./... -count=1
+
+# Run tests for a specific package
+go test ./internal/sync/... -count=1
+
+# Run only BDD feature tests
+go test ./features/steps/... -v -run TestFeatures
+
+# Lint
+golangci-lint run
+
+# Run the CLI
+go run ./cmd/ailign <command> [flags]
+```
+
+CI pipeline is defined in `.github/workflows/validate.yml`
+(lint + test + goreleaser check).
 
 ## Speckit Workflow
 
