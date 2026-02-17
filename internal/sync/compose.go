@@ -48,18 +48,36 @@ func ComposeOverlays(baseDir string, overlays []string) (*ComposeResult, error) 
 	return result, nil
 }
 
-// validateOverlayPath checks that an overlay path doesn't escape the base directory.
+// validateOverlayPath checks that an overlay path doesn't escape the base directory,
+// both lexically and after resolving symlinks.
 func validateOverlayPath(baseDir, overlay string) error {
 	cleaned := filepath.Clean(overlay)
 	absPath := filepath.Join(baseDir, cleaned)
 
-	// Ensure the resolved path stays within baseDir
+	// Lexical check: ensure the cleaned relative path stays within baseDir
 	rel, err := filepath.Rel(baseDir, absPath)
 	if err != nil {
 		return fmt.Errorf("overlay path traversal rejected: %s", overlay)
 	}
-	if strings.HasPrefix(rel, "..") {
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 		return fmt.Errorf("overlay path traversal rejected: %s", overlay)
+	}
+
+	// Symlink check: resolve the actual path and verify it's still under baseDir
+	resolvedBase, err := filepath.EvalSymlinks(baseDir)
+	if err != nil {
+		return fmt.Errorf("resolving base directory: %w", err)
+	}
+	resolvedPath, err := filepath.EvalSymlinks(absPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil // file doesn't exist yet; ReadFile will catch this
+		}
+		return fmt.Errorf("resolving overlay path %s: %w", overlay, err)
+	}
+	resolvedRel, err := filepath.Rel(resolvedBase, resolvedPath)
+	if err != nil || resolvedRel == ".." || strings.HasPrefix(resolvedRel, ".."+string(filepath.Separator)) {
+		return fmt.Errorf("overlay path escapes base directory via symlink: %s", overlay)
 	}
 
 	return nil

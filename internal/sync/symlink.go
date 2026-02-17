@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +11,13 @@ import (
 // Both paths must be absolute. The symlink uses a relative path for portability.
 // Returns status: "created", "exists" (already correct), "replaced".
 func EnsureSymlink(linkPath string, hubPath string) (string, error) {
+	if !filepath.IsAbs(linkPath) {
+		return "", fmt.Errorf("linkPath must be absolute, got: %s", linkPath)
+	}
+	if !filepath.IsAbs(hubPath) {
+		return "", fmt.Errorf("hubPath must be absolute, got: %s", hubPath)
+	}
+
 	// Compute relative path from link's directory to hub
 	relTarget, err := filepath.Rel(filepath.Dir(linkPath), hubPath)
 	if err != nil {
@@ -18,29 +26,33 @@ func EnsureSymlink(linkPath string, hubPath string) (string, error) {
 
 	// Check existing state at linkPath
 	info, err := os.Lstat(linkPath)
-	if err == nil {
-		// Something exists at linkPath
-		if info.Mode()&os.ModeSymlink != 0 {
-			// It's a symlink — check if it points to the right place
-			existingTarget, err := os.Readlink(linkPath)
-			if err == nil && existingTarget == relTarget {
-				return "exists", nil
-			}
-			// Wrong symlink — remove and recreate
-			if err := os.Remove(linkPath); err != nil {
-				return "", fmt.Errorf("removing existing symlink: %w", err)
-			}
-			return createSymlink(linkPath, relTarget, "replaced")
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("checking existing path: %w", err)
 		}
-		// Regular file — remove and replace with symlink
+		// Nothing exists — create directory if needed and create symlink
+		return createSymlink(linkPath, relTarget, "created")
+	}
+
+	// Something exists at linkPath
+	if info.Mode()&os.ModeSymlink != 0 {
+		// It's a symlink — check if it points to the right place
+		existingTarget, err := os.Readlink(linkPath)
+		if err == nil && existingTarget == relTarget {
+			return "exists", nil
+		}
+		// Wrong symlink — remove and recreate
 		if err := os.Remove(linkPath); err != nil {
-			return "", fmt.Errorf("removing existing file: %w", err)
+			return "", fmt.Errorf("removing existing symlink: %w", err)
 		}
 		return createSymlink(linkPath, relTarget, "replaced")
 	}
 
-	// Nothing exists — create directory if needed and create symlink
-	return createSymlink(linkPath, relTarget, "created")
+	// Regular file — remove and replace with symlink
+	if err := os.Remove(linkPath); err != nil {
+		return "", fmt.Errorf("removing existing file: %w", err)
+	}
+	return createSymlink(linkPath, relTarget, "replaced")
 }
 
 func createSymlink(linkPath string, relTarget string, status string) (string, error) {

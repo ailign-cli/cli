@@ -2,16 +2,24 @@ package sync
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 )
 
-// WriteHub atomically writes content to the hub file using write-temp-rename.
+// WriteHub writes content to the hub file using write-temp-rename.
+// The temp file is fsynced before rename for crash safety; note that
+// the parent directory is not fsynced, so a power loss after rename
+// could lose the update on some filesystems. This is acceptable
+// because the hub file is regenerable via "ailign sync".
 // Returns "written" if content changed, "unchanged" if identical to existing.
 func WriteHub(hubPath string, content []byte) (string, error) {
 	// Check if existing content is identical
 	existing, err := os.ReadFile(hubPath)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return "", fmt.Errorf("reading existing hub file: %w", err)
+	}
 	if err == nil && bytes.Equal(existing, content) {
 		return "unchanged", nil
 	}
