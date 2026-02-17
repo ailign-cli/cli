@@ -22,7 +22,7 @@ var knownSchemaProperties = map[string]bool{
 func Validate(cfg *Config) *ValidationResult {
 	result := &ValidationResult{Valid: true}
 
-	jsonData, err := json.Marshal(cfg)
+	jsonData, err := marshalConfigForValidation(cfg)
 	if err != nil {
 		result.Valid = false
 		result.Errors = append(result.Errors, ValidationError{
@@ -113,6 +113,20 @@ func DetectUnknownFields(rawYAML []byte) []ValidationError {
 	return warnings
 }
 
+// marshalConfigForValidation converts a Config to JSON for schema validation,
+// preserving empty slices. Go's json.Marshal with omitempty drops empty slices,
+// which hides constraints like minItems from the schema validator.
+func marshalConfigForValidation(cfg *Config) ([]byte, error) {
+	doc := make(map[string]interface{})
+	if cfg.Targets != nil {
+		doc["targets"] = cfg.Targets
+	}
+	if cfg.LocalOverlays != nil {
+		doc["local_overlays"] = cfg.LocalOverlays
+	}
+	return json.Marshal(doc)
+}
+
 func compileSchema() (*jsonschema.Schema, error) {
 	schemaDoc, err := jsonschema.UnmarshalJSON(bytes.NewReader(SchemaJSON))
 	if err != nil {
@@ -184,6 +198,18 @@ func errorToValidationError(err *jsonschema.ValidationError) *ValidationError {
 		ve.Actual = fmt.Sprintf("duplicate items at indices %d and %d", k.Duplicates[0], k.Duplicates[1])
 		ve.Message = "duplicate targets found"
 		ve.Remediation = "Remove duplicate target entries"
+
+	case *kind.MinLength:
+		ve.Expected = fmt.Sprintf("at least %d character(s)", k.Want)
+		ve.Actual = fmt.Sprintf("%d character(s)", k.Got)
+		ve.Message = "value is too short"
+		ve.Remediation = fmt.Sprintf("Provide a value with at least %d character(s)", k.Want)
+
+	case *kind.Pattern:
+		ve.Message = "value does not match required pattern"
+		ve.Expected = fmt.Sprintf("matching pattern %s", k.Want)
+		ve.Actual = k.Got
+		ve.Remediation = fmt.Sprintf("Value must match the required format (pattern: %s)", k.Want)
 
 	case *kind.Type:
 		ve.Expected = fmt.Sprintf("type %v", k.Want)

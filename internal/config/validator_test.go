@@ -435,6 +435,55 @@ func TestErrorToValidationError_UniqueItemsKind(t *testing.T) {
 	assert.Equal(t, "duplicate targets found", ve.Message)
 }
 
+func TestErrorToValidationError_MinLengthKind(t *testing.T) {
+	err := &jsonschema.ValidationError{
+		InstanceLocation: []string{"local_overlays", "0"},
+		ErrorKind:        &kind.MinLength{Got: 0, Want: 1},
+	}
+
+	ve := errorToValidationError(err)
+
+	require.NotNil(t, ve)
+	assert.Equal(t, "local_overlays[0]", ve.FieldPath)
+	assert.Equal(t, "value is too short", ve.Message)
+	assert.Equal(t, "at least 1 character(s)", ve.Expected)
+	assert.Equal(t, "0 character(s)", ve.Actual)
+	assert.NotEmpty(t, ve.Remediation)
+}
+
+func TestErrorToValidationError_PatternKind(t *testing.T) {
+	err := &jsonschema.ValidationError{
+		InstanceLocation: []string{"local_overlays", "0"},
+		ErrorKind:        &kind.Pattern{Got: "/etc/passwd", Want: "^[^/]"},
+	}
+
+	ve := errorToValidationError(err)
+
+	require.NotNil(t, ve)
+	assert.Equal(t, "local_overlays[0]", ve.FieldPath)
+	assert.Equal(t, "value does not match required pattern", ve.Message)
+	assert.Equal(t, "/etc/passwd", ve.Actual)
+	assert.NotEmpty(t, ve.Expected)
+	assert.NotEmpty(t, ve.Remediation)
+}
+
+// ---------------------------------------------------------------------------
+// marshalConfigForValidation: empty slices preserved (omitempty fix)
+// ---------------------------------------------------------------------------
+
+func TestValidate_LocalOverlays_EmptyArray(t *testing.T) {
+	cfg := &Config{
+		Targets:       []string{"claude"},
+		LocalOverlays: []string{},
+	}
+
+	result := Validate(cfg)
+
+	require.NotNil(t, result)
+	assert.False(t, result.Valid, "empty local_overlays array should fail minItems validation")
+	require.NotEmpty(t, result.Errors)
+}
+
 // ---------------------------------------------------------------------------
 // Schema validation of local_overlays (T006)
 // ---------------------------------------------------------------------------
