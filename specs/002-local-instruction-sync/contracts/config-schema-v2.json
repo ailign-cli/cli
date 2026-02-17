@@ -25,6 +25,7 @@
       "description": "Local instruction files to compose, in order",
       "items": {
         "type": "string",
+        "description": "Relative file path. Schema pattern blocks Unix absolute paths; cross-platform validation (Windows drive letters, UNC paths, path traversal) is enforced at runtime per FR-011.",
         "minLength": 1,
         "pattern": "^[^/]"
       },
