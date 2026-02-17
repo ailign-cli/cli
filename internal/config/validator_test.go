@@ -434,3 +434,93 @@ func TestErrorToValidationError_UniqueItemsKind(t *testing.T) {
 	assert.Equal(t, "targets", ve.FieldPath)
 	assert.Equal(t, "duplicate targets found", ve.Message)
 }
+
+// ---------------------------------------------------------------------------
+// Schema validation of local_overlays (T006)
+// ---------------------------------------------------------------------------
+
+func TestValidate_WithValidLocalOverlays(t *testing.T) {
+	cfg := &Config{
+		Targets:       []string{"claude"},
+		LocalOverlays: []string{".ai-instructions/base.md"},
+	}
+
+	result := Validate(cfg)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+	assert.Empty(t, result.Errors)
+}
+
+func TestValidate_WithMultipleLocalOverlays(t *testing.T) {
+	cfg := &Config{
+		Targets: []string{"claude", "cursor"},
+		LocalOverlays: []string{
+			".ai-instructions/base.md",
+			".ai-instructions/project-context.md",
+		},
+	}
+
+	result := Validate(cfg)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+	assert.Empty(t, result.Errors)
+}
+
+func TestValidate_WithoutLocalOverlays(t *testing.T) {
+	cfg := &Config{
+		Targets: []string{"claude"},
+	}
+
+	result := Validate(cfg)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid, "local_overlays is optional")
+}
+
+func TestValidate_LocalOverlays_EmptyString(t *testing.T) {
+	cfg := &Config{
+		Targets:       []string{"claude"},
+		LocalOverlays: []string{""},
+	}
+
+	result := Validate(cfg)
+
+	require.NotNil(t, result)
+	assert.False(t, result.Valid, "empty string should fail minLength validation")
+	require.NotEmpty(t, result.Errors)
+}
+
+func TestValidate_LocalOverlays_AbsolutePath(t *testing.T) {
+	cfg := &Config{
+		Targets:       []string{"claude"},
+		LocalOverlays: []string{"/etc/passwd"},
+	}
+
+	result := Validate(cfg)
+
+	require.NotNil(t, result)
+	assert.False(t, result.Valid, "absolute path should fail pattern validation")
+	require.NotEmpty(t, result.Errors)
+}
+
+func TestValidate_LocalOverlays_RelativePath(t *testing.T) {
+	cfg := &Config{
+		Targets:       []string{"claude"},
+		LocalOverlays: []string{"overlays/base.md"},
+	}
+
+	result := Validate(cfg)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+}
+
+func TestDetectUnknownFields_LocalOverlaysIsKnown(t *testing.T) {
+	rawYAML := []byte("targets:\n  - claude\nlocal_overlays:\n  - base.md\n")
+
+	warnings := DetectUnknownFields(rawYAML)
+
+	assert.Empty(t, warnings, "local_overlays should be a known field")
+}

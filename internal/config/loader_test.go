@@ -270,3 +270,59 @@ func TestLoadAndValidate_EmptyTargets(t *testing.T) {
 	assert.False(t, result.Valid)
 	require.NotEmpty(t, result.Errors)
 }
+
+// ---------------------------------------------------------------------------
+// Loader integration tests for local_overlays (T007)
+// ---------------------------------------------------------------------------
+
+func TestLoadFromFile_WithLocalOverlays(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	_ = os.WriteFile(path, []byte("targets:\n  - claude\nlocal_overlays:\n  - .ai-instructions/base.md\n  - .ai-instructions/project.md\n"), 0644)
+
+	cfg, err := LoadFromFile(path)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	assert.Equal(t, []string{"claude"}, cfg.Targets)
+	assert.Equal(t, []string{".ai-instructions/base.md", ".ai-instructions/project.md"}, cfg.LocalOverlays)
+}
+
+func TestLoadFromFile_WithoutLocalOverlays(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	_ = os.WriteFile(path, []byte("targets:\n  - cursor\n"), 0644)
+
+	cfg, err := LoadFromFile(path)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	assert.Equal(t, []string{"cursor"}, cfg.Targets)
+	assert.Nil(t, cfg.LocalOverlays)
+}
+
+func TestLoadAndValidate_WithLocalOverlays(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	_ = os.WriteFile(path, []byte("targets:\n  - claude\n  - cursor\nlocal_overlays:\n  - overlays/base.md\n"), 0644)
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+	assert.Empty(t, result.Errors)
+	assert.Empty(t, result.Warnings)
+	require.NotNil(t, result.Config)
+	assert.Equal(t, []string{"claude", "cursor"}, result.Config.Targets)
+	assert.Equal(t, []string{"overlays/base.md"}, result.Config.LocalOverlays)
+}
+
+func TestLoadAndValidate_LocalOverlaysNotTreatedAsUnknown(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	_ = os.WriteFile(path, []byte("targets:\n  - claude\nlocal_overlays:\n  - base.md\n"), 0644)
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+	assert.Empty(t, result.Warnings, "local_overlays should not produce unknown field warnings")
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ailign.dev/schemas/config/v1",
+  "$id": "https://ailign.dev/schemas/config/v2",
   "title": "AIlign Configuration",
   "description": "Schema for .ailign.yml configuration file",
   "type": "object",
@@ -18,6 +18,21 @@
       "examples": [
         ["claude", "cursor"],
         ["copilot"]
+      ]
+    },
+    "local_overlays": {
+      "type": "array",
+      "description": "Local instruction files to compose, in order",
+      "items": {
+        "type": "string",
+        "description": "Relative file path. Schema pattern blocks Unix absolute paths; cross-platform validation (Windows drive letters, UNC paths, path traversal) is enforced at runtime per FR-011.",
+        "minLength": 1,
+        "pattern": "^[^/]"
+      },
+      "minItems": 1,
+      "examples": [
+        [".ai-instructions/base.md"],
+        [".ai-instructions/base.md", ".ai-instructions/project-context.md"]
       ]
     }
   }

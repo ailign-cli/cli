@@ -13,7 +13,8 @@ import (
 
 // knownSchemaProperties lists the top-level fields defined in the schema.
 var knownSchemaProperties = map[string]bool{
-	"targets": true,
+	"targets":        true,
+	"local_overlays": true,
 }
 
 // Validate validates a Config against the embedded JSONSchema.
