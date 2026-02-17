@@ -13,7 +13,7 @@ import (
 func TestLoadFromFile_ValidConfig(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - claude\n  - cursor\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\n  - cursor\n"), 0644))
 
 	cfg, err := LoadFromFile(path)
 	require.NoError(t, err)
@@ -24,7 +24,7 @@ func TestLoadFromFile_ValidConfig(t *testing.T) {
 func TestLoadFromFile_SingleTarget(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - copilot\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - copilot\n"), 0644))
 
 	cfg, err := LoadFromFile(path)
 	require.NoError(t, err)
@@ -34,7 +34,7 @@ func TestLoadFromFile_SingleTarget(t *testing.T) {
 func TestLoadFromFile_AllTargets(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - claude\n  - cursor\n  - copilot\n  - windsurf\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\n  - cursor\n  - copilot\n  - windsurf\n"), 0644))
 
 	cfg, err := LoadFromFile(path)
 	require.NoError(t, err)
@@ -54,7 +54,7 @@ func TestLoadFromFile_MissingFile(t *testing.T) {
 func TestLoadFromFile_EmptyFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte(""), 0644)
+	require.NoError(t, os.WriteFile(path, []byte(""), 0644))
 
 	cfg, err := LoadFromFile(path)
 	require.NoError(t, err)
@@ -66,7 +66,7 @@ func TestLoadFromFile_EmptyFile(t *testing.T) {
 func TestLoadFromFile_YAMLParseError(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - claude\n bad: [yaml\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\n bad: [yaml\n"), 0644))
 
 	cfg, err := LoadFromFile(path)
 	assert.Error(t, err)
@@ -78,7 +78,7 @@ func TestLoadFromFile_TabsAsIndentation(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
 	// YAML spec forbids tabs for indentation; parser correctly rejects them
-	_ = os.WriteFile(path, []byte("targets:\n\t- claude\n\t- cursor\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n\t- claude\n\t- cursor\n"), 0644))
 
 	cfg, err := LoadFromFile(path)
 	assert.Error(t, err)
@@ -90,7 +90,7 @@ func TestLoadFromFile_TabsInValues(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
 	// Tabs within quoted scalar values are valid YAML (only indentation tabs are forbidden)
-	_ = os.WriteFile(path, []byte("targets:\n  - \"clau\tde\"\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - \"clau\tde\"\n"), 0644))
 
 	cfg, err := LoadFromFile(path)
 	require.NoError(t, err)
@@ -103,7 +103,7 @@ func TestLoadFromFile_UnicodeBOM(t *testing.T) {
 	// UTF-8 BOM + valid YAML
 	bom := []byte{0xEF, 0xBB, 0xBF}
 	content := append(bom, []byte("targets:\n  - claude\n")...)
-	_ = os.WriteFile(path, content, 0644)
+	require.NoError(t, os.WriteFile(path, content, 0644))
 
 	cfg, err := LoadFromFile(path)
 	require.NoError(t, err)
@@ -119,7 +119,7 @@ func TestLoadFromFile_Symlink(t *testing.T) {
 	dir := t.TempDir()
 	realPath := filepath.Join(dir, "real-config.yml")
 	linkPath := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(realPath, []byte("targets:\n  - windsurf\n"), 0644)
+	require.NoError(t, os.WriteFile(realPath, []byte("targets:\n  - windsurf\n"), 0644))
 	require.NoError(t, os.Symlink(realPath, linkPath))
 
 	cfg, err := LoadFromFile(linkPath)
@@ -135,7 +135,7 @@ func TestLoadFromFile_PermissionError(t *testing.T) {
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - claude\n"), 0000)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\n"), 0000))
 
 	cfg, err := LoadFromFile(path)
 	assert.Error(t, err)
@@ -146,7 +146,7 @@ func TestLoadFromFile_PermissionError(t *testing.T) {
 func TestLoadFromFile_UnknownFieldsPreserved(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - claude\ncustom_field: hello\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\ncustom_field: hello\n"), 0644))
 
 	// Loader should parse without error even with unknown fields
 	// (unknown field detection is a validator concern, not loader)
@@ -163,7 +163,7 @@ func TestLoadFromFile_UnknownFieldsPreserved(t *testing.T) {
 func TestLoadAndValidate_ValidConfig(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - claude\n  - cursor\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\n  - cursor\n"), 0644))
 
 	result := LoadAndValidate(path)
 
@@ -195,7 +195,7 @@ func TestLoadAndValidate_PermissionError(t *testing.T) {
 
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - claude\n"), 0000)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\n"), 0000))
 
 	result := LoadAndValidate(path)
 
@@ -208,7 +208,7 @@ func TestLoadAndValidate_PermissionError(t *testing.T) {
 func TestLoadAndValidate_YAMLParseError(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - claude\n bad: [yaml\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\n bad: [yaml\n"), 0644))
 
 	result := LoadAndValidate(path)
 
@@ -221,7 +221,7 @@ func TestLoadAndValidate_YAMLParseError(t *testing.T) {
 func TestLoadAndValidate_InvalidConfig(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - vscode\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - vscode\n"), 0644))
 
 	result := LoadAndValidate(path)
 
@@ -233,7 +233,7 @@ func TestLoadAndValidate_InvalidConfig(t *testing.T) {
 func TestLoadAndValidate_UnknownFieldsAsWarnings(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets:\n  - claude\ncustom_field: value\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\ncustom_field: value\n"), 0644))
 
 	result := LoadAndValidate(path)
 
@@ -249,7 +249,7 @@ func TestLoadAndValidate_UnicodeBOM(t *testing.T) {
 	path := filepath.Join(dir, ".ailign.yml")
 	bom := []byte{0xEF, 0xBB, 0xBF}
 	content := append(bom, []byte("targets:\n  - claude\n")...)
-	_ = os.WriteFile(path, content, 0644)
+	require.NoError(t, os.WriteFile(path, content, 0644))
 
 	result := LoadAndValidate(path)
 
@@ -262,11 +262,67 @@ func TestLoadAndValidate_UnicodeBOM(t *testing.T) {
 func TestLoadAndValidate_EmptyTargets(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ".ailign.yml")
-	_ = os.WriteFile(path, []byte("targets: []\n"), 0644)
+	require.NoError(t, os.WriteFile(path, []byte("targets: []\n"), 0644))
 
 	result := LoadAndValidate(path)
 
 	require.NotNil(t, result)
 	assert.False(t, result.Valid)
 	require.NotEmpty(t, result.Errors)
+}
+
+// ---------------------------------------------------------------------------
+// Loader integration tests for local_overlays (T007)
+// ---------------------------------------------------------------------------
+
+func TestLoadFromFile_WithLocalOverlays(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\nlocal_overlays:\n  - .ai-instructions/base.md\n  - .ai-instructions/project.md\n"), 0644))
+
+	cfg, err := LoadFromFile(path)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	assert.Equal(t, []string{"claude"}, cfg.Targets)
+	assert.Equal(t, []string{".ai-instructions/base.md", ".ai-instructions/project.md"}, cfg.LocalOverlays)
+}
+
+func TestLoadFromFile_WithoutLocalOverlays(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - cursor\n"), 0644))
+
+	cfg, err := LoadFromFile(path)
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	assert.Equal(t, []string{"cursor"}, cfg.Targets)
+	assert.Nil(t, cfg.LocalOverlays)
+}
+
+func TestLoadAndValidate_WithLocalOverlays(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\n  - cursor\nlocal_overlays:\n  - overlays/base.md\n"), 0644))
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+	assert.Empty(t, result.Errors)
+	assert.Empty(t, result.Warnings)
+	require.NotNil(t, result.Config)
+	assert.Equal(t, []string{"claude", "cursor"}, result.Config.Targets)
+	assert.Equal(t, []string{"overlays/base.md"}, result.Config.LocalOverlays)
+}
+
+func TestLoadAndValidate_LocalOverlaysNotTreatedAsUnknown(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ".ailign.yml")
+	require.NoError(t, os.WriteFile(path, []byte("targets:\n  - claude\nlocal_overlays:\n  - base.md\n"), 0644))
+
+	result := LoadAndValidate(path)
+
+	require.NotNil(t, result)
+	assert.True(t, result.Valid)
+	assert.Empty(t, result.Warnings, "local_overlays should not produce unknown field warnings")
 }

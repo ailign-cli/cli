@@ -32,3 +32,44 @@ func TestConfig_AllTargets(t *testing.T) {
 	}
 	assert.Len(t, cfg.Targets, 4)
 }
+
+// ---------------------------------------------------------------------------
+// LocalOverlays field tests (T005)
+// ---------------------------------------------------------------------------
+
+func TestConfig_LocalOverlays_Single(t *testing.T) {
+	cfg := Config{
+		Targets:       []string{"claude"},
+		LocalOverlays: []string{".ai-instructions/base.md"},
+	}
+	assert.Equal(t, []string{".ai-instructions/base.md"}, cfg.LocalOverlays)
+}
+
+func TestConfig_LocalOverlays_Multiple(t *testing.T) {
+	cfg := Config{
+		Targets: []string{"claude", "cursor"},
+		LocalOverlays: []string{
+			".ai-instructions/base.md",
+			".ai-instructions/project-context.md",
+		},
+	}
+	assert.Len(t, cfg.LocalOverlays, 2)
+	assert.Equal(t, ".ai-instructions/base.md", cfg.LocalOverlays[0])
+	assert.Equal(t, ".ai-instructions/project-context.md", cfg.LocalOverlays[1])
+}
+
+func TestConfig_LocalOverlays_Absent(t *testing.T) {
+	cfg := Config{
+		Targets: []string{"claude"},
+	}
+	assert.Nil(t, cfg.LocalOverlays)
+}
+
+func TestConfig_LocalOverlays_EmptySlice(t *testing.T) {
+	cfg := Config{
+		Targets:       []string{"claude"},
+		LocalOverlays: []string{},
+	}
+	assert.Empty(t, cfg.LocalOverlays)
+	assert.NotNil(t, cfg.LocalOverlays)
+}
