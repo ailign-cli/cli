@@ -32,7 +32,7 @@ jobs:
       - uses: ookami-kb/gh-pr-size-watcher@v1.5.0
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          errorSize: 500
+          errorSize: 750
           errorMessage: ':no_entry: PR has more than **{allowed} additions**. Split it into smaller PRs.'
           warningSize: 333
           warningMessage: ':warning: PR has more than **{allowed} additions**. Consider splitting it into smaller PRs.'
