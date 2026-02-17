@@ -82,7 +82,9 @@ Outcome of a sync operation, used for CLI output formatting.
 | `HubPath` | `string`        | Path to hub file                    |
 | `HubStatus` | `string`      | `written` or `unchanged`            |
 | `Links`   | `[]LinkResult`  | Per-target symlink outcomes         |
-| `DryRun`  | `bool`          | Whether this was a dry-run          |
+| `Warnings`| `[]string`      | Diagnostic warnings (e.g., empty overlay files) |
+
+> **Note**: `DryRun` field will be added in Phase 5 when dry-run behavior is implemented.
 
 ### LinkResult
 
@@ -92,7 +94,7 @@ Per-target symlink outcome within a sync operation.
 |------------|----------|------------------------------------------|
 | `Target`   | `string` | Target name                              |
 | `LinkPath` | `string` | Path to symlink (target instruction path)|
-| `Status`   | `string` | `created`, `exists`, `error`             |
+| `Status`   | `string` | `created`, `exists`, `replaced`, `error` |
 | `Error`    | `string` | Error message if status is `error`       |
 
 ### ManagedContentHeader
