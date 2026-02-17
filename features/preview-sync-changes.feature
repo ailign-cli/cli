@@ -17,7 +17,7 @@ Feature: Preview Sync Changes
     Then stdout will contain "would"
     And stdout will contain ".claude/instructions.md"
     And stdout will contain ".cursorrules"
-    And it will have exit code 0
+    And it will exit with code 0
 
   Scenario: Dry-run does not modify any files
     Given a .ailign.yml with targets "claude" and overlay "base.md"
