@@ -2,9 +2,9 @@ package target
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 
+	"github.com/ailign/cli/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -119,9 +119,8 @@ func TestKnownTargets_ReturnsNewSlice(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestSchemaRegistryInvariant(t *testing.T) {
-	// Read the embedded schema from disk (relative to test working dir)
-	schemaBytes, err := os.ReadFile("../config/schema.json")
-	require.NoError(t, err, "failed to read schema.json")
+	// Use the embedded schema (same bytes compiled into the config package)
+	schemaBytes := config.SchemaJSON
 
 	var schema struct {
 		Properties struct {
@@ -132,7 +131,7 @@ func TestSchemaRegistryInvariant(t *testing.T) {
 			} `json:"targets"`
 		} `json:"properties"`
 	}
-	err = json.Unmarshal(schemaBytes, &schema)
+	err := json.Unmarshal(schemaBytes, &schema)
 	require.NoError(t, err, "failed to parse schema JSON")
 
 	schemaTargets := schema.Properties.Targets.Items.Enum
