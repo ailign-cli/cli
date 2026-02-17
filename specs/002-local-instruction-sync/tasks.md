@@ -28,7 +28,7 @@
 
 **Purpose**: Verify baseline before starting feature work
 
-- [ ] T001 Verify all existing tests pass by running `go test ./...` from repository root
+- [X] T001 Verify all existing tests pass by running `go test ./...` from repository root
 
 ---
 
@@ -42,22 +42,22 @@
 
 ### Schema Extension
 
-- [ ] T002 [P] Update embedded schema from v1 to v2: add optional `local_overlays` array field in internal/config/schema.json (match contracts/config-schema-v2.json)
-- [ ] T003 [P] Add `LocalOverlays []string` field with yaml/json tags to Config struct in internal/config/config.go
-- [ ] T004 Add `"local_overlays"` to `knownSchemaProperties` map in internal/config/validator.go
-- [ ] T005 [P] Write unit tests for Config parsing with local_overlays (single, multiple, absent) in internal/config/config_test.go
-- [ ] T006 [P] Write unit tests for schema validation of local_overlays (valid paths, empty strings, absolute paths) in internal/config/validator_test.go
-- [ ] T007 [P] Update loader integration tests for configs including local_overlays in internal/config/loader_test.go
+- [X] T002 [P] Update embedded schema from v1 to v2: add optional `local_overlays` array field in internal/config/schema.json (match contracts/config-schema-v2.json)
+- [X] T003 [P] Add `LocalOverlays []string` field with yaml/json tags to Config struct in internal/config/config.go
+- [X] T004 Add `"local_overlays"` to `knownSchemaProperties` map in internal/config/validator.go
+- [X] T005 [P] Write unit tests for Config parsing with local_overlays (single, multiple, absent) in internal/config/config_test.go
+- [X] T006 [P] Write unit tests for schema validation of local_overlays (valid paths, empty strings, absolute paths) in internal/config/validator_test.go
+- [X] T007 [P] Update loader integration tests for configs including local_overlays in internal/config/loader_test.go
 
 ### Target Refactor
 
-- [ ] T008 Refactor internal/target/registry.go to internal/target/target.go: add `InstructionPath()` to Target interface, create Registry struct with `Register`/`Get`/`IsValid`/`KnownTargets` methods, add `NewDefaultRegistry()` constructor
-- [ ] T009 [P] Create Claude target (Name=`claude`, InstructionPath=`.claude/instructions.md`) in internal/target/claude.go
-- [ ] T010 [P] Create Cursor target (Name=`cursor`, InstructionPath=`.cursorrules`) in internal/target/cursor.go
-- [ ] T011 [P] Create Copilot target (Name=`copilot`, InstructionPath=`.github/copilot-instructions.md`) in internal/target/copilot.go
-- [ ] T012 [P] Create Windsurf target (Name=`windsurf`, InstructionPath=`.windsurfrules`) in internal/target/windsurf.go
-- [ ] T013 Write registry tests (Register, Get, IsValid, KnownTargets, duplicate registration, unknown target) and schema-registry invariant test in internal/target/target_test.go
-- [ ] T014 [P] Write per-target tests (verify Name and InstructionPath for each of the 4 targets) in internal/target/targets_test.go
+- [X] T008 Refactor internal/target/registry.go to internal/target/target.go: add `InstructionPath()` to Target interface, create Registry struct with `Register`/`Get`/`IsValid`/`KnownTargets` methods, add `NewDefaultRegistry()` constructor
+- [X] T009 [P] Create Claude target (Name=`claude`, InstructionPath=`.claude/instructions.md`) in internal/target/claude.go
+- [X] T010 [P] Create Cursor target (Name=`cursor`, InstructionPath=`.cursorrules`) in internal/target/cursor.go
+- [X] T011 [P] Create Copilot target (Name=`copilot`, InstructionPath=`.github/copilot-instructions.md`) in internal/target/copilot.go
+- [X] T012 [P] Create Windsurf target (Name=`windsurf`, InstructionPath=`.windsurfrules`) in internal/target/windsurf.go
+- [X] T013 Write registry tests (Register, Get, IsValid, KnownTargets, duplicate registration, unknown target) and schema-registry invariant test in internal/target/target_test.go
+- [X] T014 [P] Write per-target tests (verify Name and InstructionPath for each of the 4 targets) in internal/target/targets_test.go
 
 **Checkpoint**: `go test ./...` passes. `ailign validate` works with configs containing `local_overlays`. Target registry returns correct instruction paths.
 
