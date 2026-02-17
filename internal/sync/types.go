@@ -11,7 +11,7 @@ type SyncResult struct {
 	HubPath   string
 	HubStatus string // "written" or "unchanged"
 	Links     []LinkResult
-	DryRun    bool
+	Warnings  []string
 }
 
 // LinkResult holds the per-target symlink outcome.
@@ -23,6 +23,4 @@ type LinkResult struct {
 }
 
 // SyncOptions configures the sync operation.
-type SyncOptions struct {
-	DryRun bool
-}
+type SyncOptions struct{}

@@ -36,7 +36,7 @@ func Sync(baseDir string, cfg *config.Config, registry *target.Registry, opts Sy
 	result := &SyncResult{
 		HubPath:   hubPath,
 		HubStatus: hubStatus,
-		DryRun:    opts.DryRun,
+		Warnings:  composed.Warnings,
 	}
 
 	// Create symlinks per target

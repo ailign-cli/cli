@@ -15,6 +15,7 @@ import (
 // ---------------------------------------------------------------------------
 
 func TestEnsureSymlink_CreateNew(t *testing.T) {
+	skipOnWindows(t)
 	dir := resolveDir(t)
 	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
 	linkPath := filepath.Join(dir, ".cursorrules")
@@ -33,6 +34,7 @@ func TestEnsureSymlink_CreateNew(t *testing.T) {
 }
 
 func TestEnsureSymlink_ExistingCorrectSymlink(t *testing.T) {
+	skipOnWindows(t)
 	dir := t.TempDir()
 	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
 	linkPath := filepath.Join(dir, ".cursorrules")
@@ -51,6 +53,7 @@ func TestEnsureSymlink_ExistingCorrectSymlink(t *testing.T) {
 }
 
 func TestEnsureSymlink_ExistingWrongSymlink(t *testing.T) {
+	skipOnWindows(t)
 	dir := resolveDir(t)
 	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
 	otherPath := filepath.Join(dir, "other.md")
@@ -74,6 +77,7 @@ func TestEnsureSymlink_ExistingWrongSymlink(t *testing.T) {
 }
 
 func TestEnsureSymlink_ReplaceRegularFile(t *testing.T) {
+	skipOnWindows(t)
 	dir := t.TempDir()
 	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
 	linkPath := filepath.Join(dir, ".cursorrules")
@@ -93,6 +97,7 @@ func TestEnsureSymlink_ReplaceRegularFile(t *testing.T) {
 }
 
 func TestEnsureSymlink_CreateDirectory(t *testing.T) {
+	skipOnWindows(t)
 	dir := t.TempDir()
 	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
 	linkPath := filepath.Join(dir, ".claude", "instructions.md")
@@ -107,6 +112,7 @@ func TestEnsureSymlink_CreateDirectory(t *testing.T) {
 }
 
 func TestEnsureSymlink_RelativePath(t *testing.T) {
+	skipOnWindows(t)
 	dir := t.TempDir()
 	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
 	linkPath := filepath.Join(dir, ".claude", "instructions.md")
@@ -124,9 +130,7 @@ func TestEnsureSymlink_RelativePath(t *testing.T) {
 }
 
 func TestEnsureSymlink_PermissionError(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("permission test not reliable on Windows")
-	}
+	skipOnWindows(t)
 
 	dir := t.TempDir()
 	hubPath := filepath.Join(dir, ".ailign", "instructions.md")
@@ -140,6 +144,14 @@ func TestEnsureSymlink_PermissionError(t *testing.T) {
 
 	_, err := EnsureSymlink(linkPath, hubPath)
 	require.Error(t, err)
+}
+
+// skipOnWindows skips symlink tests on Windows where they require elevated privileges.
+func skipOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink tests require elevated privileges on Windows")
+	}
 }
 
 // resolveDir returns t.TempDir() with symlinks resolved (macOS: /var → /private/var).

@@ -3,7 +3,6 @@ package sync
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/ailign/cli/internal/config"
@@ -17,6 +16,7 @@ import (
 // ---------------------------------------------------------------------------
 
 func TestSync_FullFlow(t *testing.T) {
+	skipOnWindows(t)
 	dir := resolveDir(t)
 
 	writeFile(t, filepath.Join(dir, ".ai-instructions", "base.md"), "Base content.\n")
@@ -35,7 +35,6 @@ func TestSync_FullFlow(t *testing.T) {
 	assert.Equal(t, filepath.Join(dir, ".ailign", "instructions.md"), result.HubPath)
 	assert.Equal(t, "written", result.HubStatus)
 	assert.Len(t, result.Links, 2)
-	assert.False(t, result.DryRun)
 
 	// Verify hub file exists with composed content
 	hubContent, err := os.ReadFile(result.HubPath)
@@ -82,9 +81,7 @@ func TestSync_NoOverlaysError(t *testing.T) {
 }
 
 func TestSync_PartialFailure(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("permission test not reliable on Windows")
-	}
+	skipOnWindows(t)
 
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "base.md"), "Content\n")
