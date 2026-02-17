@@ -73,17 +73,17 @@
 
 > **NOTE: Write unit tests, ensure they FAIL before implementation**
 
-- [ ] T015 [P] [US1] Write unit tests for overlay composition (read files, compose in order, prepend managed header, path traversal rejection, non-UTF-8 rejection, empty file warning) in internal/sync/compose_test.go
-- [ ] T016 [P] [US1] Write unit tests for atomic hub file writing (write-temp-rename, fsync, directory creation) in internal/sync/hub_test.go
-- [ ] T017 [P] [US1] Write unit tests for symlink management (create new, replace file, existing correct symlink, existing wrong symlink, directory creation, permission error) in internal/sync/symlink_test.go
-- [ ] T018 [P] [US1] Write unit tests for sync orchestration (full flow, missing overlay error, no overlays error, partial failure) in internal/sync/sync_test.go
+- [X] T015 [P] [US1] Write unit tests for overlay composition (read files, compose in order, prepend managed header, path traversal rejection, non-UTF-8 rejection, empty file warning) in internal/sync/compose_test.go
+- [X] T016 [P] [US1] Write unit tests for atomic hub file writing (write-temp-rename, fsync, directory creation) in internal/sync/hub_test.go
+- [X] T017 [P] [US1] Write unit tests for symlink management (create new, replace file, existing correct symlink, existing wrong symlink, directory creation, permission error) in internal/sync/symlink_test.go
+- [X] T018 [P] [US1] Write unit tests for sync orchestration (full flow, missing overlay error, no overlays error, partial failure) in internal/sync/sync_test.go
 
 ### Implementation
 
-- [ ] T019 [P] [US1] Implement overlay composition (read files, validate UTF-8, validate paths, compose in order, prepend managed-content header) in internal/sync/compose.go
-- [ ] T020 [P] [US1] Implement atomic hub file writing (write to temp file, fsync, rename; create .ailign/ dir if needed) in internal/sync/hub.go
-- [ ] T021 [P] [US1] Implement symlink creation and management (create relative symlink, replace existing file/symlink, create target directories, detect existing correct symlink) in internal/sync/symlink.go
-- [ ] T022 [US1] Implement sync orchestration: compose overlays → write hub → create symlinks per target, returning SyncResult in internal/sync/sync.go
+- [X] T019 [P] [US1] Implement overlay composition (read files, validate UTF-8, validate paths, compose in order, prepend managed-content header) in internal/sync/compose.go
+- [X] T020 [P] [US1] Implement atomic hub file writing (write to temp file, fsync, rename; create .ailign/ dir if needed) in internal/sync/hub.go
+- [X] T021 [P] [US1] Implement symlink creation and management (create relative symlink, replace existing file/symlink, create target directories, detect existing correct symlink) in internal/sync/symlink.go
+- [X] T022 [US1] Implement sync orchestration: compose overlays → write hub → create symlinks per target, returning SyncResult in internal/sync/sync.go
 
 **Checkpoint**: `go test ./internal/sync/...` passes. All sync logic works via unit tests. No CLI command yet.
 
