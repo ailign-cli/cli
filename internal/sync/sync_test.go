@@ -114,3 +114,45 @@ func TestSync_PartialFailure(t *testing.T) {
 	assert.Equal(t, 1, errorCount, "claude should fail (read-only directory)")
 	assert.Equal(t, 1, successCount, "cursor should succeed")
 }
+
+func TestSync_EmptyOverlayWarning(t *testing.T) {
+	skipOnWindows(t)
+	dir := resolveDir(t)
+
+	writeFile(t, filepath.Join(dir, "empty.md"), "")
+
+	cfg := &config.Config{
+		Targets:       []string{"claude"},
+		LocalOverlays: []string{"empty.md"},
+	}
+	registry := target.NewDefaultRegistry()
+
+	result, err := Sync(dir, cfg, registry, SyncOptions{})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+
+	require.Len(t, result.Warnings, 1)
+	assert.Contains(t, result.Warnings[0], "empty.md")
+	assert.Contains(t, result.Warnings[0], "empty")
+}
+
+func TestSync_UnknownTarget(t *testing.T) {
+	dir := resolveDir(t)
+
+	writeFile(t, filepath.Join(dir, "base.md"), "Content\n")
+
+	cfg := &config.Config{
+		Targets:       []string{"nonexistent-tool"},
+		LocalOverlays: []string{"base.md"},
+	}
+	registry := target.NewDefaultRegistry()
+
+	result, err := Sync(dir, cfg, registry, SyncOptions{})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+
+	require.Len(t, result.Links, 1)
+	assert.Equal(t, "error", result.Links[0].Status)
+	assert.Contains(t, result.Links[0].Error, "unknown target")
+	assert.Empty(t, result.Links[0].LinkPath)
+}
