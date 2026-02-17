@@ -95,13 +95,15 @@ func (w *testWorld) theLoadedTargetsAre(expected string) error {
 }
 
 func (w *testWorld) itReportsErrorContaining(substring string) error {
-	if w.loadErr == nil {
-		return fmt.Errorf("expected an error but got none")
+	// Check stderr first (CLI commands write errors there)
+	if strings.Contains(w.stderr, substring) {
+		return nil
 	}
-	if !strings.Contains(w.loadErr.Error(), substring) {
-		return fmt.Errorf("expected error to contain %q, got: %v", substring, w.loadErr)
+	// Fallback: check loadErr for non-CLI contexts
+	if w.loadErr != nil && strings.Contains(w.loadErr.Error(), substring) {
+		return nil
 	}
-	return nil
+	return fmt.Errorf("expected error containing %q, stderr: %s, loadErr: %v", substring, w.stderr, w.loadErr)
 }
 
 func (w *testWorld) itExitsWithCode(code int) error {

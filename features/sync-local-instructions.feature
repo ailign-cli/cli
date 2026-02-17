@@ -1,4 +1,3 @@
-@wip
 # Source: specs/002-local-instruction-sync/spec.md - User Story 1
 
 Feature: Sync Local Instructions to Target Files
@@ -102,7 +101,7 @@ Feature: Sync Local Instructions to Target Files
   Scenario: Overlay path traversal rejected
     Given a .ailign.yml with targets "claude" and overlay "../../secrets/instructions.md"
     When the developer runs ailign sync
-    Then it will report an error containing "escapes repository root" to stderr
+    Then it will report an error containing "path traversal rejected" to stderr
     And it will exit with code 2
 
   @edge-case
@@ -110,7 +109,7 @@ Feature: Sync Local Instructions to Target Files
     Given a .ailign.yml with targets "claude" and overlay "binary.md"
     And an overlay file "binary.md" containing non-UTF-8 bytes
     When the developer runs ailign sync
-    Then it will report an error containing "encoding" to stderr
+    Then it will report an error containing "invalid UTF-8" to stderr
     And it will exit with code 2
 
   @edge-case

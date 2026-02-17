@@ -57,6 +57,71 @@ func marshalResult(result ValidationResult) string {
 	return string(data)
 }
 
+// jsonSyncResult is the JSON wire representation of a sync result.
+type jsonSyncResult struct {
+	DryRun  bool            `json:"dry_run"`
+	Hub     jsonHub         `json:"hub"`
+	Links   []jsonLink      `json:"links"`
+	Summary jsonSyncSummary `json:"summary"`
+}
+
+type jsonHub struct {
+	Path   string `json:"path"`
+	Status string `json:"status"`
+}
+
+type jsonLink struct {
+	Target   string `json:"target"`
+	LinkPath string `json:"link_path"`
+	Status   string `json:"status"`
+	Error    string `json:"error,omitempty"`
+}
+
+type jsonSyncSummary struct {
+	Total    int `json:"total"`
+	Created  int `json:"created"`
+	Existing int `json:"existing"`
+	Errors   int `json:"errors"`
+}
+
+// FormatSyncResult returns the JSON representation of a sync result.
+func (f *JSONFormatter) FormatSyncResult(result SyncResult) string {
+	var created, existing, errCount int
+	links := make([]jsonLink, 0, len(result.Links))
+	for _, l := range result.Links {
+		links = append(links, jsonLink(l))
+		switch l.Status {
+		case "created", "replaced":
+			created++
+		case "exists":
+			existing++
+		case "error":
+			errCount++
+		}
+	}
+
+	jr := jsonSyncResult{
+		DryRun: result.DryRun,
+		Hub: jsonHub{
+			Path:   result.HubPath,
+			Status: result.HubStatus,
+		},
+		Links: links,
+		Summary: jsonSyncSummary{
+			Total:    len(result.Links),
+			Created:  created,
+			Existing: existing,
+			Errors:   errCount,
+		},
+	}
+
+	data, err := json.MarshalIndent(jr, "", "  ")
+	if err != nil {
+		return `{"dry_run":false,"hub":{},"links":[],"summary":{}}`
+	}
+	return string(data)
+}
+
 // convertErrors maps a slice of internal ValidationError values to the JSON wire
 // format. An empty or nil input slice produces a non-nil empty slice so that
 // json.Marshal emits [] rather than null.

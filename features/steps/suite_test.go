@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -47,6 +48,16 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		if w.dir != "" {
+			// Restore write permissions (some tests make dirs read-only)
+			_ = filepath.WalkDir(w.dir, func(path string, d os.DirEntry, err error) error {
+				if err != nil {
+					return nil
+				}
+				if d.IsDir() {
+					_ = os.Chmod(path, 0755)
+				}
+				return nil
+			})
 			if removeErr := os.RemoveAll(w.dir); removeErr != nil {
 				return ctx, removeErr
 			}
@@ -56,4 +67,5 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	registerConfigParsingSteps(ctx, w)
 	registerSchemaValidationSteps(ctx, w)
+	registerSyncSteps(ctx, w)
 }

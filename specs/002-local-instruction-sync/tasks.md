@@ -99,23 +99,23 @@
 
 > **NOTE: Feature file exists at features/sync-local-instructions.feature (14 scenarios including 4 edge cases)**
 
-- [ ] T023 [US1] Review features/sync-local-instructions.feature and verify scenarios are concrete and aligned with data-model.md
-- [ ] T024 [US1] Extend testWorld in features/steps/world_test.go with sync-related fields and helper methods (writeOverlayFile, writeConfigWithOverlays, runSync, etc.)
-- [ ] T025 [US1] Write step definitions for US1 scenarios in features/steps/sync_steps_test.go and register via `registerSyncSteps(ctx, w)` in features/steps/suite_test.go (expect RED)
+- [X] T023 [US1] Review features/sync-local-instructions.feature and verify scenarios are concrete and aligned with data-model.md
+- [X] T024 [US1] Extend testWorld in features/steps/world_test.go with sync-related fields and helper methods (writeOverlayFile, writeConfigWithOverlays, runSync, etc.)
+- [X] T025 [US1] Write step definitions for US1 scenarios in features/steps/sync_steps_test.go and register via `registerSyncSteps(ctx, w)` in features/steps/suite_test.go (expect RED)
 
 ### Output Formatting
 
-- [ ] T026 [US1] Add SyncResult and LinkResult types to output package and extend Formatter interface with `FormatSyncResult(result SyncResult) string` in internal/output/formatter.go
-- [ ] T027 [P] [US1] Implement sync result formatting in HumanFormatter (target list, status per target, summary line) in internal/output/human.go
-- [ ] T028 [P] [US1] Implement sync result formatting in JSONFormatter (hub status, links array, summary counts) in internal/output/json.go
-- [ ] T029 [P] [US1] Write unit tests for sync output formatting (human and JSON, success, errors, multiple targets) in internal/output/human_test.go and internal/output/json_test.go
+- [X] T026 [US1] Add SyncResult and LinkResult types to output package and extend Formatter interface with `FormatSyncResult(result SyncResult) string` in internal/output/formatter.go
+- [X] T027 [P] [US1] Implement sync result formatting in HumanFormatter (target list, status per target, summary line) in internal/output/human.go
+- [X] T028 [P] [US1] Implement sync result formatting in JSONFormatter (hub status, links array, summary counts) in internal/output/json.go
+- [X] T029 [P] [US1] Write unit tests for sync output formatting (human and JSON, success, errors, multiple targets) in internal/output/human_test.go and internal/output/json_test.go
 
 ### CLI Command
 
-- [ ] T030 [US1] Implement `ailign sync` command: load config, validate local_overlays present, call sync engine, format and print result in internal/cli/sync.go
-- [ ] T031 [US1] Register sync command in root and update PersistentPreRunE if needed in internal/cli/root.go
-- [ ] T032 [P] [US1] Write CLI integration tests for sync command (valid sync, missing overlays, no overlays, format flag, exit codes) in internal/cli/sync_test.go
-- [ ] T033 [US1] Verify US1 BDD step definitions pass (GREEN) by running `go test ./features/steps/ -v -run TestFeatures`
+- [X] T030 [US1] Implement `ailign sync` command: load config, validate local_overlays present, call sync engine, format and print result in internal/cli/sync.go
+- [X] T031 [US1] Register sync command in root and update PersistentPreRunE if needed in internal/cli/root.go
+- [X] T032 [P] [US1] Write CLI integration tests for sync command (valid sync, missing overlays, no overlays, format flag, exit codes) in internal/cli/sync_test.go
+- [X] T033 [US1] Verify US1 BDD step definitions pass (GREEN) by running `go test ./features/steps/ -v -run TestFeatures`
 
 **Checkpoint**: `ailign sync` works end-to-end. All 14 US1 BDD scenarios pass (including edge cases: empty overlay, path traversal, non-UTF-8, read-only directory). `go test ./...` passes.
 
