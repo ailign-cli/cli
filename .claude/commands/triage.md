@@ -53,7 +53,7 @@ When fetching from a PR:
    ```
    Concatenate all formatted comments with blank lines between them.
 
-7. **If no unresolved comments found**, stop and report: "No unresolved review comments found on PR #&lt;number&gt;."
+7. **If no unresolved comments found**, stop and report: "No unresolved review comments found on PR #<number>."
 
 8. **Present the fetched comments** to the user before proceeding, showing which PR they came from and the number of comments found.
 
