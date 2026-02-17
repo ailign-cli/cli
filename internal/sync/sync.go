@@ -42,6 +42,9 @@ func Sync(baseDir string, cfg *config.Config, registry *target.Registry, opts Sy
 		hubStatus, err = WriteHub(hubPath, composed.Content)
 	}
 	if err != nil {
+		if opts.DryRun {
+			return nil, fmt.Errorf("checking hub file: %w", err)
+		}
 		return nil, fmt.Errorf("writing hub file: %w", err)
 	}
 
