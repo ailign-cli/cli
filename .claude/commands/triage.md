@@ -37,7 +37,7 @@ When fetching from a PR:
 
 4. **Fetch unresolved review comments**:
    ```bash
-   gh pr-review review view <pr-number> -R <owner>/<repo> --unresolved
+   gh pr-review review view <pr-number> -R <owner>/<repo> --unresolved --format json
    ```
 
 5. **Parse the JSON output**: Extract all comments from the `reviews[].comments[]` array (and nested `thread_comments[]` for reply context). For each comment, extract:
@@ -53,7 +53,7 @@ When fetching from a PR:
    ```
    Concatenate all formatted comments with blank lines between them.
 
-7. **If no unresolved comments found**, stop and report: "No unresolved review comments found on PR #&lt;number&gt;."
+7. **If no unresolved comments found**, stop and report: "No unresolved review comments found on PR #<number>."
 
 8. **Present the fetched comments** to the user before proceeding, showing which PR they came from and the number of comments found.
 
