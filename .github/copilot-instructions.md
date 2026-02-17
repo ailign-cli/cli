@@ -103,6 +103,33 @@ return fmt.Errorf("failed to load config")
 - `stderr`: all errors, all warnings, diagnostics
 - JSON format: pretty-printed, 2-space indent, `null` for missing values, arrays never `null` (use `[]`)
 
+## Build & Development Commands
+
+```bash
+# Build
+go build ./...
+
+# Run all tests (unit + BDD)
+go test ./... -count=1
+
+# Run tests with verbose output
+gotestsum -- ./... -count=1
+
+# Run tests for a specific package
+go test ./internal/sync/... -count=1
+
+# Run only BDD feature tests
+go test ./features/steps/... -v -run TestFeatures
+
+# Lint
+golangci-lint run
+
+# Run the CLI
+go run ./cmd/ailign <command> [flags]
+```
+
+Workflows in `.github/workflows/` define the CI pipeline — see `validate.yml` for the canonical lint + test + goreleaser check steps.
+
 ## Go Conventions
 
 - Standard Go project layout: `cmd/` for entry point, `internal/` for all packages
