@@ -47,7 +47,7 @@ When fetching from a PR:
    Extract `OWNER/REPO` from the remote URL (handles both HTTPS `https://github.com/OWNER/REPO.git` and SSH `git@github.com:OWNER/REPO.git` formats).
 
    Compare with the target `OWNER/REPO` from step 1. If they don't match:
-   - **Still fetch and display** the review comments (continue through steps 3–7 as read-only) so the developer can see what was flagged.
+   - **Still fetch and display** the review comments (continue through sub-steps 3–7 below as read-only) so the developer can see what was flagged.
    - After presenting the comments, provide a **brief summary** — e.g., how many comments, which authors, and a one-line characterization of the themes or patterns (e.g., "7 comments from @datadog-official — all about unpinned GitHub Actions in CI workflows").
    - After the summary, stop and report:
      > "PR #N belongs to `OWNER/REPO`, but your current directory is linked to `LOCAL_OWNER/LOCAL_REPO`. I've listed the review comments above, but cannot read code or implement fixes from this directory. Navigate to a local clone of `OWNER/REPO` and re-run `/triage` to process them."
@@ -64,7 +64,7 @@ When fetching from a PR:
              id
              isResolved
              comments(first: 100) {
-               nodes { id databaseId body author { login } path line }
+               nodes { id databaseId body author { login } path line originalLine }
              }
            }
          }
@@ -75,7 +75,7 @@ When fetching from a PR:
 
 4. **Parse the GraphQL response**: From `data.repository.pullRequest.reviewThreads.nodes[]`, filter to threads where `isResolved` is `false`. For each unresolved thread, extract:
    - `thread_id` — the thread's `id` field (format: `PRRT_kwDO...`). **Store this for later use in reply/resolve operations.**
-   - From `comments.nodes[0]` (the root comment): `path`, `line`, `body`, `author.login`, `databaseId`
+   - From `comments.nodes[0]` (the root comment): `path`, `line` (fall back to `originalLine` if `line` is null — this happens on outdated diffs), `body`, `author.login`, `databaseId`
    - From `comments.nodes[1..]` (reply comments): additional context for understanding the full thread discussion
    - Construct a **GitHub link** for each root comment: `https://github.com/OWNER/REPO/pull/PR_NUMBER#discussion_r<databaseId>`
 
@@ -239,6 +239,11 @@ git commit -m "$(cat <<'EOF'
 EOF
 )"
 ```
+   - **Immediately after each commit**, record the hash and map it to the addressed comment numbers:
+     ```bash
+     git rev-parse HEAD
+     ```
+     Store this mapping (commit hash → comment numbers) for use in Step 5a when replying to threads.
 
 ### Step 5a: Push and resolve accepted comments
 
@@ -369,7 +374,7 @@ Use the `conventional-commits` skill for formatting. Most review fixes will be:
 - **Never** push when processing inline review comments unless explicitly asked
 - **Never** make changes beyond what the review comment requires
 - **Never** dismiss a comment without a concrete technical justification
-- **Always** use `-F` flags for GraphQL variables — never inline `$variable` references in the query string, as the shell will interpret `$` before `gh` sees it. The query declares variables (e.g., `$threadId: ID!`) inside single quotes (safe from shell expansion), and `-F threadId="value"` passes them at the GraphQL level.
+- **Always** use `-F` flags for GraphQL variables — never inline *shell* variable references (e.g., `$THREAD_ID`) in the query string, as the shell will interpret `$` before `gh` sees it. The query declares GraphQL variables (e.g., `$threadId: ID!`) inside single quotes (safe from shell expansion), and `-F threadId="value"` passes them at the GraphQL level.
 
 ## Thread Management Reference
 
