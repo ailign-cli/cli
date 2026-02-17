@@ -153,6 +153,7 @@ func TestSync_DryRun_NoFilesWritten(t *testing.T) {
 	result, err := Sync(dir, cfg, registry, SyncOptions{DryRun: true})
 	require.NoError(t, err)
 	require.NotNil(t, result)
+	assert.True(t, result.DryRun)
 
 	// Hub file should NOT exist
 	_, err = os.Stat(filepath.Join(dir, ".ailign", "instructions.md"))
@@ -190,6 +191,7 @@ func TestSync_DryRun_ExistingSymlinksDetected(t *testing.T) {
 	// Now dry-run should detect existing correct symlinks
 	result, err := Sync(dir, cfg, registry, SyncOptions{DryRun: true})
 	require.NoError(t, err)
+	assert.True(t, result.DryRun)
 
 	assert.Equal(t, "unchanged", result.HubStatus)
 	require.Len(t, result.Links, 1)
