@@ -188,10 +188,10 @@ func errorToValidationError(err *jsonschema.ValidationError) *ValidationError {
 		ve.Remediation = "Use a supported target name: claude, cursor, copilot, windsurf"
 
 	case *kind.MinItems:
-		ve.Expected = "at least 1 target"
+		ve.Expected = fmt.Sprintf("at least %d item(s)", k.Want)
 		ve.Actual = fmt.Sprintf("%d items", k.Got)
-		ve.Message = "targets array is empty"
-		ve.Remediation = "Add at least one target to the \"targets\" array"
+		ve.Message = fmt.Sprintf("%s must not be empty", fieldPath)
+		ve.Remediation = fmt.Sprintf("Add at least %d item(s) to \"%s\"", k.Want, fieldPath)
 
 	case *kind.UniqueItems:
 		ve.Expected = "unique target names"

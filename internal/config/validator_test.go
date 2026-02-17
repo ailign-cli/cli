@@ -419,7 +419,7 @@ func TestErrorToValidationError_MinItemsKind(t *testing.T) {
 
 	require.NotNil(t, ve)
 	assert.Equal(t, "targets", ve.FieldPath)
-	assert.Equal(t, "targets array is empty", ve.Message)
+	assert.Equal(t, "targets must not be empty", ve.Message)
 }
 
 func TestErrorToValidationError_UniqueItemsKind(t *testing.T) {
