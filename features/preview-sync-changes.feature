@@ -1,3 +1,4 @@
+@wip
 # Source: specs/002-local-instruction-sync/spec.md - User Story 2
 
 Feature: Preview Sync Changes
