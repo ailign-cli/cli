@@ -16,7 +16,12 @@ The user input can be one of three things:
 
 1. **Inline review comments** — text containing file references with `#L` line markers and `>` quoted reviewer comments. If the input matches this pattern, use it directly as the review comments and proceed to Step 1.
 
-2. **A PR reference** — a number (e.g., `19`), a `#`-prefixed number (e.g., `#19`), or a GitHub PR URL. Extract the PR number and fetch review comments from it (see "Fetching PR review comments" below).
+2. **A PR reference** — one of:
+   - A number: `19` or `#19` (assumes the local repo)
+   - A cross-repo reference: `OWNER/REPO#NUMBER` (e.g., `acme/web-api#123`)
+   - A GitHub PR URL: `https://github.com/OWNER/REPO/pull/NUMBER`
+
+   Extract the PR number (and optionally `OWNER/REPO`) and fetch review comments from it (see "Fetching PR review comments" below).
 
 3. **Empty input** — no arguments provided. Detect the current PR for the active branch and fetch review comments from it (see "Fetching PR review comments" below).
 
@@ -24,38 +29,66 @@ The user input can be one of three things:
 
 When fetching from a PR:
 
-1. **Determine the PR number**:
-   - If a number was provided, use it directly
-   - If empty, detect the current branch's PR: `gh pr view --json number -q '.number'`
+1. **Determine the PR number and target repository**:
+   - If a cross-repo reference (`OWNER/REPO#NUMBER`) or GitHub URL was provided, extract both the PR number and `OWNER/REPO` from the input.
+   - If a plain number was provided, use it as the PR number. Determine the repository from the local remote:
+     ```bash
+     gh repo view --json nameWithOwner -q '.nameWithOwner'
+     ```
+     Parse the result to extract `OWNER` and `REPO` (split on `/`).
+   - If empty, detect the current branch's PR: `gh pr view --json number -q '.number'` and determine the repository from the local remote (as above).
    - If no PR exists for the current branch, stop and report: "No open PR found for the current branch."
 
-2. **Determine the repository**: `gh repo view --json nameWithOwner -q '.nameWithOwner'`
-
-3. **Ensure the `gh pr-review` extension is installed**:
-   - Run `gh extension list` and check for `agynio/gh-pr-review`
-   - If not found, install it: `gh extension install agynio/gh-pr-review`
-
-4. **Fetch unresolved review comments**:
+2. **Validate local repository match**:
+   Get the current working directory's git remote:
    ```bash
-   gh pr-review review view <pr-number> -R <owner>/<repo> --unresolved
+   git remote get-url origin
+   ```
+   Extract `OWNER/REPO` from the remote URL (handles both HTTPS `https://github.com/OWNER/REPO.git` and SSH `git@github.com:OWNER/REPO.git` formats).
+
+   Compare with the target `OWNER/REPO` from step 1. If they don't match:
+   - **Still fetch and display** the review comments (continue through sub-steps 3–7 below as read-only) so the developer can see what was flagged.
+   - After presenting the comments, provide a **brief summary** — e.g., how many comments, which authors, and a one-line characterization of the themes or patterns (e.g., "7 comments from @datadog-official — all about unpinned GitHub Actions in CI workflows").
+   - After the summary, stop and report:
+     > "PR #N belongs to `OWNER/REPO`, but your current directory is linked to `LOCAL_OWNER/LOCAL_REPO`. I've listed the review comments above, but cannot read code or implement fixes from this directory. Navigate to a local clone of `OWNER/REPO` and re-run `/triage` to process them."
+   - **Do not** proceed to Step 1 (analysis) — the agent cannot read the referenced files.
+
+3. **Fetch review threads via GraphQL**:
+   ```bash
+   gh api graphql -f query='
+   query($owner: String!, $repo: String!, $prNumber: Int!) {
+     repository(owner: $owner, name: $repo) {
+       pullRequest(number: $prNumber) {
+         reviewThreads(first: 100) {
+           nodes {
+             id
+             isResolved
+             comments(first: 100) {
+               nodes { id databaseId body author { login } path line originalLine }
+             }
+           }
+         }
+       }
+     }
+   }' -F owner="$OWNER" -F repo="$REPO" -F prNumber="$PR_NUMBER"
    ```
 
-5. **Parse the JSON output**: Extract all comments from the `reviews[].comments[]` array (and nested `thread_comments[]` for reply context). For each comment, extract:
-   - `path` — the file path
-   - `line` — the line number
-   - `body` — the reviewer's comment text
-   - Ignore resolved threads and review-level summaries (reviews that have a `body` but no `comments[]`)
+4. **Parse the GraphQL response**: From `data.repository.pullRequest.reviewThreads.nodes[]`, filter to threads where `isResolved` is `false`. For each unresolved thread, extract:
+   - `thread_id` — the thread's `id` field (format: `PRRT_kwDO...`). **Store this for later use in reply/resolve operations.**
+   - From `comments.nodes[0]` (the root comment): `path`, `line` (fall back to `originalLine` if `line` is null — this happens on outdated diffs), `body`, `author.login`, `databaseId`
+   - From `comments.nodes[1..]` (reply comments): additional context for understanding the full thread discussion
+   - Construct a **GitHub link** for each root comment: `https://github.com/OWNER/REPO/pull/PR_NUMBER#discussion_r<databaseId>`
 
-6. **Format as inline review comments**: Convert each extracted comment into the standard format:
+5. **Format as inline review comments**: Convert each extracted thread into the standard format:
    ```
    `<path>`#L<line>:
    > <body>
    ```
-   Concatenate all formatted comments with blank lines between them.
+   Concatenate all formatted comments with blank lines between them. Maintain a mapping of **comment number → thread_id** for use in later steps.
 
-7. **If no unresolved comments found**, stop and report: "No unresolved review comments found on PR #<number>."
+6. **If no unresolved threads found**, stop and report: "No unresolved review comments found on PR #<number>."
 
-8. **Present the fetched comments** to the user before proceeding, showing which PR they came from and the number of comments found.
+7. **Present the fetched comments** to the user before proceeding, showing which PR they came from and the number of unresolved threads found.
 
 Proceed to Step 1 with the resulting review comments (either inline or fetched).
 
@@ -63,8 +96,11 @@ Proceed to Step 1 with the resulting review comments (either inline or fetched).
 
 Extract each review comment into a structured list:
 
-| # | File | Lines | Comment Summary |
-|---|------|-------|-----------------|
+| # | File | Lines | Author | Comment Summary | Thread |
+|---|------|-------|--------|-----------------|--------|
+
+- **Author**: the `author.login` from the review comment (e.g., `copilot-pull-request-reviewer`, a colleague's GitHub handle, or a bot name). Helps distinguish human vs. automated feedback.
+- **Thread**: a clickable link to the review comment on GitHub (e.g., `[view](url)`). Only populated when fetched from a PR; leave empty for inline input. The underlying `thread_id` is stored internally for GraphQL reply/resolve operations and does not need to be displayed in the table.
 
 If the input is empty or contains no actionable comments, stop and report: "No review comments provided."
 
@@ -80,7 +116,10 @@ For **every** comment, in order:
    - Does it improve readability, maintainability, or correctness?
    - Is it consistent with project conventions and the constitution?
    - Or is it subjective/stylistic with no material impact?
-4. **Decide**: Accept (will fix) or Reject (explain why)
+4. **Decide**:
+   - **Accept** — the concern is valid and will be fixed
+   - **Reject** — the concern is not valid or not worth changing (explain why)
+   - **Unclear** — the comment is ambiguous, incomplete, or could be interpreted multiple ways. Formulate specific clarification questions.
 
 ### Step 3: Present the analysis
 
@@ -89,17 +128,73 @@ Present a verdict table summarizing all comments before making any changes:
 ```
 ## Review Analysis
 
-| # | Verdict | Summary | Rationale |
-|---|---------|---------|-----------|
-| 1 | ✅ Accept | [what will be fixed] | [why it's valid] |
-| 2 | ✅ Accept | [what will be fixed] | [why it's valid] |
-| 3 | ❌ Reject | [no change needed] | [why it's not valid or not worth changing] |
+| # | Verdict | Author | Summary | Rationale | Thread |
+|---|---------|--------|---------|-----------|--------|
+| 1 | ✅ Accept | @user | [what will be fixed] | [why it's valid] | [link](url) |
+| 2 | ❌ Reject | @bot | [no change needed] | [why it's not valid] | [link](url) |
+| 3 | ❓ Unclear | @user | [what's ambiguous] | [clarification questions] | [link](url) |
 ```
 
 **Wait for user approval** before proceeding with implementation. The user may:
 - Approve all verdicts
 - Override specific verdicts (accept a rejection, reject an acceptance)
 - Ask for more detail on a specific comment
+
+### Step 3a: Reply and resolve rejected comments
+
+After the user approves the analysis, for each **rejected** comment (only when input was fetched from a PR, not inline):
+
+1. **Reply** to the review thread with the rejection rationale:
+   ```bash
+   gh api graphql -f query='
+   mutation($threadId: ID!, $body: String!) {
+     addPullRequestReviewThreadReply(input: {
+       pullRequestReviewThreadId: $threadId
+       body: $body
+     }) {
+       comment { id }
+     }
+   }' -F threadId="$THREAD_ID" -F body="$REPLY_BODY"
+   ```
+   The `REPLY_BODY` should be a concise explanation of why the comment was rejected, derived from the Rationale column in the verdict table.
+
+2. **Resolve** the thread:
+   ```bash
+   gh api graphql -f query='
+   mutation($threadId: ID!) {
+     resolveReviewThread(input: {threadId: $threadId}) {
+       thread { id isResolved }
+     }
+   }' -F threadId="$THREAD_ID"
+   ```
+
+**Important:** Use the `thread_id` (format `PRRT_kwDO...`) from Step 0 sub-step 4, **not** individual comment IDs.
+
+If the input was inline review comments (not fetched from a PR), skip this step entirely — there are no thread IDs to reply to.
+
+### Step 3b: Post clarification questions for unclear comments
+
+After the user approves the analysis, for each **unclear** comment (only when input was fetched from a PR, not inline):
+
+1. **Reply** to the review thread with the clarification questions:
+   ```bash
+   gh api graphql -f query='
+   mutation($threadId: ID!, $body: String!) {
+     addPullRequestReviewThreadReply(input: {
+       pullRequestReviewThreadId: $threadId
+       body: $body
+     }) {
+       comment { id }
+     }
+   }' -F threadId="$THREAD_ID" -F body="$REPLY_BODY"
+   ```
+   The `REPLY_BODY` should tag the comment author (e.g., `@username`) and list the specific clarification questions. Be concise and direct.
+
+2. **Do NOT resolve** the thread — it stays open so the author can respond.
+
+If the input was inline review comments, skip this step.
+
+**Re-triage after clarification:** When `/triage` is run again on the same PR, previously unclear threads that now have replies will reappear as unresolved. Read the full thread (including new replies) and re-evaluate — the comment may now be clear enough to accept or reject. If it's still unclear, post follow-up questions. This cycle repeats until the comment can be resolved.
 
 ### Step 4: Implement fixes
 
@@ -144,43 +239,115 @@ git commit -m "$(cat <<'EOF'
 EOF
 )"
 ```
+   - **Immediately after each commit**, record the hash and map it to the addressed comment numbers:
+     ```bash
+     git rev-parse HEAD
+     ```
+     Store this mapping (commit hash → comment numbers) for use in Step 5a when replying to threads.
+
+### Step 5a: Push and resolve accepted comments
+
+After all commits are created:
+
+1. **Push** the commits to the remote branch:
+   ```bash
+   git push
+   ```
+   If the push fails (e.g., remote has new commits), report the error and stop. Do not force-push.
+
+2. **Collect commit hashes** recorded immediately after each commit in Step 5 (captured with `git rev-parse HEAD`), rather than inferring them later from `git log`.
+
+3. **Reply and resolve** each accepted comment's thread (only when input was fetched from a PR, not inline):
+
+   For each accepted comment:
+
+   a. **Reply** to the review thread referencing the commit:
+      ```bash
+      gh api graphql -f query='
+      mutation($threadId: ID!, $body: String!) {
+        addPullRequestReviewThreadReply(input: {
+          pullRequestReviewThreadId: $threadId
+          body: $body
+        }) {
+          comment { id }
+        }
+      }' -F threadId="$THREAD_ID" -F body="$REPLY_BODY"
+      ```
+      The `REPLY_BODY` should briefly describe the fix and reference the commit hash, e.g.:
+      `"Fixed in <commit_hash> — <brief description of what was changed>."`
+
+   b. **Resolve** the thread:
+      ```bash
+      gh api graphql -f query='
+      mutation($threadId: ID!) {
+        resolveReviewThread(input: {threadId: $threadId}) {
+          thread { id isResolved }
+        }
+      }' -F threadId="$THREAD_ID"
+      ```
+
+**Important:** Use the `thread_id` (format `PRRT_kwDO...`) from Step 0 sub-step 4, **not** individual comment IDs.
+
+If the input was inline review comments (not fetched from a PR), skip the reply/resolve part and do not push unless explicitly requested.
 
 ### Step 6: Distill learnings
 
-Take the analysis of the review comments and distill learnings:
+Extract actionable learnings from the review comments — patterns, mistakes, or conventions worth remembering for future work.
+
+#### 6.1 Identify new learnings
+
+From the accepted and rejected comments, distill what went wrong, what convention was missed, or what project-specific decisions were clarified. Accepted comments reveal gaps; rejected comments can reveal important conventions or architectural decisions worth documenting:
 
 ```
 ## Learnings
 
-| Learning | Comments Addressed |
-| -------- | ------------------ |
-| <learning> | #1, #2 |
-| <learning> | #3, #4 |
-
+| Learning | Scope | Comments |
+| -------- | ----- | -------- |
+| <learning> | project | #1, #2 |
+| <learning> | user | #3 |
 ```
 
-Add the learnings at the appropriate place, which could be:
-- The specs of the feature
-- AI instructions
-- Other memory locations
+**Scope** determines where the learning is stored:
+
+- **project** — specific to this codebase (conventions, architecture decisions, project-specific patterns). Stored in the project's learnings file (e.g., `.specify/memory/learnings.md`, `LEARNINGS.md`, or wherever this project keeps its memory).
+- **user** — general coding practices applicable across any codebase (language idioms, review patterns, universal best practices). Stored in the user's personal memory (e.g., `~/.claude/CLAUDE.md` or equivalent user-level config).
+
+#### 6.2 Integrate with existing learnings
+
+For each learning, **read the target file first** and compare against what's already there:
+
+1. **Duplicate** — the learning already exists in substance. Skip it.
+2. **Refinement** — the learning strengthens or clarifies an existing one. Update the existing entry in place (don't add a second entry).
+3. **Contradiction** — the new learning supersedes an older one. Replace the old entry.
+4. **Novel** — the learning is genuinely new. Add it.
+
+**Never blindly append.** The goal is a curated, non-redundant set of learnings that stays useful as it grows. Remove learnings that have been fully absorbed into project conventions or are no longer relevant.
+
+#### 6.3 Write changes
+
+Apply the additions, updates, and removals to the appropriate files. If a target file doesn't exist yet, create it with a brief header explaining its purpose.
 
 ### Step 7: Summary
 
-After all commits, present a final summary:
+After all commits and thread resolutions, present a final summary:
 
 ```
 ## Review Complete
 
-**Comments**: N total — X accepted, Y rejected
+**Comments**: N total — X accepted, Y rejected, Z unclear
 **Commits**: M created
+**Threads resolved**: R (X accepted + Y rejected)
 
 | Commit | Description | Comments Addressed |
 |--------|-------------|--------------------|
 | <hash> | <type>: <desc> | #1, #2 |
 | <hash> | <type>: <desc> | #3 |
 
-**Rejected comments:**
+**Rejected comments** (replied + resolved):
 - #Y: [brief reason]
+
+**Unclear comments** (questions posted, awaiting response):
+- #Z: @author — [summary of what was asked]
 ```
 
 ## Conventional Commit Format
@@ -203,6 +370,24 @@ Use the `conventional-commits` skill for formatting. Most review fixes will be:
 - **Never** use `git add -A` or `git add .`
 - **Never** amend existing commits unless explicitly asked
 - **Never** skip hooks (no `--no-verify`)
-- **Never** push unless explicitly asked
+- **Always** push after committing when processing PR review threads (required for commit hash references in replies)
+- **Never** push when processing inline review comments unless explicitly asked
 - **Never** make changes beyond what the review comment requires
 - **Never** dismiss a comment without a concrete technical justification
+- **Always** use `-F` flags for GraphQL variables — never inline *shell* variable references (e.g., `$THREAD_ID`) in the query string, as the shell will interpret `$` before `gh` sees it. The query declares GraphQL variables (e.g., `$threadId: ID!`) inside single quotes (safe from shell expansion), and `-F threadId="value"` passes them at the GraphQL level.
+
+## Thread Management Reference
+
+For manual thread management outside the triage workflow:
+
+**Unresolve a thread** (if a resolved thread needs to be reopened):
+```bash
+gh api graphql -f query='
+mutation($threadId: ID!) {
+  unresolveReviewThread(input: {threadId: $threadId}) {
+    thread { id isResolved }
+  }
+}' -F threadId="$THREAD_ID"
+```
+
+This is not used by the triage workflow itself but is documented here for manual recovery if a thread was resolved prematurely.

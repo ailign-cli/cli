@@ -14,15 +14,16 @@ feature planning).
 
 - `vision.md` - Problem statement, solution approach, business value
 - `scope.md` - MVP scope, key decisions, what's in/out
-- `.specify/memory/constitution.md` - Design principles (8 core
+- `.specify/memory/constitution.md` - Design principles (9 core
   principles, governance rules, prohibited patterns)
+- `.specify/memory/soul.md` - Agent culture and working style
 - `README.md` - Quick navigation and project overview
 
 ## Constitution (Non-Negotiable)
 
 Every design and implementation decision MUST align with these
 principles. When in conflict, follow the values hierarchy
-(Safety > Trust > Testing > Governance > Performance).
+(Safety > Trust > Working Software > Testing > Governance > Performance).
 
 1. **CLI-First** - Every feature via CLI. stdin/args -> stdout,
    stderr for errors. JSON + human output. No interactive prompts.
@@ -41,6 +42,8 @@ principles. When in conflict, follow the values hierarchy
    tiers: critical/recommended/extra. Never silently truncate.
 8. **Cross-Tool Parity** - Tool-agnostic source content. Renderers
    handle tool quirks. No tool is primary. No lock-in.
+9. **Working Software** - Commits and PRs MUST include both code
+   and tests. Every commit MUST validate. Every PR MUST build.
 
 ### Prohibited Patterns
 
@@ -52,6 +55,8 @@ principles. When in conflict, follow the values hierarchy
 - Hidden failures
 - Unbounded content
 - Shipping without tests
+- Code-only commits without tests
+- PRs that do not build
 
 ## Speckit Workflow
 
@@ -100,7 +105,7 @@ specs/[###-feature-name]/
 ## Development Workflow
 
 1. **Spec first** - Write feature spec in `specs/[name]/spec.md`
-2. **Constitution check** - Verify alignment with 8 principles
+2. **Constitution check** - Verify alignment with 9 principles
 3. **Task breakdown** - Create `tasks.md` for complex features
 4. **TDD cycle** - Write tests -> get approval -> implement
 5. **Integration test** - Verify feature works end-to-end

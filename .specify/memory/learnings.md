@@ -47,3 +47,9 @@ reviews and development. Curated — not a changelog.
 - Shared steps (`itReportsErrorContaining`, `itExitsWithCode`) live in `config_parsing_steps_test.go`, reused across features.
 - Error checking: `w.stderr` first (CLI), fall back to `w.loadErr` (direct API).
 - After hook restores dir permissions before `os.RemoveAll` (read-only dir tests).
+
+## PR hygiene
+
+- When a PR accumulates features beyond the original description,
+  update the PR body to list all changes. Reviewers (human and bot)
+  judge scope against the description.
