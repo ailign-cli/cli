@@ -16,7 +16,12 @@ The user input can be one of three things:
 
 1. **Inline review comments** — text containing file references with `#L` line markers and `>` quoted reviewer comments. If the input matches this pattern, use it directly as the review comments and proceed to Step 1.
 
-2. **A PR reference** — a number (e.g., `19`), a `#`-prefixed number (e.g., `#19`), or a GitHub PR URL. Extract the PR number and fetch review comments from it (see "Fetching PR review comments" below).
+2. **A PR reference** — one of:
+   - A number: `19` or `#19` (assumes the local repo)
+   - A cross-repo reference: `OWNER/REPO#NUMBER` (e.g., `Luscii/cVitals-API#123`)
+   - A GitHub PR URL: `https://github.com/OWNER/REPO/pull/NUMBER`
+
+   Extract the PR number (and optionally `OWNER/REPO`) and fetch review comments from it (see "Fetching PR review comments" below).
 
 3. **Empty input** — no arguments provided. Detect the current PR for the active branch and fetch review comments from it (see "Fetching PR review comments" below).
 
@@ -24,16 +29,29 @@ The user input can be one of three things:
 
 When fetching from a PR:
 
-1. **Determine the PR number**:
-   - If a number was provided, use it directly
-   - If empty, detect the current branch's PR: `gh pr view --json number -q '.number'`
+1. **Determine the PR number and target repository**:
+   - If a cross-repo reference (`OWNER/REPO#NUMBER`) or GitHub URL was provided, extract both the PR number and `OWNER/REPO` from the input.
+   - If a plain number was provided, use it as the PR number. Determine the repository from the local remote:
+     ```bash
+     gh repo view --json nameWithOwner -q '.nameWithOwner'
+     ```
+     Parse the result to extract `OWNER` and `REPO` (split on `/`).
+   - If empty, detect the current branch's PR: `gh pr view --json number -q '.number'` and determine the repository from the local remote (as above).
    - If no PR exists for the current branch, stop and report: "No open PR found for the current branch."
 
-2. **Determine the repository**:
+2. **Validate local repository match**:
+   Get the current working directory's git remote:
    ```bash
-   gh repo view --json nameWithOwner -q '.nameWithOwner'
+   git remote get-url origin
    ```
-   Parse the result to extract `OWNER` and `REPO` (split on `/`).
+   Extract `OWNER/REPO` from the remote URL (handles both HTTPS `https://github.com/OWNER/REPO.git` and SSH `git@github.com:OWNER/REPO.git` formats).
+
+   Compare with the target `OWNER/REPO` from step 1. If they don't match:
+   - **Still fetch and display** the review comments (continue through steps 3–7 as read-only) so the developer can see what was flagged.
+   - After presenting the comments, provide a **brief summary** — e.g., how many comments, which authors, and a one-line characterization of the themes or patterns (e.g., "7 comments from @datadog-official — all about unpinned GitHub Actions in CI workflows").
+   - After the summary, stop and report:
+     > "PR #N belongs to `OWNER/REPO`, but your current directory is linked to `LOCAL_OWNER/LOCAL_REPO`. I've listed the review comments above, but cannot read code or implement fixes from this directory. Navigate to a local clone of `OWNER/REPO` and re-run `/triage` to process them."
+   - **Do not** proceed to Step 1 (analysis) — the agent cannot read the referenced files.
 
 3. **Fetch review threads via GraphQL**:
    ```bash
