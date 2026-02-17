@@ -148,6 +148,24 @@ func TestHumanFormatSyncResult_DryRunUpToDate(t *testing.T) {
 	assert.NotContains(t, got, "would create symlink")
 }
 
+func TestHumanFormatSyncResult_DryRunReplaced(t *testing.T) {
+	f := &HumanFormatter{}
+	result := SyncResult{
+		DryRun:       true,
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "written",
+		OverlayCount: 1,
+		Links: []LinkResult{
+			{Target: "claude", LinkPath: ".claude/instructions.md", Status: "replaced"},
+		},
+	}
+
+	got := f.FormatSyncResult(result)
+
+	assert.Contains(t, got, "would replace symlink")
+	assert.NotContains(t, got, "would create symlink")
+}
+
 func TestHumanFormatSuccess_NoWarnings(t *testing.T) {
 	f := &HumanFormatter{}
 	result := ValidationResult{
