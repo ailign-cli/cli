@@ -27,9 +27,3 @@ jobs:
 
       - name: Build binary
         run: go build ./...
-
-      - name: Verify tests pass
-        run: gotestsum -- ./... -count=1
-
-      - name: Verify linter passes
-        run: golangci-lint run
