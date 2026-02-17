@@ -38,9 +38,9 @@ When fetching from a PR:
 3. **Fetch review threads via GraphQL**:
    ```bash
    gh api graphql -f query='
-   {
-     repository(owner: "OWNER", name: "REPO") {
-       pullRequest(number: PR_NUMBER) {
+   query($owner: String!, $repo: String!, $prNumber: Int!) {
+     repository(owner: $owner, name: $repo) {
+       pullRequest(number: $prNumber) {
          reviewThreads(first: 100) {
            nodes {
              id
@@ -52,9 +52,8 @@ When fetching from a PR:
          }
        }
      }
-   }'
+   }' -F owner="$OWNER" -F repo="$REPO" -F prNumber="$PR_NUMBER"
    ```
-   Replace `OWNER`, `REPO`, and `PR_NUMBER` with the values from steps 1–2.
 
 4. **Parse the GraphQL response**: From `data.repository.pullRequest.reviewThreads.nodes[]`, filter to threads where `isResolved` is `false`. For each unresolved thread, extract:
    - `thread_id` — the thread's `id` field (format: `PRRT_kwDO...`). **Store this for later use in reply/resolve operations.**
@@ -83,7 +82,7 @@ Extract each review comment into a structured list:
 |---|------|-------|--------|-----------------|--------|
 
 - **Author**: the `author.login` from the review comment (e.g., `copilot-pull-request-reviewer`, a colleague's GitHub handle, or a bot name). Helps distinguish human vs. automated feedback.
-- **Thread**: the thread_id and a [link](url) to the comment on GitHub (only when fetched from a PR, leave empty for inline input).
+- **Thread**: a clickable link to the review comment on GitHub (e.g., `[view](url)`). Only populated when fetched from a PR; leave empty for inline input. The underlying `thread_id` is stored internally for GraphQL reply/resolve operations and does not need to be displayed in the table.
 
 If the input is empty or contains no actionable comments, stop and report: "No review comments provided."
 
@@ -99,7 +98,10 @@ For **every** comment, in order:
    - Does it improve readability, maintainability, or correctness?
    - Is it consistent with project conventions and the constitution?
    - Or is it subjective/stylistic with no material impact?
-4. **Decide**: Accept (will fix) or Reject (explain why)
+4. **Decide**:
+   - **Accept** — the concern is valid and will be fixed
+   - **Reject** — the concern is not valid or not worth changing (explain why)
+   - **Unclear** — the comment is ambiguous, incomplete, or could be interpreted multiple ways. Formulate specific clarification questions.
 
 ### Step 3: Present the analysis
 
@@ -111,8 +113,8 @@ Present a verdict table summarizing all comments before making any changes:
 | # | Verdict | Author | Summary | Rationale | Thread |
 |---|---------|--------|---------|-----------|--------|
 | 1 | ✅ Accept | @user | [what will be fixed] | [why it's valid] | [link](url) |
-| 2 | ✅ Accept | @bot | [what will be fixed] | [why it's valid] | [link](url) |
-| 3 | ❌ Reject | @user | [no change needed] | [why it's not valid or not worth changing] | [link](url) |
+| 2 | ❌ Reject | @bot | [no change needed] | [why it's not valid] | [link](url) |
+| 3 | ❓ Unclear | @user | [what's ambiguous] | [clarification questions] | [link](url) |
 ```
 
 **Wait for user approval** before proceeding with implementation. The user may:
@@ -127,30 +129,54 @@ After the user approves the analysis, for each **rejected** comment (only when i
 1. **Reply** to the review thread with the rejection rationale:
    ```bash
    gh api graphql -f query='
-   mutation {
+   mutation($threadId: ID!, $body: String!) {
      addPullRequestReviewThreadReply(input: {
-       pullRequestReviewThreadId: "THREAD_ID"
-       body: "REPLY_BODY"
+       pullRequestReviewThreadId: $threadId
+       body: $body
      }) {
        comment { id }
      }
-   }'
+   }' -F threadId="$THREAD_ID" -F body="$REPLY_BODY"
    ```
-   Replace `THREAD_ID` with the stored thread_id for this comment. The `REPLY_BODY` should be a concise explanation of why the comment was rejected, derived from the Rationale column in the verdict table.
+   The `REPLY_BODY` should be a concise explanation of why the comment was rejected, derived from the Rationale column in the verdict table.
 
 2. **Resolve** the thread:
    ```bash
    gh api graphql -f query='
-   mutation {
-     resolveReviewThread(input: {threadId: "THREAD_ID"}) {
+   mutation($threadId: ID!) {
+     resolveReviewThread(input: {threadId: $threadId}) {
        thread { id isResolved }
      }
-   }'
+   }' -F threadId="$THREAD_ID"
    ```
 
 **Important:** Use the `thread_id` (format `PRRT_kwDO...`) from Step 0 sub-step 4, **not** individual comment IDs.
 
 If the input was inline review comments (not fetched from a PR), skip this step entirely — there are no thread IDs to reply to.
+
+### Step 3b: Post clarification questions for unclear comments
+
+After the user approves the analysis, for each **unclear** comment (only when input was fetched from a PR, not inline):
+
+1. **Reply** to the review thread with the clarification questions:
+   ```bash
+   gh api graphql -f query='
+   mutation($threadId: ID!, $body: String!) {
+     addPullRequestReviewThreadReply(input: {
+       pullRequestReviewThreadId: $threadId
+       body: $body
+     }) {
+       comment { id }
+     }
+   }' -F threadId="$THREAD_ID" -F body="$REPLY_BODY"
+   ```
+   The `REPLY_BODY` should tag the comment author (e.g., `@username`) and list the specific clarification questions. Be concise and direct.
+
+2. **Do NOT resolve** the thread — it stays open so the author can respond.
+
+If the input was inline review comments, skip this step.
+
+**Re-triage after clarification:** When `/triage` is run again on the same PR, previously unclear threads that now have replies will reappear as unresolved. Read the full thread (including new replies) and re-evaluate — the comment may now be clear enough to accept or reject. If it's still unclear, post follow-up questions. This cycle repeats until the comment can be resolved.
 
 ### Step 4: Implement fixes
 
@@ -206,7 +232,7 @@ After all commits are created:
    ```
    If the push fails (e.g., remote has new commits), report the error and stop. Do not force-push.
 
-2. **Collect commit hashes** for each group from `git log --oneline` (the hashes were created in Step 5).
+2. **Collect commit hashes** recorded immediately after each commit in Step 5 (captured with `git rev-parse HEAD`), rather than inferring them later from `git log`.
 
 3. **Reply and resolve** each accepted comment's thread (only when input was fetched from a PR, not inline):
 
@@ -215,14 +241,14 @@ After all commits are created:
    a. **Reply** to the review thread referencing the commit:
       ```bash
       gh api graphql -f query='
-      mutation {
+      mutation($threadId: ID!, $body: String!) {
         addPullRequestReviewThreadReply(input: {
-          pullRequestReviewThreadId: "THREAD_ID"
-          body: "REPLY_BODY"
+          pullRequestReviewThreadId: $threadId
+          body: $body
         }) {
           comment { id }
         }
-      }'
+      }' -F threadId="$THREAD_ID" -F body="$REPLY_BODY"
       ```
       The `REPLY_BODY` should briefly describe the fix and reference the commit hash, e.g.:
       `"Fixed in <commit_hash> — <brief description of what was changed>."`
@@ -230,11 +256,11 @@ After all commits are created:
    b. **Resolve** the thread:
       ```bash
       gh api graphql -f query='
-      mutation {
-        resolveReviewThread(input: {threadId: "THREAD_ID"}) {
+      mutation($threadId: ID!) {
+        resolveReviewThread(input: {threadId: $threadId}) {
           thread { id isResolved }
         }
-      }'
+      }' -F threadId="$THREAD_ID"
       ```
 
 **Important:** Use the `thread_id` (format `PRRT_kwDO...`) from Step 0 sub-step 4, **not** individual comment IDs.
@@ -285,9 +311,9 @@ After all commits and thread resolutions, present a final summary:
 ```
 ## Review Complete
 
-**Comments**: N total — X accepted, Y rejected
+**Comments**: N total — X accepted, Y rejected, Z unclear
 **Commits**: M created
-**Threads resolved**: Z (of N unresolved)
+**Threads resolved**: R (of N unresolved)
 
 | Commit | Description | Comments Addressed |
 |--------|-------------|--------------------|
@@ -296,6 +322,9 @@ After all commits and thread resolutions, present a final summary:
 
 **Rejected comments** (replied + resolved):
 - #Y: [brief reason]
+
+**Unclear comments** (questions posted, awaiting response):
+- #Z: @author — [summary of what was asked]
 ```
 
 ## Conventional Commit Format
@@ -322,6 +351,7 @@ Use the `conventional-commits` skill for formatting. Most review fixes will be:
 - **Never** push when processing inline review comments unless explicitly asked
 - **Never** make changes beyond what the review comment requires
 - **Never** dismiss a comment without a concrete technical justification
+- **Always** use `-F` flags for GraphQL variables — never inline `$variable` references in the query string, as the shell will interpret `$` before `gh` sees it. The query declares variables (e.g., `$threadId: ID!`) inside single quotes (safe from shell expansion), and `-F threadId="value"` passes them at the GraphQL level.
 
 ## Thread Management Reference
 
@@ -330,11 +360,11 @@ For manual thread management outside the triage workflow:
 **Unresolve a thread** (if a resolved thread needs to be reopened):
 ```bash
 gh api graphql -f query='
-mutation {
-  unresolveReviewThread(input: {threadId: "PRRT_kwDO..."}) {
+mutation($threadId: ID!) {
+  unresolveReviewThread(input: {threadId: $threadId}) {
     thread { id isResolved }
   }
-}'
+}' -F threadId="PRRT_kwDO..."
 ```
 
 This is not used by the triage workflow itself but is documented here for manual recovery if a thread was resolved prematurely.
