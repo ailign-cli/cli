@@ -21,10 +21,9 @@
     - .specify/templates/checklist-template.md ✅ compatible
       (Generic template, dynamically populated)
     - .specify/templates/agent-file-template.md ✅ compatible
-    - CLAUDE.md ⚠️ pending — references "8 core principles" must become "9"
+    - CLAUDE.md ✅ updated — references updated to "9 core principles"
     - README.md ✅ compatible (links to constitution.md)
-  Follow-up TODOs:
-    - Update CLAUDE.md "8 core principles" -> "9 core principles"
+  Follow-up TODOs: None
   === End Sync Impact Report ===
 -->
 # AIlign Constitution
