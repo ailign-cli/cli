@@ -18,7 +18,15 @@ labels:
 - label: "type:docs"
   files:
   - ".*\\.md$"
+
+- label: "type:specification"
+  files:
   - "specs/.*"
+  - "\\.specify/.*"
+
+- label: "type:tooling"
+  files:
+  - "\\.claude/.*"
 
 - label: "type:build-definition"
   files:
