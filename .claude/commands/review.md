@@ -8,9 +8,56 @@ description: Analyze code review comments, decide validity, implement fixes, and
 $ARGUMENTS
 ```
 
-The user input contains code review comments. Each comment references a file, line number(s), and a reviewer suggestion or concern. Parse them all before starting analysis.
-
 ## Workflow
+
+### Step 0: Determine input source
+
+The user input can be one of three things:
+
+1. **Inline review comments** — text containing file references with `#L` line markers and `>` quoted reviewer comments. If the input matches this pattern, use it directly as the review comments and proceed to Step 1.
+
+2. **A PR reference** — a number (e.g., `19`), a `#`-prefixed number (e.g., `#19`), or a GitHub PR URL. Extract the PR number and fetch review comments from it (see "Fetching PR review comments" below).
+
+3. **Empty input** — no arguments provided. Detect the current PR for the active branch and fetch review comments from it (see "Fetching PR review comments" below).
+
+#### Fetching PR review comments
+
+When fetching from a PR:
+
+1. **Determine the PR number**:
+   - If a number was provided, use it directly
+   - If empty, detect the current branch's PR: `gh pr view --json number -q '.number'`
+   - If no PR exists for the current branch, stop and report: "No open PR found for the current branch."
+
+2. **Determine the repository**: `gh repo view --json nameWithOwner -q '.nameWithOwner'`
+
+3. **Ensure the `gh pr-review` extension is installed**:
+   - Run `gh extension list` and check for `agynio/gh-pr-review`
+   - If not found, install it: `gh extension install agynio/gh-pr-review`
+
+4. **Fetch unresolved review comments**:
+   ```bash
+   gh pr-review review view <pr-number> -R <owner>/<repo> --unresolved
+   ```
+
+5. **Parse the JSON output**: Extract all comments from the `reviews[].comments[]` array (and nested `thread_comments[]` for reply context). For each comment, extract:
+   - `path` — the file path
+   - `line` — the line number
+   - `body` — the reviewer's comment text
+   - Ignore resolved threads and review-level summaries (reviews that have a `body` but no `comments[]`)
+
+6. **Format as inline review comments**: Convert each extracted comment into the standard format:
+   ```
+   `<path>`#L<line>:
+   > <body>
+   ```
+   Concatenate all formatted comments with blank lines between them.
+
+7. **If no unresolved comments found**, stop and report: "No unresolved review comments found on PR #&lt;number&gt;."
+
+8. **Present the fetched comments** to the user before proceeding, showing which PR they came from and the number of comments found.
+
+Proceed to Step 1 with the resulting review comments (either inline or fetched).
 
 ### Step 1: Parse review comments
 
