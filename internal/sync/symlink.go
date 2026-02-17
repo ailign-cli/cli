@@ -41,18 +41,10 @@ func EnsureSymlink(linkPath string, hubPath string) (string, error) {
 		if err == nil && existingTarget == relTarget {
 			return "exists", nil
 		}
-		// Wrong symlink — remove and recreate
-		if err := os.Remove(linkPath); err != nil {
-			return "", fmt.Errorf("removing existing symlink: %w", err)
-		}
-		return createSymlink(linkPath, relTarget, "replaced")
 	}
 
-	// Regular file — remove and replace with symlink
-	if err := os.Remove(linkPath); err != nil {
-		return "", fmt.Errorf("removing existing file: %w", err)
-	}
-	return createSymlink(linkPath, relTarget, "replaced")
+	// Wrong symlink or regular file — atomically replace
+	return replaceSymlink(linkPath, relTarget)
 }
 
 func createSymlink(linkPath string, relTarget string, status string) (string, error) {
@@ -66,4 +58,27 @@ func createSymlink(linkPath string, relTarget string, status string) (string, er
 	}
 
 	return status, nil
+}
+
+// replaceSymlink atomically replaces whatever exists at linkPath with a
+// symlink pointing to relTarget. It creates a temporary symlink in the
+// same directory and renames it into place so the previous file/link
+// remains until the new one is ready.
+func replaceSymlink(linkPath, relTarget string) (string, error) {
+	dir := filepath.Dir(linkPath)
+	tmpLink := filepath.Join(dir, ".ailign-symlink-tmp")
+
+	// Remove any stale temp from a previous interrupted run
+	_ = os.Remove(tmpLink)
+
+	if err := os.Symlink(relTarget, tmpLink); err != nil {
+		return "", fmt.Errorf("creating temporary symlink: %w", err)
+	}
+
+	if err := os.Rename(tmpLink, linkPath); err != nil {
+		_ = os.Remove(tmpLink)
+		return "", fmt.Errorf("replacing symlink: %w", err)
+	}
+
+	return "replaced", nil
 }

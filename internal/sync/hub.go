@@ -30,12 +30,18 @@ func WriteHub(hubPath string, content []byte) (string, error) {
 		return "", fmt.Errorf("creating hub directory: %w", err)
 	}
 
-	// Atomic write: temp file → fsync → rename
+	// Atomic write: temp file → chmod → fsync → rename
 	tmp, err := os.CreateTemp(dir, ".ailign-*.tmp")
 	if err != nil {
 		return "", fmt.Errorf("creating temp file: %w", err)
 	}
 	defer func() { _ = os.Remove(tmp.Name()) }() // cleanup on error path
+
+	// CreateTemp uses 0600; set 0644 so the hub file is world-readable
+	if err := os.Chmod(tmp.Name(), 0644); err != nil {
+		_ = tmp.Close()
+		return "", fmt.Errorf("setting hub file permissions: %w", err)
+	}
 
 	if _, err := tmp.Write(content); err != nil {
 		_ = tmp.Close()
