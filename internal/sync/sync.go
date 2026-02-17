@@ -19,6 +19,13 @@ func Sync(baseDir string, cfg *config.Config, registry *target.Registry, opts Sy
 		return nil, fmt.Errorf("no local_overlays configured in .ailign.yml")
 	}
 
+	// Normalize to absolute path so derived paths satisfy EnsureSymlink's contract
+	absBase, err := filepath.Abs(baseDir)
+	if err != nil {
+		return nil, fmt.Errorf("resolving base directory: %w", err)
+	}
+	baseDir = absBase
+
 	hubPath := filepath.Join(baseDir, hubRelPath)
 
 	// Compose overlays

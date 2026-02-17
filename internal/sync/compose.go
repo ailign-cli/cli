@@ -64,6 +64,10 @@ func ComposeOverlays(baseDir string, overlays []string) (*ComposeResult, error) 
 // validateOverlayPath checks that an overlay path doesn't escape the base directory,
 // both lexically and after resolving symlinks.
 func validateOverlayPath(baseDir, overlay string) error {
+	if filepath.IsAbs(overlay) || filepath.VolumeName(overlay) != "" {
+		return fmt.Errorf("overlay path must be relative to base directory: %s", overlay)
+	}
+
 	cleaned := filepath.Clean(overlay)
 	absPath := filepath.Join(baseDir, cleaned)
 
