@@ -265,7 +265,7 @@ After all commits are created:
 
 **Important:** Use the `thread_id` (format `PRRT_kwDO...`) from Step 0 sub-step 4, **not** individual comment IDs.
 
-If the input was inline review comments (not fetched from a PR), skip the reply/resolve part but still push if there is a PR context.
+If the input was inline review comments (not fetched from a PR), skip the reply/resolve part and do not push unless explicitly requested.
 
 ### Step 6: Distill learnings
 
@@ -273,7 +273,7 @@ Extract actionable learnings from the review comments — patterns, mistakes, or
 
 #### 6.1 Identify new learnings
 
-From the accepted comments, distill what went wrong or what convention was missed:
+From the accepted and rejected comments, distill what went wrong, what convention was missed, or what project-specific decisions were clarified. Accepted comments reveal gaps; rejected comments can reveal important conventions or architectural decisions worth documenting:
 
 ```
 ## Learnings
@@ -313,7 +313,7 @@ After all commits and thread resolutions, present a final summary:
 
 **Comments**: N total — X accepted, Y rejected, Z unclear
 **Commits**: M created
-**Threads resolved**: R (of N unresolved)
+**Threads resolved**: R (X accepted + Y rejected)
 
 | Commit | Description | Comments Addressed |
 |--------|-------------|--------------------|
