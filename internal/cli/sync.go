@@ -49,7 +49,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 	}
 
 	// Format and print result to stdout
-	syncResult := toSyncOutputResult(result, len(cfg.LocalOverlays), dryRunFlag)
+	syncResult := toSyncOutputResult(result, len(cfg.LocalOverlays))
 	sf := getSyncFormatter(formatFlag)
 	_, _ = fmt.Fprint(cmd.OutOrStdout(), sf.FormatSyncResult(syncResult))
 
@@ -63,7 +63,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func toSyncOutputResult(r *sync.SyncResult, overlayCount int, dryRun bool) output.SyncResult {
+func toSyncOutputResult(r *sync.SyncResult, overlayCount int) output.SyncResult {
 	links := make([]output.LinkResult, 0, len(r.Links))
 	for _, l := range r.Links {
 		links = append(links, output.LinkResult{
@@ -75,7 +75,7 @@ func toSyncOutputResult(r *sync.SyncResult, overlayCount int, dryRun bool) outpu
 	}
 
 	return output.SyncResult{
-		DryRun:       dryRun,
+		DryRun:       r.DryRun,
 		HubPath:      r.HubPath,
 		HubStatus:    r.HubStatus,
 		Links:        links,

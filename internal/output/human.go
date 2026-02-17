@@ -143,6 +143,8 @@ func dryRunLinkStatus(status string) string {
 	switch status {
 	case "exists":
 		return "symlink ok"
+	case "replaced":
+		return "would replace symlink"
 	default:
 		return "would create symlink"
 	}

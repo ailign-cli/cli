@@ -49,6 +49,7 @@ func Sync(baseDir string, cfg *config.Config, registry *target.Registry, opts Sy
 	}
 
 	result := &SyncResult{
+		DryRun:    opts.DryRun,
 		HubPath:   hubPath,
 		HubStatus: hubStatus,
 		Links:     make([]LinkResult, 0, len(cfg.Targets)),

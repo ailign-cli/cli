@@ -8,6 +8,7 @@ type ComposeResult struct {
 
 // SyncResult holds the outcome of a sync operation.
 type SyncResult struct {
+	DryRun    bool
 	HubPath   string
 	HubStatus string // "written" or "unchanged"
 	Links     []LinkResult

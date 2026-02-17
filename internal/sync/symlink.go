@@ -8,7 +8,7 @@ import (
 )
 
 // CheckSymlinkStatus returns what EnsureSymlink would do without modifying any files.
-// Returns "created" (doesn't exist), "exists" (correct), or "replaced" (wrong target).
+// Returns "created" (doesn't exist), "exists" (correct), or "replaced" (wrong symlink target or non-symlink entry at linkPath).
 func CheckSymlinkStatus(linkPath string, hubPath string) (string, error) {
 	if !filepath.IsAbs(linkPath) {
 		return "", fmt.Errorf("linkPath must be absolute, got: %s", linkPath)
