@@ -14,7 +14,21 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. Run `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
-2. **Check checklists status** (if FEATURE_DIR/checklists/ exists):
+2. **Branch strategy — one branch per phase/PR**:
+   - **Spec branch**: All speckit workflow steps (specify, clarify, plan, tasks, analyze, checklists) use `<feature>/spec` (e.g., `002-local-instruction-sync/spec`). This is created by `/speckit.specify` and merged as a single PR before implementation starts.
+   - **Phase branches**: Each implementation phase that maps to a PR gets its own branch off `main`
+   - Branch naming: `<feature>/<phase-slug>` (e.g., `002-local-instruction-sync/schema-target-refactor`)
+   - Derive the slug from the phase title in tasks.md (kebab-case, 2-4 words)
+   - Before starting a phase:
+     1. Ensure `main` is up to date: `git checkout main && git pull`
+     2. Create the phase branch: `git checkout -b <feature>/<phase-slug>`
+   - After completing a phase:
+     1. Commit all changes, push the branch
+     2. Create a PR for the phase
+     3. **STOP** — wait for user to approve/merge before starting the next phase
+   - Phase 1 (Setup) is a verification-only step — run it on whatever branch is current, no dedicated branch needed unless it produces changes
+
+3. **Check checklists status** (if `FEATURE_DIR/checklists/` exists):
    - Scan all checklist files in the checklists/ directory
    - For each checklist, count:
      - Total items: All lines matching `- [ ]` or `- [X]` or `- [x]`
@@ -105,7 +119,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Execution flow**: Order and dependency requirements
 
 6. Execute implementation following the task plan:
-   - **Phase-by-phase execution**: Complete each phase before moving to the next
+   - **Phase-by-phase execution**: Complete each phase before moving to the next. Create the phase branch (per step 2) before starting each phase that maps to a PR.
    - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together
    - **Follow BDD+TDD approach**: Execute BDD and TDD test tasks before their corresponding implementation tasks
    - **BDD outer loop**: At each user story phase:
