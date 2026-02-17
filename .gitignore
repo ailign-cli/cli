@@ -43,3 +43,6 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Claude Code internal state
+.claude/worktrees/
