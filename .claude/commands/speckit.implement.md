@@ -110,10 +110,11 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Follow BDD+TDD approach**: Execute BDD and TDD test tasks before their corresponding implementation tasks
    - **BDD outer loop**: At each user story phase:
      1. Verify `.feature` file exists for the story
-     2. Run step definitions (expect RED for new scenarios)
-     3. Execute TDD inner loop (unit tests → implement)
-     4. Run step definitions again (expect GREEN)
-     5. Report BDD scenario status: X of Y scenarios passing
+     2. Remove the `@wip` tag from the `.feature` file so godog picks up the scenarios
+     3. Run step definitions (expect RED for new scenarios)
+     4. Execute TDD inner loop (unit tests → implement)
+     5. Run step definitions again (expect GREEN)
+     6. Report BDD scenario status: X of Y scenarios passing
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
 

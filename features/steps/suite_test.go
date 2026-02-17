@@ -16,11 +16,17 @@ func TestFeatures(t *testing.T) {
 		format = "junit:" + output
 	}
 
+	tags := "~@wip"
+	if envTags := os.Getenv("GODOG_TAGS"); envTags != "" {
+		tags = envTags
+	}
+
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
 			Format:   format,
 			Paths:    []string{"../"},
+			Tags:     tags,
 			TestingT: t,
 		},
 	}

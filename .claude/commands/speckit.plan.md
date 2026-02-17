@@ -92,8 +92,10 @@ Feature files require technical context (data model, contracts, architecture) to
 concrete, executable scenarios. This is why they are generated here rather than during
 `/speckit.specify`.
 
-1. **For each user story in spec.md**, generate a `.feature` file at `features/[kebab-case-story-title].feature` (project root):
+1. **For each user story in spec.md**, generate a `.feature` file at `features/[kebab-case-story-title].feature` (project root).
+   Tag the feature with `@wip` so it is excluded from test runs until step definitions are implemented:
    ```gherkin
+   @wip
    # Source: specs/[###-feature-name]/spec.md - User Story N
 
    Feature: [User Story Title]
@@ -112,12 +114,13 @@ concrete, executable scenarios. This is why they are generated here rather than 
        Then [concrete assertion]
    ```
 
-2. **Scenario quality requirements**:
+2. **Scenario quality requirements** (follow the `gherkin-scenarios` and `gherkin-feature-files` skills):
    - Scenarios must use concrete test data (not vague prose)
    - Each scenario maps to one acceptance criterion from the user story summary table
    - Edge cases from the spec become additional scenarios (tagged @edge-case)
    - Leverage data model and contracts for realistic test data
    - Step phrasing should be reusable across scenarios where possible
+   - **Tense convention**: Given = past tense, When = present tense, Then/And = future tense ("will")
 
 3. **Update spec.md** acceptance scenario sections to reference the generated feature files
 
