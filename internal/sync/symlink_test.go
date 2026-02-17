@@ -140,7 +140,7 @@ func TestEnsureSymlink_PermissionError(t *testing.T) {
 	require.NoError(t, os.MkdirAll(filepath.Dir(hubPath), 0755))
 	require.NoError(t, os.WriteFile(hubPath, []byte("content"), 0644))
 	require.NoError(t, os.MkdirAll(readonlyDir, 0555))
-	defer os.Chmod(readonlyDir, 0755)
+	defer func() { _ = os.Chmod(readonlyDir, 0755) }()
 
 	_, err := EnsureSymlink(linkPath, hubPath)
 	require.Error(t, err)

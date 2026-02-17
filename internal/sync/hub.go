@@ -35,15 +35,15 @@ func WriteHub(hubPath string, content []byte) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("creating temp file: %w", err)
 	}
-	defer os.Remove(tmp.Name()) // cleanup on error path
+	defer func() { _ = os.Remove(tmp.Name()) }() // cleanup on error path
 
 	if _, err := tmp.Write(content); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return "", fmt.Errorf("writing temp file: %w", err)
 	}
 
 	if err := tmp.Sync(); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return "", fmt.Errorf("syncing temp file: %w", err)
 	}
 

@@ -10,27 +10,36 @@ import (
 )
 
 // ComposeOverlays reads and composes overlay files in order,
-// prepending a managed-content header.
+// prepending a managed-content header. All overlays are validated
+// before composition; errors are collected and returned together.
 func ComposeOverlays(baseDir string, overlays []string) (*ComposeResult, error) {
-	result := &ComposeResult{}
+	result := &ComposeResult{
+		Warnings: make([]string, 0),
+	}
+
+	var errs []error
 	var parts []string
 
 	for _, overlay := range overlays {
 		if err := validateOverlayPath(baseDir, overlay); err != nil {
-			return nil, err
+			errs = append(errs, err)
+			continue
 		}
 
 		fullPath := filepath.Join(baseDir, overlay)
 		data, err := os.ReadFile(fullPath)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
-				return nil, fmt.Errorf("overlay file not found: %s", overlay)
+				errs = append(errs, fmt.Errorf("overlay file not found: %s", overlay))
+			} else {
+				errs = append(errs, fmt.Errorf("reading overlay %s: %w", overlay, err))
 			}
-			return nil, fmt.Errorf("reading overlay %s: %w", overlay, err)
+			continue
 		}
 
 		if !utf8.Valid(data) {
-			return nil, fmt.Errorf("overlay %s contains invalid UTF-8 content", overlay)
+			errs = append(errs, fmt.Errorf("overlay %s contains invalid UTF-8 content", overlay))
+			continue
 		}
 
 		content := string(data)
@@ -39,6 +48,10 @@ func ComposeOverlays(baseDir string, overlays []string) (*ComposeResult, error) 
 		}
 
 		parts = append(parts, content)
+	}
+
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
 	}
 
 	header := buildHeader(overlays)
@@ -76,7 +89,10 @@ func validateOverlayPath(baseDir, overlay string) error {
 		return fmt.Errorf("resolving overlay path %s: %w", overlay, err)
 	}
 	resolvedRel, err := filepath.Rel(resolvedBase, resolvedPath)
-	if err != nil || resolvedRel == ".." || strings.HasPrefix(resolvedRel, ".."+string(filepath.Separator)) {
+	if err != nil {
+		return fmt.Errorf("computing resolved relative path for %s: %w", overlay, err)
+	}
+	if resolvedRel == ".." || strings.HasPrefix(resolvedRel, ".."+string(filepath.Separator)) {
 		return fmt.Errorf("overlay path escapes base directory via symlink: %s", overlay)
 	}
 

@@ -89,7 +89,7 @@ func TestSync_PartialFailure(t *testing.T) {
 	// Create .claude/ as read-only so symlink creation fails for claude
 	claudeDir := filepath.Join(dir, ".claude")
 	require.NoError(t, os.MkdirAll(claudeDir, 0555))
-	defer os.Chmod(claudeDir, 0755)
+	defer func() { _ = os.Chmod(claudeDir, 0755) }()
 
 	cfg := &config.Config{
 		Targets:       []string{"claude", "cursor"},
