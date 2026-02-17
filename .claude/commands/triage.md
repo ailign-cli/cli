@@ -18,7 +18,7 @@ The user input can be one of three things:
 
 2. **A PR reference** — one of:
    - A number: `19` or `#19` (assumes the local repo)
-   - A cross-repo reference: `OWNER/REPO#NUMBER` (e.g., `Luscii/cVitals-API#123`)
+   - A cross-repo reference: `OWNER/REPO#NUMBER` (e.g., `acme/web-api#123`)
    - A GitHub PR URL: `https://github.com/OWNER/REPO/pull/NUMBER`
 
    Extract the PR number (and optionally `OWNER/REPO`) and fetch review comments from it (see "Fetching PR review comments" below).
