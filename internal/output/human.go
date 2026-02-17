@@ -77,7 +77,7 @@ func (f *HumanFormatter) FormatSyncResult(result SyncResult) string {
 	// Hub file status
 	hubLabel := result.HubPath
 	if result.DryRun {
-		fmt.Fprintf(&b, "  %-40s would be written\n", hubLabel)
+		fmt.Fprintf(&b, "  %-40s %s\n", hubLabel, dryRunHubStatus(result.HubStatus))
 	} else {
 		fmt.Fprintf(&b, "  %-40s %s\n", hubLabel, result.HubStatus)
 	}
@@ -88,7 +88,7 @@ func (f *HumanFormatter) FormatSyncResult(result SyncResult) string {
 		if link.Status == "error" {
 			fmt.Fprintf(&b, "  %-40s error: %s\n", label, link.Error)
 		} else if result.DryRun {
-			fmt.Fprintf(&b, "  %-40s would create symlink\n", label)
+			fmt.Fprintf(&b, "  %-40s %s\n", label, dryRunLinkStatus(link.Status))
 		} else {
 			fmt.Fprintf(&b, "  %-40s %s\n", label, humanLinkStatus(link.Status))
 		}
@@ -128,6 +128,24 @@ func (f *HumanFormatter) FormatSyncResult(result SyncResult) string {
 	}
 
 	return b.String()
+}
+
+func dryRunHubStatus(status string) string {
+	switch status {
+	case "unchanged":
+		return "unchanged"
+	default:
+		return "would be written"
+	}
+}
+
+func dryRunLinkStatus(status string) string {
+	switch status {
+	case "exists":
+		return "symlink ok"
+	default:
+		return "would create symlink"
+	}
 }
 
 func humanLinkStatus(status string) string {

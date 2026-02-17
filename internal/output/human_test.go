@@ -144,6 +144,8 @@ func TestHumanFormatSyncResult_DryRunUpToDate(t *testing.T) {
 	got := f.FormatSyncResult(result)
 
 	assert.Contains(t, got, "up to date")
+	assert.NotContains(t, got, "would be written")
+	assert.NotContains(t, got, "would create symlink")
 }
 
 func TestHumanFormatSuccess_NoWarnings(t *testing.T) {
