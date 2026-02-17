@@ -17,10 +17,10 @@ labels:
     description: "Spec, plan, and speckit workflow changes"
   - name: "type:tooling"
     color: "E07C98"
-    description: "Developer tooling and AI agent configuration"
+    description: "AI agent instructions and developer tool configuration"
   - name: "type:build-definition"
     color: "D93F0B"
-    description: "Build, CI, and config changes"
+    description: "Workflows, CI/CD, linters, and build configuration"
 
   # --- Version labels (title-based, auto-applied by labeler) ---
   - name: "version:major"

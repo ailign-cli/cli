@@ -27,15 +27,27 @@ labels:
 - label: "type:tooling"
   files:
   - "\\.claude/.*"
+  - "\\.github/copilot-instructions\\.md$"
+  - "\\.github/instructions/.*"
+  - "\\.github/skills/.*"
+  - "\\.cursorrules$"
+  - "\\.windsurfrules$"
 
 - label: "type:build-definition"
   files:
-  - "\\.github/.*"
+  - "\\.github/workflows/.*"
+  - "\\.github/dependabot\\.yml$"
+  - "\\.github/labeler\\.yml$"
+  - "\\.github/settings\\.yml$"
+  - "\\.github/release-drafter\\.yml$"
+  - "\\.github/PULL_REQUEST_TEMPLATE/.*"
   - "go\\.(mod|sum)$"
   - "Makefile$"
   - "Dockerfile.*"
-  - "\\.golangci\\.yml$"
+  - "\\.golangci.*"
   - "\\.goreleaser\\.yml$"
+  - "\\.editorconfig$"
+  - "\\.pre-commit-config\\.yaml$"
 
 # --- Version labels (based on PR title, conventional commits) ---
 
