@@ -25,7 +25,10 @@ func (w *testWorld) noSymlinksWillBeCreated() error {
 		fullPath := filepath.Join(w.dir, path)
 		info, err := os.Lstat(fullPath)
 		if err != nil {
-			continue // doesn't exist, good
+			if os.IsNotExist(err) {
+				continue // doesn't exist, good
+			}
+			return fmt.Errorf("checking for unexpected symlink at %s: %w", fullPath, err)
 		}
 		if info.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("symlink exists at %s but should not in dry-run", path)
