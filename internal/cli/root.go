@@ -57,6 +57,7 @@ func NewRootCommand() *cobra.Command {
 		"Output format: human or json")
 
 	rootCmd.AddCommand(newValidateCommand())
+	rootCmd.AddCommand(newSyncCommand())
 
 	return rootCmd
 }
