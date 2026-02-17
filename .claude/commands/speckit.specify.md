@@ -59,9 +59,9 @@ Given that feature description, do this:
       - Bash example: `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" --json --number 5 --short-name "user-auth" "Add user authentication"`
       - PowerShell example: `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" -Json -Number 5 -ShortName "user-auth" "Add user authentication"`
 
-   e. Rename the branch to add `/spec` suffix for PR-based workflow:
+   e. Rename the branch to add `/spec` suffix for PR-based workflow. Use the BRANCH_NAME value from the script's JSON output:
       ```bash
-      git branch -m <branch-name>/spec
+      git branch -m $BRANCH_NAME/spec
       ```
       This creates a sub-branch (e.g., `002-local-instruction-sync/spec`) for all specification work. The `/spec` branch is used for the entire speckit workflow: specify, clarify, plan, tasks, analyze, and checklists. After the spec PR is merged, implementation phases get their own branches (e.g., `<feature>/schema-target-refactor`). The `specs/` directory retains the base feature name (e.g., `specs/002-local-instruction-sync/`).
 
