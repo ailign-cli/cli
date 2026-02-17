@@ -95,7 +95,7 @@ tool at all.
 **BDD+TDD dual-loop is mandatory for all features.**
 
 - Outer loop (BDD): `.feature` file scenarios drive acceptance criteria
-  - Scenarios written during `/speckit.specify` as executable Gherkin
+  - Scenarios written during `/speckit.plan` as executable Gherkin
   - Step definitions written before implementation (RED)
   - Step definitions pass after implementation (GREEN)
 - Inner loop (TDD): Unit tests drive component design

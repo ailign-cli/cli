@@ -10,7 +10,7 @@ Enforces Constitution Principle IV (BDD+TDD dual-loop).
 
 ## When This Skill Applies
 
-- Creating a new `.feature` file during `/speckit.specify`
+- Creating a new `.feature` file during `/speckit.plan`
 - Reorganizing or splitting feature files
 - Adding scenarios to an existing feature file
 - Reviewing feature file structure

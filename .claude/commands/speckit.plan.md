@@ -32,6 +32,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Phase 1: Generate data-model.md, contracts/, quickstart.md
    - Phase 1: Update agent context by running the agent script
    - Re-evaluate Constitution Check post-design
+   - Phase 2: Generate Gherkin feature files from spec user stories
 
 4. **Stop and report**: Command ends after planning. Report branch, IMPL_PLAN path, generated artifacts, and generated feature files.
 
