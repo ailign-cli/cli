@@ -114,12 +114,13 @@ concrete, executable scenarios. This is why they are generated here rather than 
        Then [concrete assertion]
    ```
 
-2. **Scenario quality requirements**:
+2. **Scenario quality requirements** (follow the `gherkin-scenarios` and `gherkin-feature-files` skills):
    - Scenarios must use concrete test data (not vague prose)
    - Each scenario maps to one acceptance criterion from the user story summary table
    - Edge cases from the spec become additional scenarios (tagged @edge-case)
    - Leverage data model and contracts for realistic test data
    - Step phrasing should be reusable across scenarios where possible
+   - **Tense convention**: Given = past tense, When = present tense, Then/And = future tense ("will")
 
 3. **Update spec.md** acceptance scenario sections to reference the generated feature files
 
