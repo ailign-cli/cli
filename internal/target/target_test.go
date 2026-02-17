@@ -18,7 +18,7 @@ func TestRegistry_Register_And_Get(t *testing.T) {
 	r.Register(Claude{})
 
 	got, ok := r.Get("claude")
-	assert.True(t, ok)
+	require.True(t, ok)
 	assert.Equal(t, "claude", got.Name())
 	assert.Equal(t, ".claude/instructions.md", got.InstructionPath())
 }
