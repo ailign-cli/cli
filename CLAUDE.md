@@ -225,6 +225,7 @@ Exception: Security vulnerabilities get immediate fixes.
 ## Active Technologies
 - Go 1.24+ (targeting Go 1.26) + Cobra (CLI), goccy/go-yaml (YAML), santhosh-tekuri/jsonschema v6 (validation), testify (TDD), godog (BDD) (001-config-parsing)
 - N/A (file system read-only, single `.ailign.yml` file) (001-config-parsing)
+- File system — reads overlay files, writes `.ailign/instructions.md`, creates symlinks (002-local-instruction-sync)
 
 ## Recent Changes
 - 001-config-parsing: Added godog (BDD) for executable Gherkin feature files alongside existing TDD
