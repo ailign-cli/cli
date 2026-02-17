@@ -1,0 +1,35 @@
+name: Copilot Setup Steps
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  copilot-setup-steps:
+    name: Copilot Setup Steps
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install tools
+        run: |
+          go install gotest.tools/gotestsum@latest
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(cat .golangci-lint-version)
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Build binary
+        run: go build ./...
+
+      - name: Verify tests pass
+        run: gotestsum -- ./... -count=1
+
+      - name: Verify linter passes
+        run: golangci-lint run
