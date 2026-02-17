@@ -159,9 +159,9 @@
 
 **Purpose**: Final validation across all stories
 
-- [ ] T043 Run full test suite `go test ./...` and verify all tests pass (unit + BDD)
-- [ ] T044 [P] Validate quickstart.md workflow: execute documented commands and verify expected file structure and output
-- [ ] T045 Mark all tasks complete in specs/002-local-instruction-sync/tasks.md
+- [X] T043 Run full test suite `go test ./...` and verify all tests pass (unit + BDD)
+- [X] T044 [P] Validate quickstart.md workflow: execute documented commands and verify expected file structure and output
+- [X] T045 Mark all tasks complete in specs/002-local-instruction-sync/tasks.md
 
 ---
 
