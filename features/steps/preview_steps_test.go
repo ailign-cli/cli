@@ -23,16 +23,14 @@ func (w *testWorld) noSymlinksWillBeCreated() error {
 		".windsurfrules",
 	} {
 		fullPath := filepath.Join(w.dir, path)
-		info, err := os.Lstat(fullPath)
+		_, err := os.Lstat(fullPath)
 		if err != nil {
 			if os.IsNotExist(err) {
 				continue // doesn't exist, good
 			}
-			return fmt.Errorf("checking for unexpected symlink at %s: %w", fullPath, err)
+			return fmt.Errorf("checking path %s: %w", fullPath, err)
 		}
-		if info.Mode()&os.ModeSymlink != 0 {
-			return fmt.Errorf("symlink exists at %s but should not in dry-run", path)
-		}
+		return fmt.Errorf("path %s exists but should not in dry-run", path)
 	}
 	return nil
 }
