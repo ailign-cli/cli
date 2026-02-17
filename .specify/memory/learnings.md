@@ -1,6 +1,14 @@
-# Development Learnings
+# Learnings
 
-Patterns discovered through code review and debugging. Follow these to avoid repeat mistakes.
+Project-specific conventions and patterns discovered through code
+reviews and development. Curated — not a changelog.
+
+## Documentation
+
+- Use generic/fictional examples in documentation (e.g.,
+  `acme/web-api#123`) instead of real repository names, even
+  internal ones. Avoids implying affiliation, leaking private repo
+  names, and confusing access controls.
 
 ## Go Error Handling
 
@@ -24,7 +32,7 @@ Patterns discovered through code review and debugging. Follow these to avoid rep
 
 ## CI/CD
 
-- **Workflow permissions**: An explicit least-privilege `permissions:` block is required on all GitHub Actions workflows. See `ci-rules.md`.
+- **Workflow permissions**: An explicit least-privilege `permissions:` block is required on all GitHub Actions workflows. Document permission rationale alongside each workflow in `.github/workflows/`.
 
 ## PR & Commit Workflow
 
@@ -32,6 +40,7 @@ Patterns discovered through code review and debugging. Follow these to avoid rep
 - **BDD steps are expensive**: A single `*_steps_test.go` can be 300+ lines. Split into own PR when pushing over limit.
 - **Test multiplier**: Estimate 1.5-2x implementation lines for Go tests.
 - **Pre-commit stash**: Stashes unstaged but NOT untracked files. Stage all interdependent files together or linter fails on undefined symbols.
+- When a PR accumulates features beyond the original description, update the PR body to list all changes. Reviewers (human and bot) judge scope against the description.
 
 ## BDD Architecture
 
