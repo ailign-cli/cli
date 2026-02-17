@@ -68,4 +68,5 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	registerConfigParsingSteps(ctx, w)
 	registerSchemaValidationSteps(ctx, w)
 	registerSyncSteps(ctx, w)
+	registerPreviewSteps(ctx, w)
 }

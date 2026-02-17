@@ -163,6 +163,25 @@ func TestSync_EmptyOverlay_WarningOnStderr(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// Sync command: dry-run
+// ---------------------------------------------------------------------------
+
+func TestSync_DryRun_NoFilesCreated(t *testing.T) {
+	dir := t.TempDir()
+	writeConfigWithOverlays(t, dir, []string{"claude"}, []string{"base.md"})
+	writeOverlay(t, dir, "base.md", "Instructions\n")
+
+	stdout, _, exitCode := executeCommand([]string{"sync", "--dry-run"}, dir)
+
+	assert.Equal(t, 0, exitCode)
+	assert.Contains(t, stdout, "would")
+
+	// Verify no files were created
+	_, err := os.Stat(filepath.Join(dir, ".ailign", "instructions.md"))
+	assert.True(t, os.IsNotExist(err), "hub file should not exist after dry-run")
+}
+
+// ---------------------------------------------------------------------------
 // Sync command: missing config file
 // ---------------------------------------------------------------------------
 

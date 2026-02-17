@@ -107,6 +107,45 @@ func TestHumanFormatSyncResult_Replaced(t *testing.T) {
 	assert.Contains(t, got, "symlink replaced")
 }
 
+func TestHumanFormatSyncResult_DryRun(t *testing.T) {
+	f := &HumanFormatter{}
+	result := SyncResult{
+		DryRun:       true,
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "written",
+		OverlayCount: 1,
+		Links: []LinkResult{
+			{Target: "claude", LinkPath: ".claude/instructions.md", Status: "created"},
+			{Target: "cursor", LinkPath: ".cursorrules", Status: "created"},
+		},
+	}
+
+	got := f.FormatSyncResult(result)
+
+	assert.Contains(t, got, "Dry run")
+	assert.Contains(t, got, "would be written")
+	assert.Contains(t, got, "would create symlink")
+	assert.Contains(t, got, "Would sync 2 targets")
+	assert.NotContains(t, got, "Synced")
+}
+
+func TestHumanFormatSyncResult_DryRunUpToDate(t *testing.T) {
+	f := &HumanFormatter{}
+	result := SyncResult{
+		DryRun:       true,
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "unchanged",
+		OverlayCount: 1,
+		Links: []LinkResult{
+			{Target: "cursor", LinkPath: ".cursorrules", Status: "exists"},
+		},
+	}
+
+	got := f.FormatSyncResult(result)
+
+	assert.Contains(t, got, "up to date")
+}
+
 func TestHumanFormatSuccess_NoWarnings(t *testing.T) {
 	f := &HumanFormatter{}
 	result := ValidationResult{
