@@ -63,12 +63,19 @@ func createSymlink(linkPath string, relTarget string, status string) (string, er
 // replaceSymlink atomically replaces whatever exists at linkPath with a
 // symlink pointing to relTarget. It creates a temporary symlink in the
 // same directory and renames it into place so the previous file/link
-// remains until the new one is ready.
+// remains until the new one is ready. Each call uses a unique temp name
+// to avoid races with concurrent runs.
 func replaceSymlink(linkPath, relTarget string) (string, error) {
 	dir := filepath.Dir(linkPath)
-	tmpLink := filepath.Join(dir, ".ailign-symlink-tmp")
 
-	// Remove any stale temp from a previous interrupted run
+	// Reserve a unique temp path via CreateTemp, then remove the regular
+	// file so we can create a symlink at that path.
+	tmp, err := os.CreateTemp(dir, ".ailign-symlink-*.tmp")
+	if err != nil {
+		return "", fmt.Errorf("creating temp file for symlink: %w", err)
+	}
+	tmpLink := tmp.Name()
+	_ = tmp.Close()
 	_ = os.Remove(tmpLink)
 
 	if err := os.Symlink(relTarget, tmpLink); err != nil {
