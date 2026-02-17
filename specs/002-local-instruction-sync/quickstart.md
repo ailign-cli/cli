@@ -126,7 +126,7 @@ your-repo/
 │   └── instructions.md -> ../.ailign/instructions.md
 ├── .cursorrules -> .ailign/instructions.md
 └── .github/
-    └── copilot-instructions.md -> ../../.ailign/instructions.md
+    └── copilot-instructions.md -> ../.ailign/instructions.md
 ```
 
 ## Git Integration

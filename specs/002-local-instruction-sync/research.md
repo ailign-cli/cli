@@ -70,7 +70,7 @@ can evolve to per-target files.
 |------------------------------------|---------------------------------|
 | `.claude/instructions.md`          | `../.ailign/instructions.md`    |
 | `.cursorrules`                     | `.ailign/instructions.md`       |
-| `.github/copilot-instructions.md`  | `../../.ailign/instructions.md` |
+| `.github/copilot-instructions.md`  | `../.ailign/instructions.md`    |
 | `.windsurfrules`                   | `.ailign/instructions.md`       |
 
 ### Cross-Platform Considerations
