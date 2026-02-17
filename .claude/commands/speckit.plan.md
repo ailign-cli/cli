@@ -32,8 +32,9 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Phase 1: Generate data-model.md, contracts/, quickstart.md
    - Phase 1: Update agent context by running the agent script
    - Re-evaluate Constitution Check post-design
+   - Phase 2: Generate Gherkin feature files from spec user stories
 
-4. **Stop and report**: Command ends after Phase 2 planning. Report branch, IMPL_PLAN path, and generated artifacts.
+4. **Stop and report**: Command ends after planning. Report branch, IMPL_PLAN path, generated artifacts, and generated feature files.
 
 ## Phases
 
@@ -82,6 +83,45 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Preserve manual additions between markers
 
 **Output**: data-model.md, /contracts/*, quickstart.md, agent-specific file
+
+### Phase 2: Generate Gherkin Feature Files
+
+**Prerequisites:** Phase 1 complete (technical context available)
+
+Feature files require technical context (data model, contracts, architecture) to write
+concrete, executable scenarios. This is why they are generated here rather than during
+`/speckit.specify`.
+
+1. **For each user story in spec.md**, generate a `.feature` file at `features/[kebab-case-story-title].feature` (project root):
+   ```gherkin
+   # Source: specs/[###-feature-name]/spec.md - User Story N
+
+   Feature: [User Story Title]
+     In order to [benefit/goal from user story]
+     As a [actor from user story]
+     I want to [action from user story]
+
+     Scenario: [Acceptance scenario 1 title]
+       Given [concrete precondition with test data]
+       When [concrete action]
+       Then [concrete assertion]
+
+     Scenario: [Acceptance scenario 2 title]
+       Given [concrete precondition with test data]
+       When [concrete action]
+       Then [concrete assertion]
+   ```
+
+2. **Scenario quality requirements**:
+   - Scenarios must use concrete test data (not vague prose)
+   - Each scenario maps to one acceptance criterion from the user story summary table
+   - Edge cases from the spec become additional scenarios (tagged @edge-case)
+   - Leverage data model and contracts for realistic test data
+   - Step phrasing should be reusable across scenarios where possible
+
+3. **Update spec.md** acceptance scenario sections to reference the generated feature files
+
+**Output**: features/*.feature, updated spec.md
 
 ## Key rules
 

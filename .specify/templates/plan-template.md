@@ -47,7 +47,7 @@ specs/[###-feature]/
 └── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 
 features/                    # BDD feature files (Gherkin) - at project root
-├── [story-name].feature     # One per user story (/speckit.specify output)
+├── [story-name].feature     # One per user story (/speckit.plan Phase 2 output)
 └── steps/                   # Go step definitions
     ├── suite_test.go        # godog test runner
     ├── world_test.go        # shared testWorld struct

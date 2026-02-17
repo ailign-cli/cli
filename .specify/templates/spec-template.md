@@ -23,7 +23,7 @@
   - Use Connextra format: "In order to [benefit] / As a [actor] / I want to [action]" — benefit first
   - Full Gherkin scenarios live in .feature files at features/ (single source of truth)
   - spec.md contains a summary table for quick scanning — NOT full Given/When/Then prose
-  - Feature files are generated alongside spec.md by /speckit.specify
+  - Feature files are generated during /speckit.plan (not specify) when technical context is available
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)
