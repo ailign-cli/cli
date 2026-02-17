@@ -33,6 +33,11 @@ labels:
     color: "BFD4F2"
     description: "Bug fix — bumps patch version"
 
+  # --- Override labels (manually applied) ---
+  - name: "allow-large-pr"
+    color: "D4C5F9"
+    description: "Bypass PR size check for this PR"
+
   # --- Size labels (auto-applied by labeler) ---
   - name: "size:s"
     color: "C2E0C6"

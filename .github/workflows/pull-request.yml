@@ -27,29 +27,20 @@ jobs:
     name: PR Size Check
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: read
+      pull-requests: write
     steps:
-      - name: Check PR size
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if ! SIZE=$(gh pr view ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
-            --json additions,deletions \
-            --jq '.additions + .deletions'); then
-            echo "::error::Failed to fetch PR size from GitHub API"
-            exit 1
-          fi
-
-          echo "### PR Size: ${SIZE} lines changed" >> "$GITHUB_STEP_SUMMARY"
-
-          if [ "$SIZE" -gt 750 ]; then
-            echo "::error::PR size (${SIZE} lines) exceeds the hard limit of 750 lines. Split into smaller, independently deployable PRs."
-            echo "**Result:** FAILED — exceeds 750 line hard limit" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          elif [ "$SIZE" -gt 500 ]; then
-            echo "::warning::PR size (${SIZE} lines) exceeds the recommended limit of 500 lines. Consider splitting."
-            echo "**Result:** WARNING — exceeds 500 line soft limit" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "**Result:** OK" >> "$GITHUB_STEP_SUMMARY"
-          fi
+      - uses: ookami-kb/gh-pr-size-watcher@v1.5.0
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          errorSize: 500
+          errorMessage: ':no_entry: PR has more than **{allowed} additions**. Split it into smaller PRs.'
+          warningSize: 333
+          warningMessage: ':warning: PR has more than **{allowed} additions**. Consider splitting it into smaller PRs.'
+          excludeLabels: |
+            allow-large-pr
+          excludePaths: |
+            *.md
+            specs/**
+            features/*.feature
+            .specify/**
+            .claude/**
