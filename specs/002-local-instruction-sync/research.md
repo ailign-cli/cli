@@ -201,7 +201,7 @@ func atomicWrite(path string, content []byte) error {
 ### Cross-Target Atomicity
 
 Full cross-target atomicity (all-or-nothing across all targets) is
-not implemented. Each hub file is written atomically individually.
+not implemented. The hub file is written atomically.
 If a failure occurs mid-sync, some targets may have updated content
 while others retain old content. Re-running `ailign sync` resolves
 this. The risk is extremely low for small file operations.
