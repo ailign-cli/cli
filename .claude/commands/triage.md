@@ -387,7 +387,7 @@ mutation($threadId: ID!) {
   unresolveReviewThread(input: {threadId: $threadId}) {
     thread { id isResolved }
   }
-}' -F threadId="PRRT_kwDO..."
+}' -F threadId="$THREAD_ID"
 ```
 
 This is not used by the triage workflow itself but is documented here for manual recovery if a thread was resolved prematurely.
