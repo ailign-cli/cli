@@ -98,35 +98,7 @@ Given that feature description, do this:
 
 5. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
 
-6. **Generate Gherkin feature files**:
-   - For each user story in the spec, generate a `.feature` file at `features/[kebab-case-story-title].feature` (at project root)
-   - Create the `features/` directory at project root if it doesn't exist
-   - Feature file structure:
-     ```gherkin
-     # Feature: [User Story Title]
-     # Source: specs/[###-feature-name]/spec.md - User Story N
-
-     Feature: [User Story Title]
-       In order to [benefit/goal from user story]
-       As a [actor from user story]
-       I want to [action from user story]
-
-       Scenario: [Acceptance scenario 1 title]
-         Given [concrete precondition with test data]
-         When [concrete action]
-         Then [concrete assertion]
-
-       Scenario: [Acceptance scenario 2 title]
-         Given [concrete precondition with test data]
-         When [concrete action]
-         Then [concrete assertion]
-     ```
-   - Scenarios must use concrete test data (not vague prose)
-   - Each scenario maps to one acceptance criterion from the user story
-   - Edge cases from the spec become additional scenarios (tagged @edge-case)
-   - Update the spec.md acceptance section to reference the feature file with a summary table
-
-7. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
+6. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
 
    a. **Create Spec Quality Checklist**: Generate a checklist file at `FEATURE_DIR/checklists/requirements.md` using the checklist template structure with these validation items:
 
@@ -155,11 +127,10 @@ Given that feature description, do this:
       - [ ] Scope is clearly bounded
       - [ ] Dependencies and assumptions identified
       
-      ## BDD Integration
+      ## BDD Readiness
 
-      - [ ] Feature files generated for each user story
-      - [ ] Feature files contain concrete, executable scenarios
-      - [ ] spec.md acceptance sections reference feature files
+      - [ ] Acceptance scenario summary tables defined for each user story
+      - [ ] Scenario titles are specific enough to drive .feature file generation during /speckit.plan
 
       ## Feature Readiness
 
@@ -224,7 +195,9 @@ Given that feature description, do this:
 
    d. **Update Checklist**: After each validation iteration, update the checklist file with current pass/fail status
 
-8. Report completion with branch name, spec file path, generated feature files, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
+7. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
+
+**NOTE:** Feature files (`.feature`) are NOT generated during this step. They are generated during `/speckit.plan` when technical context is available to write concrete, executable scenarios.
 
 **NOTE:** The script creates and checks out the new branch and initializes the spec file before writing.
 
