@@ -40,7 +40,6 @@ reviews and development. Curated — not a changelog.
 - **BDD steps are expensive**: A single `*_steps_test.go` can be 300+ lines. Split into own PR when pushing over limit.
 - **Test multiplier**: Estimate 1.5-2x implementation lines for Go tests.
 - **Pre-commit stash**: Stashes unstaged but NOT untracked files. Stage all interdependent files together or linter fails on undefined symbols.
-- When a PR accumulates features beyond the original description, update the PR body to list all changes. Reviewers (human and bot) judge scope against the description.
 
 ## BDD Architecture
 
