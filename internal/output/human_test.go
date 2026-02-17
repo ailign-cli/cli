@@ -10,6 +10,103 @@ func TestHumanFormatterImplementsFormatter(t *testing.T) {
 	var _ Formatter = &HumanFormatter{}
 }
 
+func TestHumanFormatterImplementsSyncFormatter(t *testing.T) {
+	var _ SyncFormatter = &HumanFormatter{}
+}
+
+// --- Sync result formatting ---
+
+func TestHumanFormatSyncResult_Success(t *testing.T) {
+	f := &HumanFormatter{}
+	result := SyncResult{
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "written",
+		OverlayCount: 2,
+		Links: []LinkResult{
+			{Target: "claude", LinkPath: ".claude/instructions.md", Status: "created"},
+			{Target: "cursor", LinkPath: ".cursorrules", Status: "created"},
+		},
+	}
+
+	got := f.FormatSyncResult(result)
+
+	assert.Contains(t, got, "Syncing instructions to 2 targets")
+	assert.Contains(t, got, ".ailign/instructions.md")
+	assert.Contains(t, got, "written")
+	assert.Contains(t, got, "symlink created")
+	assert.Contains(t, got, "Synced 2 targets from 2 overlays")
+}
+
+func TestHumanFormatSyncResult_AllUpToDate(t *testing.T) {
+	f := &HumanFormatter{}
+	result := SyncResult{
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "unchanged",
+		OverlayCount: 1,
+		Links: []LinkResult{
+			{Target: "claude", LinkPath: ".claude/instructions.md", Status: "exists"},
+			{Target: "cursor", LinkPath: ".cursorrules", Status: "exists"},
+		},
+	}
+
+	got := f.FormatSyncResult(result)
+
+	assert.Contains(t, got, "symlink ok")
+	assert.Contains(t, got, "All 2 targets up to date")
+}
+
+func TestHumanFormatSyncResult_WithErrors(t *testing.T) {
+	f := &HumanFormatter{}
+	result := SyncResult{
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "written",
+		OverlayCount: 1,
+		Links: []LinkResult{
+			{Target: "claude", LinkPath: ".claude/instructions.md", Status: "created"},
+			{Target: "cursor", LinkPath: ".cursorrules", Status: "error", Error: "permission denied"},
+		},
+	}
+
+	got := f.FormatSyncResult(result)
+
+	assert.Contains(t, got, "error: permission denied")
+	assert.Contains(t, got, "Synced 1 of 2 targets")
+	assert.Contains(t, got, "1 error")
+}
+
+func TestHumanFormatSyncResult_SingleTarget(t *testing.T) {
+	f := &HumanFormatter{}
+	result := SyncResult{
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "written",
+		OverlayCount: 1,
+		Links: []LinkResult{
+			{Target: "claude", LinkPath: ".claude/instructions.md", Status: "created"},
+		},
+	}
+
+	got := f.FormatSyncResult(result)
+
+	assert.Contains(t, got, "Syncing instructions to 1 target")
+	assert.Contains(t, got, "Synced 1 target from 1 overlay")
+}
+
+func TestHumanFormatSyncResult_Replaced(t *testing.T) {
+	f := &HumanFormatter{}
+	result := SyncResult{
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "written",
+		OverlayCount: 1,
+		Links: []LinkResult{
+			{Target: "cursor", LinkPath: ".cursorrules", Status: "replaced"},
+		},
+	}
+
+	got := f.FormatSyncResult(result)
+
+	assert.Contains(t, got, "symlink replaced")
+}
+
 func TestHumanFormatSuccess_NoWarnings(t *testing.T) {
 	f := &HumanFormatter{}
 	result := ValidationResult{

@@ -301,6 +301,102 @@ func TestJSON_FieldNamesUseSnakeCase(t *testing.T) {
 	assert.NotContains(t, out, "\"fieldPath\"")
 }
 
+func TestJSONFormatterImplementsSyncFormatter(t *testing.T) {
+	var _ SyncFormatter = &JSONFormatter{}
+}
+
+// --- Sync result formatting ---
+
+// jsonSyncOutput mirrors the JSON sync result for unmarshalling in tests.
+type jsonSyncOutput struct {
+	DryRun  bool `json:"dry_run"`
+	Hub     struct {
+		Path   string `json:"path"`
+		Status string `json:"status"`
+	} `json:"hub"`
+	Links []struct {
+		Target   string `json:"target"`
+		LinkPath string `json:"link_path"`
+		Status   string `json:"status"`
+		Error    string `json:"error,omitempty"`
+	} `json:"links"`
+	Summary struct {
+		Total    int `json:"total"`
+		Created  int `json:"created"`
+		Existing int `json:"existing"`
+		Errors   int `json:"errors"`
+	} `json:"summary"`
+}
+
+func TestJSONFormatSyncResult_Success(t *testing.T) {
+	f := &JSONFormatter{}
+	result := SyncResult{
+		HubPath:      ".ailign/instructions.md",
+		HubStatus:    "written",
+		OverlayCount: 2,
+		Links: []LinkResult{
+			{Target: "claude", LinkPath: ".claude/instructions.md", Status: "created"},
+			{Target: "cursor", LinkPath: ".cursorrules", Status: "created"},
+		},
+	}
+
+	out := f.FormatSyncResult(result)
+
+	var parsed jsonSyncOutput
+	err := json.Unmarshal([]byte(out), &parsed)
+	assert.NoError(t, err, "FormatSyncResult output must be valid JSON")
+
+	assert.False(t, parsed.DryRun)
+	assert.Equal(t, ".ailign/instructions.md", parsed.Hub.Path)
+	assert.Equal(t, "written", parsed.Hub.Status)
+	assert.Len(t, parsed.Links, 2)
+	assert.Equal(t, "claude", parsed.Links[0].Target)
+	assert.Equal(t, "created", parsed.Links[0].Status)
+	assert.Equal(t, 2, parsed.Summary.Total)
+	assert.Equal(t, 2, parsed.Summary.Created)
+	assert.Equal(t, 0, parsed.Summary.Errors)
+}
+
+func TestJSONFormatSyncResult_WithErrors(t *testing.T) {
+	f := &JSONFormatter{}
+	result := SyncResult{
+		HubPath:   ".ailign/instructions.md",
+		HubStatus: "written",
+		Links: []LinkResult{
+			{Target: "claude", LinkPath: ".claude/instructions.md", Status: "created"},
+			{Target: "cursor", LinkPath: ".cursorrules", Status: "error", Error: "permission denied"},
+		},
+	}
+
+	out := f.FormatSyncResult(result)
+
+	var parsed jsonSyncOutput
+	err := json.Unmarshal([]byte(out), &parsed)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 2, parsed.Summary.Total)
+	assert.Equal(t, 1, parsed.Summary.Created)
+	assert.Equal(t, 1, parsed.Summary.Errors)
+	assert.Equal(t, "error", parsed.Links[1].Status)
+	assert.Equal(t, "permission denied", parsed.Links[1].Error)
+}
+
+func TestJSONFormatSyncResult_LinksAlwaysArray(t *testing.T) {
+	f := &JSONFormatter{}
+	result := SyncResult{
+		HubPath:   ".ailign/instructions.md",
+		HubStatus: "written",
+		Links:     []LinkResult{},
+	}
+
+	out := f.FormatSyncResult(result)
+
+	var raw map[string]json.RawMessage
+	err := json.Unmarshal([]byte(out), &raw)
+	assert.NoError(t, err)
+	assert.Equal(t, byte('['), raw["links"][0], "links must be a JSON array, not null")
+}
+
 func TestJSON_SeverityOmitted(t *testing.T) {
 	f := newJSONFormatter()
 	result := ValidationResult{

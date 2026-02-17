@@ -60,6 +60,89 @@ func formatEntry(b *strings.Builder, e ValidationError) {
 	}
 }
 
+// FormatSyncResult formats a sync result for human-readable terminal output.
+func (f *HumanFormatter) FormatSyncResult(result SyncResult) string {
+	var b strings.Builder
+
+	totalTargets := len(result.Links)
+
+	if result.DryRun {
+		b.WriteString("Dry run — no files will be modified.\n")
+	} else {
+		fmt.Fprintf(&b, "Syncing instructions to %d %s...\n", totalTargets, pluralize("target", totalTargets))
+	}
+
+	b.WriteString("\n")
+
+	// Hub file status
+	hubLabel := result.HubPath
+	if result.DryRun {
+		fmt.Fprintf(&b, "  %-40s would be written\n", hubLabel)
+	} else {
+		fmt.Fprintf(&b, "  %-40s %s\n", hubLabel, result.HubStatus)
+	}
+
+	// Per-target status
+	for _, link := range result.Links {
+		label := link.LinkPath
+		if link.Status == "error" {
+			fmt.Fprintf(&b, "  %-40s error: %s\n", label, link.Error)
+		} else if result.DryRun {
+			fmt.Fprintf(&b, "  %-40s would create symlink\n", label)
+		} else {
+			fmt.Fprintf(&b, "  %-40s %s\n", label, humanLinkStatus(link.Status))
+		}
+	}
+
+	b.WriteString("\n")
+
+	// Summary line
+	var created, existing, errors int
+	for _, link := range result.Links {
+		switch link.Status {
+		case "created", "replaced":
+			created++
+		case "exists":
+			existing++
+		case "error":
+			errors++
+		}
+	}
+
+	overlayCount := result.OverlayCount
+	if errors > 0 {
+		fmt.Fprintf(&b, "Synced %d of %d %s from %d %s (%d %s).\n",
+			totalTargets-errors, totalTargets, pluralize("target", totalTargets),
+			overlayCount, pluralize("overlay", overlayCount),
+			errors, pluralize("error", errors))
+	} else if existing == totalTargets {
+		fmt.Fprintf(&b, "All %d %s up to date.\n", totalTargets, pluralize("target", totalTargets))
+	} else if result.DryRun {
+		fmt.Fprintf(&b, "Would sync %d %s from %d %s.\n",
+			totalTargets, pluralize("target", totalTargets),
+			overlayCount, pluralize("overlay", overlayCount))
+	} else {
+		fmt.Fprintf(&b, "Synced %d %s from %d %s.\n",
+			totalTargets, pluralize("target", totalTargets),
+			overlayCount, pluralize("overlay", overlayCount))
+	}
+
+	return b.String()
+}
+
+func humanLinkStatus(status string) string {
+	switch status {
+	case "created":
+		return "symlink created"
+	case "exists":
+		return "symlink ok"
+	case "replaced":
+		return "symlink replaced"
+	default:
+		return status
+	}
+}
+
 // pluralize returns the singular or plural form of a word based on count.
 func pluralize(word string, count int) string {
 	if count == 1 {

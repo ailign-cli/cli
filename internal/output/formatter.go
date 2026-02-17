@@ -24,3 +24,26 @@ type Formatter interface {
 	FormatErrors(result ValidationResult) string
 	FormatWarnings(result ValidationResult) string
 }
+
+// SyncFormatter defines the interface for formatting sync results.
+type SyncFormatter interface {
+	FormatSyncResult(result SyncResult) string
+}
+
+// SyncResult represents the outcome of a sync operation for formatting.
+type SyncResult struct {
+	DryRun       bool
+	HubPath      string
+	HubStatus    string // "written", "unchanged"
+	Links        []LinkResult
+	Warnings     []string
+	OverlayCount int
+}
+
+// LinkResult represents a per-target symlink outcome for formatting.
+type LinkResult struct {
+	Target   string
+	LinkPath string
+	Status   string // "created", "exists", "replaced", "error"
+	Error    string
+}
