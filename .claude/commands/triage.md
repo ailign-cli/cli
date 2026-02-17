@@ -243,22 +243,40 @@ If the input was inline review comments (not fetched from a PR), skip the reply/
 
 ### Step 6: Distill learnings
 
-Take the analysis of the review comments and distill learnings:
+Extract actionable learnings from the review comments — patterns, mistakes, or conventions worth remembering for future work.
+
+#### 6.1 Identify new learnings
+
+From the accepted comments, distill what went wrong or what convention was missed:
 
 ```
 ## Learnings
 
-| Learning | Comments Addressed |
-| -------- | ------------------ |
-| <learning> | #1, #2 |
-| <learning> | #3, #4 |
-
+| Learning | Scope | Comments |
+| -------- | ----- | -------- |
+| <learning> | project | #1, #2 |
+| <learning> | user | #3 |
 ```
 
-Add the learnings at the appropriate place, which could be:
-- The specs of the feature
-- AI instructions
-- Other memory locations
+**Scope** determines where the learning is stored:
+
+- **project** — specific to this codebase (conventions, architecture decisions, project-specific patterns). Stored in the project's learnings file (e.g., `.specify/memory/learnings.md`, `LEARNINGS.md`, or wherever this project keeps its memory).
+- **user** — general coding practices applicable across any codebase (language idioms, review patterns, universal best practices). Stored in the user's personal memory (e.g., `~/.claude/CLAUDE.md` or equivalent user-level config).
+
+#### 6.2 Integrate with existing learnings
+
+For each learning, **read the target file first** and compare against what's already there:
+
+1. **Duplicate** — the learning already exists in substance. Skip it.
+2. **Refinement** — the learning strengthens or clarifies an existing one. Update the existing entry in place (don't add a second entry).
+3. **Contradiction** — the new learning supersedes an older one. Replace the old entry.
+4. **Novel** — the learning is genuinely new. Add it.
+
+**Never blindly append.** The goal is a curated, non-redundant set of learnings that stays useful as it grows. Remove learnings that have been fully absorbed into project conventions or are no longer relevant.
+
+#### 6.3 Write changes
+
+Apply the additions, updates, and removals to the appropriate files. If a target file doesn't exist yet, create it with a brief header explaining its purpose.
 
 ### Step 7: Summary
 
