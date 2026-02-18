@@ -259,8 +259,8 @@ Exception: Security vulnerabilities get immediate fixes.
 - Go 1.24+ (targeting Go 1.26) + Cobra (CLI), goccy/go-yaml (YAML), santhosh-tekuri/jsonschema v6 (validation), testify (TDD), godog (BDD) (001-config-parsing)
 - N/A (file system read-only, single `.ailign.yml` file) (001-config-parsing)
 - File system — reads overlay files, writes `.ailign/instructions.md`, creates symlinks (002-local-instruction-sync)
-- Go 1.24+ (existing), POSIX shell (install script), Node.js (NPM wrapper) + GoReleaser v2.13+ (existing), GitHub Actions (003-install-distribution/spec)
-- N/A (distribution only — no data persistence) (003-install-distribution/spec)
+- Go 1.24+ (existing), POSIX shell (install script), Node.js (NPM wrapper) + GoReleaser v2.13+ (existing), GitHub Actions (003-install-distribution)
+- N/A (distribution only — no data persistence) (003-install-distribution)
 
 ## Recent Changes
 - 001-config-parsing: Added godog (BDD) for executable Gherkin feature files alongside existing TDD
