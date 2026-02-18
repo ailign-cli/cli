@@ -93,7 +93,7 @@ The project README includes an Installation section near the top listing all ava
 | Scenario                        | Description                                                    |
 |---------------------------------|----------------------------------------------------------------|
 | README has install section      | Installation section appears before usage instructions         |
-| All methods documented          | Homebrew, go install, install script, Scoop, and npm are all listed |
+| All methods documented          | Homebrew, go install, install script, Scoop, npm, Docker, direct download, and Linux packages are all listed |
 | Commands are copy-pasteable     | Each method has a single command block that can be copied       |
 | Version verification documented | Shows how to verify the installation with `ailign --version`   |
 

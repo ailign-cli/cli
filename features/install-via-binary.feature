@@ -18,7 +18,6 @@ Feature: Download Pre-built Binary
     Then the ailign binary will be installed to the default location
     And running "ailign --version" will print a version string
 
-  @ci
   Scenario: Download and run on Windows
     Given the developer downloads the windows/amd64 release archive
     When the developer extracts the archive

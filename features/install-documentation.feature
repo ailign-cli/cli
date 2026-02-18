@@ -19,6 +19,9 @@ Feature: Installation Documentation
     And it will contain instructions for the install script
     And it will contain instructions for Scoop
     And it will contain instructions for npm
+    And it will contain instructions for Docker
+    And it will contain instructions for direct download
+    And it will contain instructions for Linux packages
 
   Scenario: Commands are copy-pasteable
     Given the Installation section in README.md
