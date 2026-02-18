@@ -55,7 +55,11 @@ When fetching from a PR:
 
 3. **Fetch review threads via GraphQL**:
    ```bash
-   gh api graphql -f query='
+   gh api graphql -F owner="$OWNER" -F repo="$REPO" -F prNumber="$PR_NUMBER" -f query='query($owner: String!, $repo: String!, $prNumber: Int!) { repository(owner: $owner, name: $repo) { pullRequest(number: $prNumber) { reviewThreads(first: 100) { nodes { id isResolved comments(first: 100) { nodes { id databaseId body author { login } path line originalLine } } } } } } }'
+   ```
+   **Quote safety:** The query MUST be passed as a single-line string to `-f query=` with ASCII single quotes. Markdown renderers, AI tools, and text editors can silently convert quotes to Unicode curly quotes (`'` `'`), causing `UNKNOWN_CHAR` GraphQL parse errors. Keeping the query on one line makes copy-paste safer. If the query needs to be multi-line for readability during editing, use a heredoc alternative:
+   ```bash
+   QUERY=$(cat <<'GQL'
    query($owner: String!, $repo: String!, $prNumber: Int!) {
      repository(owner: $owner, name: $repo) {
        pullRequest(number: $prNumber) {
@@ -70,7 +74,10 @@ When fetching from a PR:
          }
        }
      }
-   }' -F owner="$OWNER" -F repo="$REPO" -F prNumber="$PR_NUMBER"
+   }
+   GQL
+   )
+   gh api graphql -f query="$QUERY" -F owner="$OWNER" -F repo="$REPO" -F prNumber="$PR_NUMBER"
    ```
 
 4. **Parse the GraphQL response**: From `data.repository.pullRequest.reviewThreads.nodes[]`, filter to threads where `isResolved` is `false`. For each unresolved thread, extract:
@@ -142,55 +149,66 @@ Present a verdict table summarizing all comments before making any changes:
 
 ### Step 3a: Reply and resolve rejected comments
 
-After the user approves the analysis, for each **rejected** comment (only when input was fetched from a PR, not inline):
+After the user approves the analysis, for all **rejected** comments (only when input was fetched from a PR, not inline):
 
-1. **Reply** to the review thread with the rejection rationale:
-   ```bash
-   gh api graphql -f query='
-   mutation($threadId: ID!, $body: String!) {
-     addPullRequestReviewThreadReply(input: {
-       pullRequestReviewThreadId: $threadId
-       body: $body
-     }) {
-       comment { id }
-     }
-   }' -F threadId="$THREAD_ID" -F body="$REPLY_BODY"
-   ```
-   The `REPLY_BODY` should be a concise explanation of why the comment was rejected, derived from the Rationale column in the verdict table.
+**Batch all replies and resolves using GraphQL aliases** — this makes two API calls total instead of 2N:
 
-2. **Resolve** the thread:
+1. **Reply to all threads** in a single batched mutation:
+   Build a mutation using aliases (`r0`, `r1`, ...) for each rejected thread:
    ```bash
-   gh api graphql -f query='
-   mutation($threadId: ID!) {
-     resolveReviewThread(input: {threadId: $threadId}) {
-       thread { id isResolved }
-     }
-   }' -F threadId="$THREAD_ID"
+   QUERY=$(cat <<'GQL'
+   mutation {
+     r0: addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: "THREAD_ID_0", body: "REPLY_0"}) { comment { id } }
+     r1: addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: "THREAD_ID_1", body: "REPLY_1"}) { comment { id } }
+   }
+   GQL
+   )
+   gh api graphql -f query="$QUERY"
    ```
+   Replace `THREAD_ID_N` and `REPLY_N` with actual values. The `REPLY_BODY` should be a concise explanation of why the comment was rejected, derived from the Rationale column in the verdict table. **Escape double quotes and newlines** in reply bodies since they're embedded in the query string.
+
+2. **Resolve all threads** in a single batched mutation:
+   ```bash
+   QUERY=$(cat <<'GQL'
+   mutation {
+     t0: resolveReviewThread(input: {threadId: "THREAD_ID_0"}) { thread { id } }
+     t1: resolveReviewThread(input: {threadId: "THREAD_ID_1"}) { thread { id } }
+   }
+   GQL
+   )
+   gh api graphql -f query="$QUERY"
+   ```
+
+**Why two calls instead of one?** Replies must be posted before resolving, and GraphQL does not guarantee execution order of mutations within a single request. Batching replies first, then resolves, ensures correct ordering.
 
 **Important:** Use the `thread_id` (format `PRRT_kwDO...`) from Step 0 sub-step 4, **not** individual comment IDs.
+
+**Fallback:** If a batched mutation fails (e.g., one thread ID is invalid), fall back to individual calls for the failing threads so that valid threads are still processed.
 
 If the input was inline review comments (not fetched from a PR), skip this step entirely — there are no thread IDs to reply to.
 
 ### Step 3b: Post clarification questions for unclear comments
 
-After the user approves the analysis, for each **unclear** comment (only when input was fetched from a PR, not inline):
+After the user approves the analysis, for all **unclear** comments (only when input was fetched from a PR, not inline):
 
-1. **Reply** to the review thread with the clarification questions:
+**Batch all replies using GraphQL aliases** — one API call for all unclear threads:
+
+1. **Reply to all unclear threads** in a single batched mutation:
    ```bash
-   gh api graphql -f query='
-   mutation($threadId: ID!, $body: String!) {
-     addPullRequestReviewThreadReply(input: {
-       pullRequestReviewThreadId: $threadId
-       body: $body
-     }) {
-       comment { id }
-     }
-   }' -F threadId="$THREAD_ID" -F body="$REPLY_BODY"
+   QUERY=$(cat <<'GQL'
+   mutation {
+     c0: addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: "THREAD_ID_0", body: "REPLY_0"}) { comment { id } }
+     c1: addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: "THREAD_ID_1", body: "REPLY_1"}) { comment { id } }
+   }
+   GQL
+   )
+   gh api graphql -f query="$QUERY"
    ```
-   The `REPLY_BODY` should tag the comment author (e.g., `@username`) and list the specific clarification questions. Be concise and direct.
+   The `REPLY_BODY` should tag the comment author (e.g., `@username`) and list the specific clarification questions. Be concise and direct. **Escape double quotes and newlines** in reply bodies.
 
-2. **Do NOT resolve** the thread — it stays open so the author can respond.
+2. **Do NOT resolve** the threads — they stay open so the authors can respond.
+
+**Fallback:** If the batched mutation fails, fall back to individual calls for each thread.
 
 If the input was inline review comments, skip this step.
 
@@ -257,34 +275,36 @@ After all commits are created:
 
 2. **Collect commit hashes** recorded immediately after each commit in Step 5 (captured with `git rev-parse HEAD`), rather than inferring them later from `git log`.
 
-3. **Reply and resolve** each accepted comment's thread (only when input was fetched from a PR, not inline):
+3. **Reply and resolve** all accepted comments' threads using **batched GraphQL mutations** (only when input was fetched from a PR, not inline):
 
-   For each accepted comment:
-
-   a. **Reply** to the review thread referencing the commit:
+   a. **Reply to all threads** in a single batched mutation:
       ```bash
-      gh api graphql -f query='
-      mutation($threadId: ID!, $body: String!) {
-        addPullRequestReviewThreadReply(input: {
-          pullRequestReviewThreadId: $threadId
-          body: $body
-        }) {
-          comment { id }
-        }
-      }' -F threadId="$THREAD_ID" -F body="$REPLY_BODY"
+      QUERY=$(cat <<'GQL'
+      mutation {
+        r0: addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: "THREAD_ID_0", body: "Fixed in abc123 — description of fix."}) { comment { id } }
+        r1: addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: "THREAD_ID_1", body: "Fixed in def456 — description of fix."}) { comment { id } }
+      }
+      GQL
+      )
+      gh api graphql -f query="$QUERY"
       ```
-      The `REPLY_BODY` should briefly describe the fix and reference the commit hash, e.g.:
-      `"Fixed in <commit_hash> — <brief description of what was changed>."`
+      Each `REPLY_BODY` should briefly describe the fix and reference the commit hash. **Escape double quotes and newlines** in reply bodies.
 
-   b. **Resolve** the thread:
+   b. **Resolve all threads** in a single batched mutation:
       ```bash
-      gh api graphql -f query='
-      mutation($threadId: ID!) {
-        resolveReviewThread(input: {threadId: $threadId}) {
-          thread { id isResolved }
-        }
-      }' -F threadId="$THREAD_ID"
+      QUERY=$(cat <<'GQL'
+      mutation {
+        t0: resolveReviewThread(input: {threadId: "THREAD_ID_0"}) { thread { id } }
+        t1: resolveReviewThread(input: {threadId: "THREAD_ID_1"}) { thread { id } }
+      }
+      GQL
+      )
+      gh api graphql -f query="$QUERY"
       ```
+
+   **Why two calls instead of one?** Replies must be posted before resolving, and GraphQL does not guarantee execution order of mutations within a single request.
+
+   **Fallback:** If a batched mutation fails, fall back to individual calls for the failing threads.
 
 **Important:** Use the `thread_id` (format `PRRT_kwDO...`) from Step 0 sub-step 4, **not** individual comment IDs.
 
@@ -374,7 +394,9 @@ Use the `conventional-commits` skill for formatting. Most review fixes will be:
 - **Never** push when processing inline review comments unless explicitly asked
 - **Never** make changes beyond what the review comment requires
 - **Never** dismiss a comment without a concrete technical justification
-- **Always** use `-F` flags for GraphQL variables — never inline *shell* variable references (e.g., `$THREAD_ID`) in the query string, as the shell will interpret `$` before `gh` sees it. The query declares GraphQL variables (e.g., `$threadId: ID!`) inside single quotes (safe from shell expansion), and `-F threadId="value"` passes them at the GraphQL level.
+- **Always** use `-F` flags for GraphQL variables — never inline *shell* variable references (e.g., `$THREAD_ID`) in the query string, as the shell will interpret `$` before `gh` sees it.
+- **Always** use heredoc (`cat <<'GQL' ... GQL`) for multi-line GraphQL queries to avoid Unicode curly quote corruption. Markdown renderers and AI tools silently convert ASCII `'` to `'`/`'`, causing `UNKNOWN_CHAR` parse errors. Heredoc quotes are immune to this.
+- **Always** batch multiple thread operations using GraphQL aliases (e.g., `r0: mutation(...)`, `r1: mutation(...)`) to minimize API calls. Batch replies first, then resolves, in two separate calls to ensure ordering.
 
 ## Thread Management Reference
 
@@ -382,12 +404,15 @@ For manual thread management outside the triage workflow:
 
 **Unresolve a thread** (if a resolved thread needs to be reopened):
 ```bash
-gh api graphql -f query='
+QUERY=$(cat <<'GQL'
 mutation($threadId: ID!) {
   unresolveReviewThread(input: {threadId: $threadId}) {
     thread { id isResolved }
   }
-}' -F threadId="$THREAD_ID"
+}
+GQL
+)
+gh api graphql -f query="$QUERY" -F threadId="$THREAD_ID"
 ```
 
 This is not used by the triage workflow itself but is documented here for manual recovery if a thread was resolved prematurely.
