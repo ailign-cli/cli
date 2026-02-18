@@ -70,7 +70,7 @@ A developer on a system without Homebrew or Go, or a CI/CD pipeline that needs a
 |--------------------------------|------------------------------------------------------------------|
 | Download and run on macOS      | Archive for darwin/amd64 or darwin/arm64 contains working binary |
 | Download and run on Linux      | Archive for linux/amd64 or linux/arm64 contains working binary   |
-| Download and run on Windows    | Archive for windows/amd64 contains working binary                |
+| Download and run on Windows    | Archive for windows/amd64 contains working binary (direct download — install script is POSIX-only) |
 | Checksum verification          | Published checksums match the downloaded archives                |
 | CI/CD install script           | A one-liner curl/wget command installs the binary                |
 
