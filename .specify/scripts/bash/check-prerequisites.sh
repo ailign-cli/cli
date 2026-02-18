@@ -12,6 +12,10 @@
 #   --require-tasks     Require tasks.md to exist (for implementation phase)
 #   --include-tasks     Include tasks.md in AVAILABLE_DOCS list
 #   --paths-only        Only output path variables (no validation)
+#   --feature NAME      Explicit feature name (e.g., 003-install-distribution).
+#                       Bypasses branch-name detection and validation. Use when
+#                       running from main to implement a feature whose spec
+#                       branch has already been merged.
 #   --help, -h          Show help message
 #
 # OUTPUTS:
@@ -26,9 +30,12 @@ JSON_MODE=false
 REQUIRE_TASKS=false
 INCLUDE_TASKS=false
 PATHS_ONLY=false
+EXPLICIT_FEATURE=""
 
-for arg in "$@"; do
-    case "$arg" in
+args=("$@")
+i=0
+while [[ $i -lt ${#args[@]} ]]; do
+    case "${args[$i]}" in
         --json)
             JSON_MODE=true
             ;;
@@ -41,6 +48,14 @@ for arg in "$@"; do
         --paths-only)
             PATHS_ONLY=true
             ;;
+        --feature)
+            i=$((i + 1))
+            if [[ $i -ge ${#args[@]} ]]; then
+                echo "ERROR: --feature requires a value (e.g., --feature 003-install-distribution)" >&2
+                exit 1
+            fi
+            EXPLICIT_FEATURE="${args[$i]}"
+            ;;
         --help|-h)
             cat << 'EOF'
 Usage: check-prerequisites.sh [OPTIONS]
@@ -52,26 +67,31 @@ OPTIONS:
   --require-tasks     Require tasks.md to exist (for implementation phase)
   --include-tasks     Include tasks.md in AVAILABLE_DOCS list
   --paths-only        Only output path variables (no prerequisite validation)
+  --feature NAME      Explicit feature name (bypasses branch detection)
   --help, -h          Show this help message
 
 EXAMPLES:
   # Check task prerequisites (plan.md required)
   ./check-prerequisites.sh --json
-  
+
   # Check implementation prerequisites (plan.md + tasks.md required)
   ./check-prerequisites.sh --json --require-tasks --include-tasks
-  
+
+  # Implementation from main with explicit feature
+  ./check-prerequisites.sh --json --require-tasks --include-tasks --feature 003-install-distribution
+
   # Get feature paths only (no validation)
   ./check-prerequisites.sh --paths-only
-  
+
 EOF
             exit 0
             ;;
         *)
-            echo "ERROR: Unknown option '$arg'. Use --help for usage information." >&2
+            echo "ERROR: Unknown option '${args[$i]}'. Use --help for usage information." >&2
             exit 1
             ;;
     esac
+    i=$((i + 1))
 done
 
 # Source common functions
@@ -79,8 +99,18 @@ SCRIPT_DIR="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 # Get feature paths and validate branch
+if [[ -n "$EXPLICIT_FEATURE" ]]; then
+    # Explicit feature: set SPECIFY_FEATURE so get_feature_paths uses it
+    # instead of the current git branch. This allows running from main.
+    export SPECIFY_FEATURE="$EXPLICIT_FEATURE"
+fi
 eval $(get_feature_paths)
-check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
+
+# Validate branch naming — skip when an explicit feature was provided
+# (the caller is deliberately working from main or another non-feature branch)
+if [[ -z "$EXPLICIT_FEATURE" ]]; then
+    check_feature_branch "$CURRENT_BRANCH" "$HAS_GIT" || exit 1
+fi
 
 # If paths-only mode, output paths and exit (support JSON + paths-only combined)
 if $PATHS_ONLY; then

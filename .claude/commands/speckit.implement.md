@@ -12,7 +12,23 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
-1. Run `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+1. **Determine the feature to implement**:
+
+   The command can be invoked from different starting points:
+   - **From `main`** (typical — spec branch already merged): Detect the feature from context. Look at recent specs directories (`specs/NNN-*`) or let the user specify via arguments. Pass `--feature <NNN-feature-name>` to the prerequisites script.
+   - **From a feature branch** (`NNN-feature/spec` or `NNN-feature/phase-slug`): The script auto-detects the feature from the branch name.
+
+   Run the prerequisites check:
+   ```bash
+   # From main — pass explicit feature:
+   .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks --feature <NNN-feature-name>
+
+   # From a feature branch — auto-detected:
+   .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
+   ```
+   Parse FEATURE_DIR and AVAILABLE_DOCS from the JSON output. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+
+   **Detecting the feature when on `main`**: If the user didn't specify a feature name in their arguments, look at `specs/` directories to find candidates. If there's only one feature with a complete tasks.md, use it automatically. If multiple candidates exist, ask the user which feature to implement.
 
 2. **Branch strategy — one branch per phase/PR**:
    - **Spec branch**: All speckit workflow steps (specify, clarify, plan, tasks, analyze, checklists) use `<feature>/spec` (e.g., `002-local-instruction-sync/spec`). This is created by `/speckit.specify` and merged as a single PR before implementation starts.
