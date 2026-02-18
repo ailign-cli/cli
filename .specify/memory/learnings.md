@@ -10,6 +10,10 @@ reviews and development. Curated — not a changelog.
   internal ones. Avoids implying affiliation, leaking private repo
   names, and confusing access controls.
 
+## Go Build & Versioning
+
+- **`go install` does NOT use GoReleaser ldflags**: Binaries built via `go install ...@vX.Y.Z` compile from source without `-ldflags`. Use `runtime/debug.ReadBuildInfo` as fallback when the compiled-in version is `"dev"`.
+
 ## Go Error Handling
 
 - **File errors**: Always `errors.Is(err, os.ErrNotExist)` — never treat all errors as "file missing". Permission denied, EIO, etc. must propagate.
@@ -33,6 +37,27 @@ reviews and development. Curated — not a changelog.
 ## CI/CD
 
 - **Workflow permissions**: An explicit least-privilege `permissions:` block is required on all GitHub Actions workflows. Document permission rationale alongside each workflow in `.github/workflows/`.
+
+## Distribution & Registry Naming
+
+The Go module path and GitHub organization are different names. This is intentional — `ailign` was taken on GitHub.
+
+| Registry / Service | Organization / Account | Name | Status |
+|--------------------|----------------------|------|--------|
+| **GitHub** | `ailign-cli` | `ailign-cli/cli` | Active |
+| **Go module** | `ailign` | `github.com/ailign/cli` | Active (redirect) |
+| **npm** | `@ailign` | `@ailign/cli` | Created (login issues) |
+| **Docker Hub** | `ailign` | `ailign/ailign` | TBD — use if available |
+| **GHCR** | `ailign-cli` | `ghcr.io/ailign-cli/ailign` | Automatic (GitHub org) |
+| **Homebrew tap** | `ailign-cli` | `ailign-cli/homebrew-tap` | TBD — create repo |
+| **Scoop bucket** | `ailign-cli` | `ailign-cli/scoop-bucket` | TBD — create repo |
+| **Nix NUR** | `ailign-cli` | `ailign-cli/nur-packages` | TBD — create repo |
+| **AUR** | — | `ailign` | TBD — create account + SSH key |
+| **Chocolatey** | — | `ailign` | TBD — create account |
+| **Snapcraft** | — | `ailign` | TBD — Ubuntu One account |
+| **WinGet** | `ailign-cli` | staging repo for PRs | TBD — create repo |
+
+**Rule**: GitHub infrastructure references (repos, GHCR, taps, buckets) use `ailign-cli`. Package registry names (npm, Docker Hub, AUR, Chocolatey, Snapcraft) use `ailign` where available.
 
 ## PR & Commit Workflow
 
