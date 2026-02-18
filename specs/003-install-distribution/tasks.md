@@ -19,11 +19,11 @@
 
 **Purpose**: Verify existing release infrastructure is in place before extending it
 
-- [ ] T001 Verify existing GoReleaser configuration at .goreleaser.yml (builds, archives, checksum sections present)
-- [ ] T002 [P] Verify existing release workflow at .github/workflows/release.yml triggers on release publish
-- [ ] T003 [P] Verify version ldflags are set in .goreleaser.yml and cmd/ailign/main.go embeds version/commit
-- [ ] T004 [P] Validate GoReleaser config with `goreleaser check` (or `goreleaser build --snapshot --clean` for dry-run)
-- [ ] T005 Configure godog test runner in features/steps/suite_test.go to exclude `@ci` tagged scenarios from local test runs by updating the Tags expression to `~@wip && ~@ci` (godog uses `&&` to combine tag exclusions)
+- [x] T001 Verify existing GoReleaser configuration at .goreleaser.yml (builds, archives, checksum sections present)
+- [x] T002 [P] Verify existing release workflow at .github/workflows/release.yml triggers on release publish
+- [x] T003 [P] Verify version ldflags are set in .goreleaser.yml and cmd/ailign/main.go embeds version/commit
+- [x] T004 [P] Validate GoReleaser config with `goreleaser check` (or `goreleaser build --snapshot --clean` for dry-run)
+- [x] T005 Configure godog test runner in features/steps/suite_test.go to exclude `@ci` tagged scenarios from local test runs by updating the Tags expression to `~@wip && ~@ci` (godog uses `&&` to combine tag exclusions)
 
 **Checkpoint**: Existing release infrastructure confirmed working, godog configured to exclude `@ci` — extension can begin
 

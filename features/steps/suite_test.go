@@ -17,7 +17,7 @@ func TestFeatures(t *testing.T) {
 		format = "junit:" + output
 	}
 
-	tags := "~@wip"
+	tags := "~@wip && ~@ci"
 	if envTags := os.Getenv("GODOG_TAGS"); envTags != "" {
 		tags = envTags
 	}
