@@ -39,17 +39,17 @@
 
 > **NOTE**: Tag integration scenarios (real `go install` from published module) with `@ci`. "Version output includes tag" runs locally via godog. Install script logic (custom dir, PATH warning, unsupported platform, checksum) runs locally; curl-based scenarios tagged `@ci`.
 
-- [ ] T006 [P] [US2] Tag integration scenarios in features/install-via-go.feature with `@ci` (Install latest, Install specific version), keep "Version output includes tag" untagged for local godog, remove `@wip` tag
-- [ ] T007 [P] [US3] Tag curl-based scenarios in features/install-via-binary.feature with `@ci` (Install script on macOS, Install script on Linux), keep locally-testable scenarios untagged (custom dir, specific version, checksum, PATH warning, unsupported platform), remove `@wip` tag
-- [ ] T008 [P] [US2] Write step definitions for version output scenario in features/steps/install_go_steps_test.go — build binary with test ldflags, verify `--version` output contains version string (expect RED)
-- [ ] T009 [US3] Write step definitions for install script scenarios in features/steps/install_binary_steps_test.go — test custom INSTALL_DIR, AILIGN_VERSION override, checksum verification, PATH warning, unsupported platform error by invoking install.sh with mocked environment (expect RED)
+- [x] T006 [P] [US2] Tag integration scenarios in features/install-via-go.feature with `@ci` (Install latest, Install specific version), keep "Version output includes tag" untagged for local godog, remove `@wip` tag
+- [x] T007 [P] [US3] Tag curl-based scenarios in features/install-via-binary.feature with `@ci` (Install script on macOS, Install script on Linux), keep locally-testable scenarios untagged (custom dir, specific version, checksum, PATH warning, unsupported platform), remove `@wip` tag
+- [x] T008 [P] [US2] Write step definitions for version output scenario in features/steps/install_go_steps_test.go — build binary with test ldflags, verify `--version` output contains version string (expect RED)
+- [x] T009 [US3] Write step definitions for install script scenarios in features/steps/install_binary_steps_test.go — test custom INSTALL_DIR, AILIGN_VERSION override, checksum verification, PATH warning, unsupported platform error by invoking install.sh with mocked environment (expect RED)
 
 ### Implementation
 
-- [ ] T010 [US2] Verify `go install` module path resolves correctly (check go.mod module path matches expected `github.com/ailign/cli`) and ensure version is reported correctly: GoReleaser-built binaries use ldflags, `go install`-built binaries fall back to Go module build info via `runtime/debug.ReadBuildInfo` when version is "dev"
-- [ ] T011 [US3] Create universal install script at install.sh with: OS/arch detection, GitHub API latest version fetch, AILIGN_VERSION env var override, correct archive download from GitHub Releases, checksum verification via checksums.txt, configurable install directory (INSTALL_DIR > ~/.local/bin > /usr/local/bin), PATH warning, unsupported platform error handling, edge cases (wrong platform archive, older version via different method)
-- [ ] T012 [US3] Validate install.sh with shellcheck (install shellcheck if needed, run `shellcheck install.sh`)
-- [ ] T013 [US3] Verify step definitions pass for locally-testable scenarios (GREEN) — run `go test ./features/steps/... -v` excluding `@ci` tagged scenarios
+- [x] T010 [US2] Verify `go install` module path resolves correctly (check go.mod module path matches expected `github.com/ailign/cli`) and ensure version is reported correctly: GoReleaser-built binaries use ldflags, `go install`-built binaries fall back to Go module build info via `runtime/debug.ReadBuildInfo` when version is "dev"
+- [x] T011 [US3] Create universal install script at install.sh with: OS/arch detection, GitHub API latest version fetch, AILIGN_VERSION env var override, correct archive download from GitHub Releases, checksum verification via checksums.txt, configurable install directory (INSTALL_DIR > ~/.local/bin > /usr/local/bin), PATH warning, unsupported platform error handling, edge cases (wrong platform archive, older version via different method)
+- [x] T012 [US3] Validate install.sh with shellcheck (install shellcheck if needed, run `shellcheck install.sh`)
+- [x] T013 [US3] Verify step definitions pass for locally-testable scenarios (GREEN) — run `go test ./features/steps/... -v` excluding `@ci` tagged scenarios
 
 **Checkpoint**: `go install` path verified, install.sh ready for use, BDD scenarios GREEN. PR 1 can be merged independently.
 
