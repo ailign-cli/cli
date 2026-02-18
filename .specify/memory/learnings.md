@@ -10,6 +10,10 @@ reviews and development. Curated — not a changelog.
   internal ones. Avoids implying affiliation, leaking private repo
   names, and confusing access controls.
 
+## Go Build & Versioning
+
+- **`go install` does NOT use GoReleaser ldflags**: Binaries built via `go install ...@vX.Y.Z` compile from source without `-ldflags`. Use `runtime/debug.ReadBuildInfo` as fallback when the compiled-in version is `"dev"`.
+
 ## Go Error Handling
 
 - **File errors**: Always `errors.Is(err, os.ErrNotExist)` — never treat all errors as "file missing". Permission denied, EIO, etc. must propagate.
