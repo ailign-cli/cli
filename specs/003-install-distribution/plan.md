@@ -12,7 +12,7 @@ Extend the existing GoReleaser configuration to distribute ailign via all major 
 **Language/Version**: Go 1.24+ (existing), POSIX shell (install script), Node.js (NPM wrapper)
 **Primary Dependencies**: GoReleaser v2.13+ (existing), GitHub Actions
 **Storage**: N/A (distribution only — no data persistence)
-**Testing**: Shell script testing via BATS or manual validation, npm package smoke tests
+**Testing**: BDD scenarios via godog (locally-testable install flows + `@ci`-tagged post-release smoke tests), shellcheck for install.sh, npm package smoke tests
 **Target Platform**: macOS (amd64, arm64), Linux (amd64, arm64), Windows (amd64)
 **Project Type**: Configuration + scripts (minimal Go code changes)
 **Performance Goals**: Install completes in <30 seconds (excluding download)

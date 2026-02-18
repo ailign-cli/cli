@@ -4,7 +4,7 @@
 
 **Decision**: Split distribution targets into three tiers based on infrastructure complexity.
 
-**Tier 1 — GoReleaser OSS (no external accounts)**:
+**Tier 1 — GoReleaser OSS (GitHub-only credentials)**:
 - Homebrew (brews) — needs tap repo + PAT
 - Scoop (scoops) — needs bucket repo + PAT
 - nFPM (nfpms) — local artifact generation (deb, rpm, apk)

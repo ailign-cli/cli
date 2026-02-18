@@ -70,6 +70,7 @@ A developer on a system without Homebrew or Go, or a CI/CD pipeline that needs a
 |--------------------------------|------------------------------------------------------------------|
 | Download and run on macOS      | Archive for darwin/amd64 or darwin/arm64 contains working binary |
 | Download and run on Linux      | Archive for linux/amd64 or linux/arm64 contains working binary   |
+| Download and run on Windows    | Archive for windows/amd64 contains working binary                |
 | Checksum verification          | Published checksums match the downloaded archives                |
 | CI/CD install script           | A one-liner curl/wget command installs the binary                |
 
@@ -171,7 +172,7 @@ The project README includes an Installation section near the top listing all ava
 - GoReleaser natively supports all listed package managers via configuration
 - The Homebrew tap will be a separate GitHub repository (standard pattern: `ailign-cli/homebrew-tap`)
 - The Scoop bucket will be a separate GitHub repository (standard pattern: `ailign-cli/scoop-bucket`)
-- `go install` works out of the box once the module path is correct and version ldflags are set
+- `go install` builds from source and does not receive GoReleaser ldflags; the CLI MUST fall back to Go module build info (e.g., `runtime/debug.ReadBuildInfo`) when the compiled-in version is "dev", so that `ailign --version` still reports a meaningful version
 - External accounts/credentials are available for: Chocolatey, Snapcraft, AUR, Docker Hub/GHCR, npm
 - The install script will be a POSIX shell script hosted in the repository
 - The NPM package wraps the binary — it downloads the correct platform binary during `npm install`

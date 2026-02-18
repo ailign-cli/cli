@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/003-install-distribution/`
 **Prerequisites**: plan.md (required), spec.md (required), research.md, quickstart.md
 
-**Tests**: BDD feature files exist at `features/install-*.feature`. Scenarios are tagged to indicate where they execute: untagged scenarios run locally via godog step definitions; `@ci` tagged scenarios run in CI/CD smoke test workflows post-release. The godog test runner is configured to exclude `@ci` scenarios. All scenarios remain in the feature files as the single source of truth. Shell script validation uses shellcheck.
+**Tests**: BDD feature files exist at `features/install-*.feature`. Scenarios are tagged to indicate where they execute: untagged scenarios run locally via godog step definitions; `@ci` tagged scenarios run in CI/CD smoke test workflows post-release. The godog test runner will be configured in T005 to exclude `@ci` scenarios from local runs. All scenarios remain in the feature files as the single source of truth. Shell script validation uses shellcheck.
 
 **Organization**: Tasks are organized by PR (from plan.md decomposition) to enable independent, deployable increments per distribution tier.
 
@@ -46,7 +46,7 @@
 
 ### Implementation
 
-- [ ] T010 [US2] Verify `go install` module path resolves correctly (check go.mod module path matches expected `github.com/ailign/cli`) and version is embedded via ldflags in .goreleaser.yml
+- [ ] T010 [US2] Verify `go install` module path resolves correctly (check go.mod module path matches expected `github.com/ailign/cli`) and ensure version is reported correctly: GoReleaser-built binaries use ldflags, `go install`-built binaries fall back to Go module build info via `runtime/debug.ReadBuildInfo` when version is "dev"
 - [ ] T011 [US3] Create universal install script at install.sh with: OS/arch detection, GitHub API latest version fetch, AILIGN_VERSION env var override, correct archive download from GitHub Releases, checksum verification via checksums.txt, configurable install directory (INSTALL_DIR > ~/.local/bin > /usr/local/bin), PATH warning, unsupported platform error handling, edge cases (wrong platform archive, older version via different method)
 - [ ] T012 [US3] Validate install.sh with shellcheck (install shellcheck if needed, run `shellcheck install.sh`)
 - [ ] T013 [US3] Verify step definitions pass for locally-testable scenarios (GREEN) — run `go test ./features/steps/... -v` excluding `@ci` tagged scenarios
