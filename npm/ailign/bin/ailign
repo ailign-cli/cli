@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+
+"use strict";
+
+const { resolve } = require("path");
+const { execFileSync } = require("child_process");
+const { platformKey, binaryPath } = require("../lib/platform");
+
+const bin = binaryPath();
+if (!bin) {
+  console.error(
+    `ailign: unsupported platform ${platformKey()}\n` +
+      "See https://github.com/ailign-cli/cli for supported platforms."
+  );
+  process.exit(2);
+}
+
+try {
+  execFileSync(bin, process.argv.slice(2), { stdio: "inherit" });
+} catch (err) {
+  if (err.status !== null) {
+    process.exit(err.status);
+  }
+  throw err;
+}

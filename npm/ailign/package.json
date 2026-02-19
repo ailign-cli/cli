@@ -2,7 +2,7 @@
   "name": "@ailign/cli",
   "version": "0.0.0",
   "description": "Instruction governance & distribution for engineering organizations",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ailign-cli/cli.git",
@@ -18,6 +18,14 @@
   ],
   "bin": {
     "ailign": "bin/ailign"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "scripts/"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/install.js"
   },
   "optionalDependencies": {
     "@ailign/cli-darwin-arm64": "0.0.0",

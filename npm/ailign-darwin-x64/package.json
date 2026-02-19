@@ -2,16 +2,13 @@
   "name": "@ailign/cli-darwin-x64",
   "version": "0.0.0",
   "description": "AIlign CLI binary for macOS x64 (Intel)",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ailign-cli/cli.git",
     "directory": "npm/ailign-darwin-x64"
   },
-  "os": [
-    "darwin"
-  ],
-  "cpu": [
-    "x64"
-  ]
+  "os": ["darwin"],
+  "cpu": ["x64"],
+  "files": ["bin/"]
 }

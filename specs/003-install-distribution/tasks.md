@@ -110,13 +110,13 @@
 
 ### Implementation
 
-- [ ] T027 [US3] Update main wrapper package at npm/ailign/package.json — bump version, finalize bin entry, optionalDependencies for all 5 platform packages
-- [ ] T028 [US3] Create CLI shim at npm/ailign/bin/ailign — Node.js script that finds and executes the platform-specific binary
-- [ ] T029 [US3] Create platform detection module at npm/ailign/lib/platform.js — maps process.platform + process.arch to package name and binary path
-- [ ] T030 [US3] Create postinstall fallback downloader at npm/ailign/scripts/install.js — downloads binary from GitHub Releases if optionalDependencies failed (handles --ignore-scripts, custom registries)
-- [ ] T031 [P] [US3] Update platform-specific packages at npm/ailign-darwin-arm64/package.json, npm/ailign-darwin-x64/package.json, npm/ailign-linux-x64/package.json, npm/ailign-linux-arm64/package.json, npm/ailign-win32-x64/package.json — bump version, add placeholder for binary
-- [ ] T032 [US3] Add npm publish job to .github/workflows/release.yml — runs after GoReleaser job, copies binaries into platform packages, publishes all 6 packages to npm registry. <!-- TODO: add `environment: npm` for OIDC trust once npm OIDC is configured (requires security key) -->
-- [ ] T033 [US3] Validate npm packages with `npm pack --dry-run` for main and platform packages
+- [x] T027 [US3] Update main wrapper package at npm/ailign/package.json — bump version, finalize bin entry, optionalDependencies for all 5 platform packages
+- [x] T028 [US3] Create CLI shim at npm/ailign/bin/ailign — Node.js script that finds and executes the platform-specific binary
+- [x] T029 [US3] Create platform detection module at npm/ailign/lib/platform.js — maps process.platform + process.arch to package name and binary path
+- [x] T030 [US3] Create postinstall fallback downloader at npm/ailign/scripts/install.js — downloads binary from GitHub Releases if optionalDependencies failed (handles --ignore-scripts, custom registries)
+- [x] T031 [P] [US3] Update platform-specific packages at npm/ailign-darwin-arm64/package.json, npm/ailign-darwin-x64/package.json, npm/ailign-linux-x64/package.json, npm/ailign-linux-arm64/package.json, npm/ailign-win32-x64/package.json — bump version, add placeholder for binary
+- [x] T032 [US3] Add npm publish job to .github/workflows/release.yml — runs after GoReleaser job, copies binaries into platform packages, publishes all 6 packages to npm registry. <!-- TODO: add `environment: npm` for OIDC trust once npm OIDC is configured (requires security key) -->
+- [x] T033 [US3] Validate npm packages with `npm pack --dry-run` for main and platform packages
 
 **Checkpoint**: NPM wrapper package complete. After next release + npm publish: `npx @ailign/cli` works. PR 4 can be merged independently.
 
