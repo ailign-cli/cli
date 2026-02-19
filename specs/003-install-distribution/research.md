@@ -60,13 +60,13 @@
 
 ## Decision 5: Docker Image Strategy
 
-**Decision**: Use `dockers` (not `dockers_v2` yet) with GHCR as the registry.
+**Decision**: Use `dockers` (not `dockers_v2` yet) with both GHCR and Docker Hub.
 
-**Image**: `ghcr.io/ailign-cli/ailign`
-**Tags**: `v{version}`, `latest`
+**Images**: `ghcr.io/ailign-cli/ailign`, `ailign/ailign`
+**Tags**: `{version}`, `latest`
 **Platforms**: linux/amd64 (single platform initially)
 
-**Rationale**: `dockers_v2` uses buildx for multi-arch but adds complexity. Start with single-platform image on GHCR (free for public repos, integrated with GitHub). Add multi-arch later.
+**Rationale**: `dockers_v2` uses buildx for multi-arch but adds complexity. Start with single-platform image on GHCR (free for public repos, integrated with GitHub) + Docker Hub (`ailign` personal account) for discoverability. Add multi-arch later.
 
 ## Decision 6: nFPM Package Formats
 

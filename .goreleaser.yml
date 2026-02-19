@@ -98,6 +98,8 @@ dockers:
     image_templates:
       - "ghcr.io/ailign-cli/ailign:{{ .Version }}"
       - "ghcr.io/ailign-cli/ailign:latest"
+      - "ailign/ailign:{{ .Version }}"
+      - "ailign/ailign:latest"
     dockerfile: Dockerfile
     build_flag_templates:
       - "--pull"
