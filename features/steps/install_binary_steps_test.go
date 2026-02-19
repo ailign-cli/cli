@@ -27,7 +27,7 @@ func registerInstallBinarySteps(ctx *godog.ScenarioContext, w *testWorld) {
 
 	ctx.After(func(ctx2 context.Context, sc *godog.Scenario, err error) (context.Context, error) {
 		for _, d := range is.tempDirs {
-			os.RemoveAll(d)
+			_ = os.RemoveAll(d)
 		}
 		return ctx2, nil
 	})
