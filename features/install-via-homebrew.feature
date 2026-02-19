@@ -1,4 +1,4 @@
-@wip
+@ci
 # Source: specs/003-install-distribution/spec.md - User Story 1
 
 Feature: Install via Homebrew
@@ -8,7 +8,7 @@ Feature: Install via Homebrew
 
   Scenario: Fresh install from tap
     Given the ailign Homebrew tap has been added
-    When the developer runs "brew install ailign-cli/tap/ailign"
+    When the developer runs "brew install ailign-cli/distribution/ailign"
     Then the ailign binary will be available on PATH
     And running "ailign --version" will print a version string
 
