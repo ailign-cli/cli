@@ -177,6 +177,10 @@
 
 - [ ] T049 [US3] Configure npm OIDC on all 6 @ailign packages (requires security key). Create GitHub Actions `npm` environment on ailign-cli/cli. Update T032 npm publish job to use `environment: npm` for OIDC trust.
 
+### Docker multi-arch
+
+- [ ] T050 [US3] Add multi-arch Docker images (amd64 + arm64) — migrate from `dockers` to `dockers_v2` with buildx, add `docker_manifests` for unified tags. Include both GHCR and Docker Hub image templates.
+
 ---
 
 ## Dependencies & Execution Order
