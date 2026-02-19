@@ -1,0 +1,17 @@
+{
+  "name": "@ailign/cli-linux-arm64",
+  "version": "0.0.0",
+  "description": "AIlign CLI binary for Linux ARM64",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ailign-cli/cli.git",
+    "directory": "npm/ailign-linux-arm64"
+  },
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ]
+}

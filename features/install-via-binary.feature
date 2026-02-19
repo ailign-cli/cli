@@ -1,4 +1,3 @@
-@wip
 # Source: specs/003-install-distribution/spec.md - User Story 3
 
 Feature: Download Pre-built Binary
@@ -6,18 +5,21 @@ Feature: Download Pre-built Binary
   As a developer or CI/CD pipeline
   I want to download a pre-built binary from GitHub Releases
 
+  @ci
   Scenario: Install script on macOS
     Given the developer is on macOS with arm64 architecture
     When the developer runs the install script via curl
     Then the ailign binary will be installed to the default location
     And running "ailign --version" will print a version string
 
+  @ci
   Scenario: Install script on Linux
     Given the developer is on Linux with amd64 architecture
     When the developer runs the install script via curl
     Then the ailign binary will be installed to the default location
     And running "ailign --version" will print a version string
 
+  @ci
   Scenario: Download and run on Windows
     Given the developer downloads the windows/amd64 release archive
     When the developer extracts the archive

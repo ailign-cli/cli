@@ -1,0 +1,29 @@
+{
+  "name": "@ailign/cli",
+  "version": "0.0.0",
+  "description": "Instruction governance & distribution for engineering organizations",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ailign-cli/cli.git",
+    "directory": "npm/ailign"
+  },
+  "homepage": "https://github.com/ailign-cli/cli",
+  "keywords": [
+    "ailign",
+    "cli",
+    "ai",
+    "instructions",
+    "governance"
+  ],
+  "bin": {
+    "ailign": "bin/ailign"
+  },
+  "optionalDependencies": {
+    "@ailign/cli-darwin-arm64": "0.0.0",
+    "@ailign/cli-darwin-x64": "0.0.0",
+    "@ailign/cli-linux-x64": "0.0.0",
+    "@ailign/cli-linux-arm64": "0.0.0",
+    "@ailign/cli-win32-x64": "0.0.0"
+  }
+}

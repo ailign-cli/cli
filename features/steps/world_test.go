@@ -20,6 +20,7 @@ type testWorld struct {
 	stdout   string
 	stderr   string
 	exitCode int
+	binPath  string
 }
 
 func (w *testWorld) reset() {
@@ -29,6 +30,7 @@ func (w *testWorld) reset() {
 	w.stdout = ""
 	w.stderr = ""
 	w.exitCode = -1
+	w.binPath = ""
 }
 
 func (w *testWorld) writeConfigWithTargets(targets string) error {

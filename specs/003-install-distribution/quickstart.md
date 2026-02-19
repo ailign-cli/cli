@@ -5,7 +5,7 @@
 ### Option 1: Homebrew (macOS / Linux)
 
 ```bash
-brew install ailign-cli/tap/ailign
+brew install ailign-cli/distribution/ailign
 ```
 
 ### Option 2: Go Install
@@ -35,7 +35,7 @@ INSTALL_DIR=/opt/bin curl -fsSL https://raw.githubusercontent.com/ailign-cli/cli
 ### Option 4: Scoop (Windows)
 
 ```powershell
-scoop bucket add ailign https://github.com/ailign-cli/scoop-bucket
+scoop bucket add ailign https://github.com/ailign-cli/distribution
 scoop install ailign
 ```
 
