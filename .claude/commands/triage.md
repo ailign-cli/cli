@@ -313,10 +313,10 @@ When a failure appears **unrelated to the PR** (e.g., flaky test, known base-bra
 
 After the user approves the analysis, for all **rejected** comments (only when input was fetched from a PR, not inline):
 
-**Batch all replies and resolves using GraphQL aliases** — this makes two API calls total instead of 2N:
+**Batch all replies and resolves using GraphQL aliases** — this makes two API calls total instead of 2N. **Batch size limit:** GitHub GraphQL hits `RESOURCE_LIMITS_EXCEEDED` at around 8–9 aliased mutations per request. When there are more than 8 threads to process, split into chunks of at most 8 aliases per call.
 
-1. **Reply to all threads** in a single batched mutation:
-   Build a mutation using aliases (`r0`, `r1`, ...) for each rejected thread:
+1. **Reply to all threads** in batched mutation(s):
+   Build a mutation using aliases (`r0`, `r1`, ...) for each rejected thread (max 8 per call):
    ```bash
    QUERY=$(cat <<'GQL'
    mutation {
@@ -329,7 +329,7 @@ After the user approves the analysis, for all **rejected** comments (only when i
    ```
    Replace `THREAD_ID_N` and `REPLY_N` with actual values. The `REPLY_BODY` should be a concise explanation of why the comment was rejected, derived from the Rationale column in the verdict table. **Escape double quotes and newlines** in reply bodies since they're embedded in the query string.
 
-2. **Resolve all threads** in a single batched mutation:
+2. **Resolve all threads** in batched mutation(s) (max 8 per call):
    ```bash
    QUERY=$(cat <<'GQL'
    mutation {
@@ -345,7 +345,7 @@ After the user approves the analysis, for all **rejected** comments (only when i
 
 **Important:** Use the `thread_id` (format `PRRT_kwDO...`) from Step 0 sub-step 4, **not** individual comment IDs.
 
-**Fallback:** If a batched mutation fails (e.g., one thread ID is invalid), fall back to individual calls for the failing threads so that valid threads are still processed.
+**Fallback:** If a batched mutation fails (e.g., `RESOURCE_LIMITS_EXCEEDED` or one thread ID is invalid), fall back to smaller chunks or individual calls for the failing threads so that valid threads are still processed.
 
 If the input was inline review comments (not fetched from a PR), skip this step entirely — there are no thread IDs to reply to.
 
@@ -353,9 +353,9 @@ If the input was inline review comments (not fetched from a PR), skip this step 
 
 After the user approves the analysis, for all **unclear** comments (only when input was fetched from a PR, not inline):
 
-**Batch all replies using GraphQL aliases** — one API call for all unclear threads:
+**Batch all replies using GraphQL aliases** — one API call for all unclear threads (max 8 aliases per call; split into chunks if more):
 
-1. **Reply to all unclear threads** in a single batched mutation:
+1. **Reply to all unclear threads** in batched mutation(s):
    ```bash
    QUERY=$(cat <<'GQL'
    mutation {
@@ -370,7 +370,7 @@ After the user approves the analysis, for all **unclear** comments (only when in
 
 2. **Do NOT resolve** the threads — they stay open so the authors can respond.
 
-**Fallback:** If the batched mutation fails, fall back to individual calls for each thread.
+**Fallback:** If a batched mutation fails (e.g., `RESOURCE_LIMITS_EXCEEDED`), fall back to smaller chunks or individual calls for each thread.
 
 If the input was inline review comments, skip this step.
 
@@ -458,7 +458,7 @@ After all commits are created:
 
 3. **Reply and resolve** all accepted comments' threads using **batched GraphQL mutations** (only when input was fetched from a PR, not inline):
 
-   a. **Reply to all threads** in a single batched mutation:
+   a. **Reply to all threads** in batched mutation(s) (max 8 aliases per call):
       ```bash
       QUERY=$(cat <<'GQL'
       mutation {
@@ -469,9 +469,9 @@ After all commits are created:
       )
       gh api graphql -f query="$QUERY"
       ```
-      Each `REPLY_BODY` should briefly describe the fix and reference the commit hash. **Escape double quotes and newlines** in reply bodies.
+      Each `REPLY_BODY` should briefly describe the fix and reference the commit hash. **Escape double quotes and newlines** in reply bodies. If there are more than 8 threads, split into multiple calls of at most 8 aliases each.
 
-   b. **Resolve all threads** in a single batched mutation:
+   b. **Resolve all threads** in batched mutation(s) (max 8 aliases per call):
       ```bash
       QUERY=$(cat <<'GQL'
       mutation {
@@ -485,7 +485,7 @@ After all commits are created:
 
    **Why two calls instead of one?** Replies must be posted before resolving, and GraphQL does not guarantee execution order of mutations within a single request.
 
-   **Fallback:** If a batched mutation fails, fall back to individual calls for the failing threads.
+   **Fallback:** If a batched mutation fails (e.g., `RESOURCE_LIMITS_EXCEEDED`), fall back to smaller chunks or individual calls for the failing threads.
 
 **Important:** Use the `thread_id` (format `PRRT_kwDO...`) from Step 0 sub-step 4, **not** individual comment IDs.
 
@@ -592,7 +592,7 @@ Use the `conventional-commits` skill for formatting. Most review fixes will be:
 - **Never** dismiss a comment without a concrete technical justification
 - **Always** use `-F` flags for GraphQL variables — never inline *shell* variable references (e.g., `$THREAD_ID`) in the query string, as the shell will interpret `$` before `gh` sees it.
 - **Always** use heredoc (`cat <<'GQL' ... GQL`) for multi-line GraphQL queries to avoid Unicode curly quote corruption. Markdown renderers and AI tools silently convert ASCII `'` to `'`/`'`, causing `UNKNOWN_CHAR` parse errors. Heredoc quotes are immune to this.
-- **Always** batch multiple thread operations using GraphQL aliases (e.g., `r0: mutation(...)`, `r1: mutation(...)`) to minimize API calls. Batch replies first, then resolves, in two separate calls to ensure ordering.
+- **Always** batch multiple thread operations using GraphQL aliases (e.g., `r0: mutation(...)`, `r1: mutation(...)`) to minimize API calls. Batch replies first, then resolves, in two separate calls to ensure ordering. **Limit each batched call to at most 8 aliases** — GitHub GraphQL hits `RESOURCE_LIMITS_EXCEEDED` at ~9 mutations per request. When processing more than 8 threads, split into chunks.
 - **Always** fetch CI check statuses for PR-sourced triage runs before analysis (Step 0b)
 - **Never** dismiss or disable a failing check (lint rule, test skip, `//nolint` directive, etc.) without explicit operator approval and a concrete justification
 - **Always** label CI failure references as `CI-N` (distinct from review comment numbers `#N`) to avoid ambiguity throughout the workflow
