@@ -158,13 +158,15 @@ jobs:
 
           # Update optionalDependencies versions in main package
           cd npm/ailign
-          node -e "
-            const pkg = require('./package.json');
-            for (const dep of Object.keys(pkg.optionalDependencies)) {
-              pkg.optionalDependencies[dep] = '${VERSION}';
+          node -e '
+            const fs = require("fs");
+            const pkg = require("./package.json");
+            const version = process.env.VERSION;
+            for (const dep of Object.keys(pkg.optionalDependencies || {})) {
+              pkg.optionalDependencies[dep] = version;
             }
-            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
+            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
+          '
 
       - name: Publish platform packages
         env:

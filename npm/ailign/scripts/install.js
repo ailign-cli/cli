@@ -1,6 +1,6 @@
 "use strict";
 
-const { existsSync, mkdirSync, createWriteStream, chmodSync } = require("fs");
+const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream, chmodSync } = require("fs");
 const { join } = require("path");
 const { execSync } = require("child_process");
 const https = require("https");
@@ -60,42 +60,66 @@ mkdirSync(binDir, { recursive: true });
 
 console.log(`ailign: downloading ${url}`);
 
-fetch(url).then(downloadAndExtract).catch((err) => {
+downloadAndExtract(url).catch((err) => {
   console.error(`ailign: failed to download binary: ${err.message}`);
   console.error("ailign: you can install manually from https://github.com/ailign-cli/cli/releases");
   process.exit(0); // Don't fail the install.
 });
 
-async function downloadAndExtract(response) {
-  if (!response.ok) {
-    // Follow redirects (GitHub releases redirect to S3).
-    if (response.status >= 300 && response.status < 400 && response.headers.get("location")) {
-      return downloadAndExtract(await fetch(response.headers.get("location")));
-    }
-    throw new Error(`HTTP ${response.status}`);
-  }
+function downloadAndExtract(downloadUrl, redirectCount) {
+  redirectCount = redirectCount || 0;
+  const MAX_REDIRECTS = 5;
 
-  const buffer = Buffer.from(await response.arrayBuffer());
-  const tmpArchive = join(binDir, archiveName);
+  return new Promise((resolve, reject) => {
+    https.get(downloadUrl, (response) => {
+      const statusCode = response.statusCode || 0;
 
-  require("fs").writeFileSync(tmpArchive, buffer);
+      // Follow redirects (GitHub releases redirect to S3).
+      if (statusCode >= 300 && statusCode < 400 && response.headers.location) {
+        response.resume();
+        if (redirectCount >= MAX_REDIRECTS) {
+          return reject(new Error("Too many redirects"));
+        }
+        return resolve(downloadAndExtract(response.headers.location, redirectCount + 1));
+      }
 
-  try {
-    if (ext === "tar.gz") {
-      execSync(`tar xzf "${tmpArchive}" -C "${binDir}" ${binaryName()}`, { stdio: "pipe" });
-    } else {
-      // Windows zip — use PowerShell.
-      execSync(
-        `powershell -Command "Expand-Archive -Path '${tmpArchive}' -DestinationPath '${binDir}' -Force"`,
-        { stdio: "pipe" }
-      );
-    }
+      if (statusCode < 200 || statusCode >= 300) {
+        response.resume();
+        return reject(new Error(`HTTP ${statusCode}`));
+      }
 
-    chmodSync(binPath, 0o755);
-    console.log(`ailign: installed to ${binPath}`);
-  } finally {
-    try {
-      require("fs").unlinkSync(tmpArchive);
-    } catch {}
-  }
+      const tmpArchive = join(binDir, archiveName);
+      const fileStream = createWriteStream(tmpArchive);
+      response.pipe(fileStream);
+
+      fileStream.on("finish", () => {
+        fileStream.close(() => {
+          try {
+            if (ext === "tar.gz") {
+              execSync(`tar xzf "${tmpArchive}" -C "${binDir}" ${binaryName()}`, { stdio: "pipe" });
+            } else {
+              execSync(
+                `powershell -Command "Expand-Archive -Path '${tmpArchive}' -DestinationPath '${binDir}' -Force"`,
+                { stdio: "pipe" }
+              );
+            }
+            chmodSync(binPath, 0o755);
+            console.log(`ailign: installed to ${binPath}`);
+          } catch (err) {
+            reject(err);
+            return;
+          } finally {
+            try { unlinkSync(tmpArchive); } catch {}
+          }
+          resolve();
+        });
+      });
+
+      fileStream.on("error", (err) => {
+        response.resume();
+        try { unlinkSync(tmpArchive); } catch {}
+        reject(err);
+      });
+    }).on("error", reject);
+  });
 }
