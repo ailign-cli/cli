@@ -80,12 +80,14 @@
 
 | Secret | Used By | Notes |
 |--------|---------|-------|
-| `GITHUB_TOKEN` | GoReleaser releases | Auto-provided |
-| `DISTRIBUTION_REPO_TOKEN` | Homebrew/Scoop/NUR/WinGet push | PAT with `repo` scope on `ailign-cli/distribution` |
-| `CHOCOLATEY_API_KEY` | Chocolatey publish | From chocolatey.org account |
-| `SNAPCRAFT_STORE_CREDENTIALS` | Snapcraft publish | From `snapcraft export-login` |
-| `AUR_KEY` | AUR package push | SSH private key (no passphrase) |
-| `NPM_TOKEN` | npm publish | From npmjs.com account |
+| `GITHUB_TOKEN` | GoReleaser releases, GHCR push | Auto-provided |
+| `DISTRIBUTION_REPO_TOKEN` | Homebrew/Scoop/NUR/WinGet push | Fine-grained PAT (Contents R/W, Pull requests R/W, Metadata RO) on `ailign-cli/distribution` |
+| `DOCKERHUB_USERNAME` | Docker Hub login | Variable (not secret): `ailign` |
+| `DOCKERHUB_TOKEN` | Docker Hub push | Access token from hub.docker.com |
+| `CHOCOLATEY_API_KEY` | Chocolatey publish | From chocolatey.org account (deferred) |
+| `SNAPCRAFT_STORE_CREDENTIALS` | Snapcraft publish | From `snapcraft export-login` (deferred) |
+| `AUR_KEY` | AUR package push | SSH private key, no passphrase (deferred) |
+| `NPM_TOKEN` | npm publish | Granular token scoped to @ailign, bypass 2FA enabled |
 
 ## External Repositories Required
 
