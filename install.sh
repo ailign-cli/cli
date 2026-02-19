@@ -113,7 +113,7 @@ download_and_install() {
     checksums_name="checksums.txt"
     base_url="https://github.com/${GITHUB_REPO}/releases/download/${version}"
 
-    tmpdir="$(mktemp -d)"
+    tmpdir="$(mktemp -d 2>/dev/null || mktemp -d -t 'ailign_install')"
     trap 'rm -rf "$tmpdir"' EXIT
 
     log_info "Downloading ailign ${version} for ${os}/${arch}..."
@@ -125,11 +125,14 @@ download_and_install() {
     elif command -v wget >/dev/null 2>&1; then
         wget -q -O "${tmpdir}/${archive_name}" "${base_url}/${archive_name}"
         wget -q -O "${tmpdir}/${checksums_name}" "${base_url}/${checksums_name}"
+    else
+        log_error "Neither curl nor wget found. Please install curl or wget and re-run this installer."
+        exit 1
     fi
 
     # Verify checksum
     log_info "Verifying checksum..."
-    expected_checksum="$(grep "${archive_name}" "${tmpdir}/${checksums_name}" | awk '{print $1}')"
+    expected_checksum="$(grep -F "  ${archive_name}" "${tmpdir}/${checksums_name}" | awk '{print $1}')"
     if [ -z "$expected_checksum" ]; then
         log_error "Could not find checksum for ${archive_name} in checksums.txt."
         exit 1
