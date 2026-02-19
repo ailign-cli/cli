@@ -51,7 +51,7 @@ homebrew_casks:
 scoops:
   - name: ailign
     description: "Instruction governance & distribution for engineering organizations"
-    license: MIT
+    license: Apache-2.0
     homepage: "https://github.com/ailign-cli/cli"
     repository:
       owner: ailign-cli
@@ -68,7 +68,7 @@ nfpms:
   - package_name: ailign
     description: "Instruction governance & distribution for engineering organizations"
     maintainer: "AIlign <noreply@ailign.dev>"
-    license: MIT
+    license: Apache-2.0
     homepage: "https://github.com/ailign-cli/cli"
     formats:
       - deb
@@ -79,7 +79,7 @@ nix:
   - name: ailign
     homepage: "https://github.com/ailign-cli/cli"
     description: "Instruction governance & distribution for engineering organizations"
-    license: mit
+    license: asl20
     path: nix/ailign.nix
     repository:
       owner: ailign-cli
@@ -108,7 +108,7 @@ dockers:
       - "--label=org.opencontainers.image.created={{ .Date }}"
       - "--label=org.opencontainers.image.title=AIlign"
       - "--label=org.opencontainers.image.description=Instruction governance & distribution for engineering organizations"
-      - "--label=org.opencontainers.image.licenses=MIT"
+      - "--label=org.opencontainers.image.licenses=Apache-2.0"
       - "--label=org.opencontainers.image.url=https://github.com/ailign-cli/cli"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
 
@@ -117,7 +117,7 @@ winget:
     publisher: "AIlign"
     publisher_url: "https://github.com/ailign-cli"
     short_description: "Instruction governance & distribution for engineering organizations"
-    license: MIT
+    license: Apache-2.0
     license_url: "https://github.com/ailign-cli/cli/blob/main/LICENSE"
     repository:
       owner: ailign-cli
