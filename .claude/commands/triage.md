@@ -158,7 +158,11 @@ gh run view "$RUN_ID" --repo "$OWNER/$REPO" --job "$JOB_ID" --log-failed
 
 For additional structured error context (especially useful for linters and test reporters that emit annotations):
 
-First, obtain the `CHECK_RUN_ID`. For checks whose `link` field points to a GitHub Actions job URL (`/actions/runs/{run_id}/job/{job_id}`), the `job_id` extracted in sub-step 2 is also the check run ID. For other checks (non-Actions status checks), fetch check runs for the PR's head commit:
+First, obtain the `CHECK_RUN_ID`. For checks whose `link` field points to a GitHub Actions job URL (`/actions/runs/{run_id}/job/{job_id}`), the `job_id` extracted in sub-step 2 is also the check run ID. For other checks (non-Actions status checks), first get the PR's head commit SHA:
+```bash
+HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo "$OWNER/$REPO" --json headRefOid -q '.headRefOid')
+```
+Then fetch check runs for that commit:
 ```bash
 gh api "/repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" --jq '.check_runs[] | {id, name}'
 ```
