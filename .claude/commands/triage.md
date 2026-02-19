@@ -51,7 +51,7 @@ When fetching from a PR:
    - After presenting the comments, provide a **brief summary** — e.g., how many comments, which authors, and a one-line characterization of the themes or patterns (e.g., "7 comments from @datadog-official — all about unpinned GitHub Actions in CI workflows").
    - After the summary, stop and report:
      > "PR #N belongs to `OWNER/REPO`, but your current directory is linked to `LOCAL_OWNER/LOCAL_REPO`. I've listed the review comments above, but cannot read code, fetch CI check logs, or implement fixes from this directory. Navigate to a local clone of `OWNER/REPO` and re-run `/triage` to process them."
-   - **Do not** proceed to Step 0b or Step 1 — the agent cannot read the referenced files or fetch CI logs for the correct repository.
+   - **Do not** proceed to Step 0b (CI checks) or Step 4 (implementation) — the agent cannot read the referenced files, fetch CI logs, or apply fixes for the correct repository.
 
 3. **Fetch review threads via GraphQL**:
    ```bash
@@ -110,7 +110,9 @@ gh pr checks "$PR_NUMBER" --repo "$OWNER/$REPO" \
   --json name,state,bucket,link,workflow
 ```
 
-Parse the JSON array. Filter to entries where `bucket` is `"fail"`. If no checks have `bucket == "fail"`, note "All CI checks pass" and skip the remaining sub-steps of Step 0b.
+If the command succeeds, parse the JSON array and filter to entries where `bucket` is `"fail"`. If no checks have `bucket == "fail"`, note "All CI checks pass" and skip the remaining sub-steps of Step 0b.
+
+If the `gh pr checks` command itself fails (non-zero exit status) for any reason (e.g., network issue, authentication/permission error, or PR not found), treat this as a non-fatal condition: emit a clear warning that CI status could not be determined (including the error message and concrete remediation steps such as checking GitHub login, repo access, PR number, and network connectivity), skip the remaining sub-steps of Step 0b, and proceed with the rest of the triage workflow without CI analysis.
 
 #### 2. Extract run IDs from failed check links
 
@@ -126,7 +128,7 @@ Extract `run_id` using the pattern `/actions/runs/(\d+)/`. Extract `job_id` from
 gh run view "$RUN_ID" --repo "$OWNER/$REPO" --json jobs
 ```
 
-From the `jobs` array, filter to jobs where `conclusion` is `"failure"` (or `"cancelled"` if it was cancelled mid-step). For each failing job, record:
+From the `jobs` array, filter to jobs where `conclusion` is `"failure"`, `"cancelled"` (cancelled mid-step), `"timed_out"`, or `"action_required"` (manual intervention needed). Treat all of these as CI failures for analysis. For each such job, record:
 - `job_id` (the `databaseId` field)
 - `job_name`
 - `workflow_name` (from the outer run context or `gh pr checks` `workflow` field)
@@ -145,7 +147,7 @@ This returns interleaved log lines for all failing steps in the run. Each log li
 <job_name>\t<step_name>\t<log_line>
 ```
 
-Parse this output to associate log lines with their job+step. Capture up to **50 lines of relevant error output per failing step** — use the last 50 lines of each step's log section, which typically contain the actual error rather than setup noise. Note any truncation.
+For each line, parse out `job_name`, `step_name`, and `log_line`, and group lines by the `(job_name, step_name)` pair. Treat each unique `(job_name, step_name)` as a distinct step and, for that group, retain only the last **50** `log_line` entries (per group, not globally) as the "relevant error output" for that failing step. These final 50 lines typically contain the actual error rather than setup noise; if a step produced more than 50 lines, record that its output was truncated.
 
 **Fallback:** If `--log-failed` produces no output or fails, fetch per-job:
 ```bash
@@ -156,13 +158,30 @@ gh run view "$RUN_ID" --repo "$OWNER/$REPO" --job "$JOB_ID" --log-failed
 
 For additional structured error context (especially useful for linters and test reporters that emit annotations):
 
+First, obtain the `CHECK_RUN_ID`. For checks whose `link` field points to a GitHub Actions job URL (`/actions/runs/{run_id}/job/{job_id}`), the `job_id` extracted in sub-step 2 is also the check run ID. For other checks (non-Actions status checks), fetch check runs for the PR's head commit:
+```bash
+gh api "/repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" --jq '.check_runs[] | {id, name}'
+```
+Match by `name` against the failing check's `name` to find the corresponding `id`.
+
+Then fetch annotations:
 ```bash
 gh api "/repos/$OWNER/$REPO/check-runs/$CHECK_RUN_ID/annotations"
 ```
 
-Where `CHECK_RUN_ID` is the numeric ID derived from the failed check. This returns structured annotation objects with `path`, `start_line`, `end_line`, `annotation_level`, and `message`. If annotations exist, they supplement the log output and can pinpoint specific files and lines to read.
+This returns structured annotation objects with `path`, `start_line`, `end_line`, `annotation_level`, and `message`. If annotations exist, they supplement the log output and can pinpoint specific files and lines to read.
 
-Skip this sub-step if no annotations are available or if the API returns an empty array.
+**When to perform this sub-step:**
+- The captured error log for a failing step does not already contain clear file and line references, and you need more precise locations to investigate
+- The failing check is a linter, test reporter, or similar tool known to emit GitHub annotations
+- You want to cross-check log messages against structured locations to build a more accurate `annotations` list
+
+**When to skip this sub-step:**
+- The error log already contains sufficient, unambiguous file/line references (e.g., `path/to/file.go:123` style messages) and additional structure would not change the fix you apply
+- The check type is known not to emit annotations (based on previous runs or documentation)
+- The API returns an empty array
+
+In all skip cases, proceed with just the captured log output; leave `annotations` empty for that failing step.
 
 #### 6. Build the CI failure inventory
 
@@ -194,7 +213,7 @@ Extract each review comment into a structured list:
 - **Author**: the `author.login` from the review comment (e.g., `copilot-pull-request-reviewer`, a colleague's GitHub handle, or a bot name). Helps distinguish human vs. automated feedback.
 - **Thread**: a clickable link to the review comment on GitHub (e.g., `[view](url)`). Only populated when fetched from a PR; leave empty for inline input. The underlying `thread_id` is stored internally for GraphQL reply/resolve operations and does not need to be displayed in the table.
 
-If the input is empty or contains no actionable comments, and no CI failures were collected in Step 0b, stop and report: "No review comments or CI failures found."
+If the input is empty or contains no actionable comments, stop and report: "No review comments or CI failures found." (unless CI failures were collected in Step 0b, in which case proceed with CI analysis only).
 
 If CI failures were collected in Step 0b, also present a **CI Failures** table:
 
@@ -278,6 +297,11 @@ If CI failures exist, also present a **CI Check Analysis** table:
 - **❓ Unclear** — ask specific questions before proceeding
 
 **Key constraint:** Failed checks should NOT be dismissed or worked around (e.g., disabling a lint rule, skipping a test, adding `//nolint` directives) unless there is truly no other option. If dismissal is the only path, flag it explicitly to the operator and wait for approval before doing it.
+
+When a failure appears **unrelated to the PR** (e.g., flaky test, known base-branch breakage):
+- Compare against the base branch CI status. If the same check is already failing on the base branch, document it explicitly in the analysis (including links to the failing runs) and treat it as **🚫 Blocked** or **❓ Unclear** rather than silently ignoring it.
+- For flaky checks, call out the flakiness pattern in the CI Check Analysis and ask the operator whether to re-run the check in CI. Do **not** locally skip, mute, or weaken the check to get a green run.
+- If the operator decides to proceed despite a pre-existing or flaky failure, record that decision in the summary so the behavior remains explainable and auditable.
 
 **Wait for user approval** before proceeding with implementation. The user may:
 - Approve all verdicts (review comments and CI failures)
@@ -467,7 +491,7 @@ After all commits are created:
 
 If the input was inline review comments (not fetched from a PR), skip the reply/resolve part and do not push unless explicitly requested.
 
-CI check failures resolved by the committed fixes will re-run automatically after the push — no explicit thread management is needed for CI items.
+CI check failures resolved by the committed fixes will re-run automatically after the push — no explicit thread management is needed for CI items. After the push, verify the status of the re-run checks; if any still fail or new failures appear, investigate them and, if appropriate, run `/triage` again to process the new CI feedback.
 
 ### Step 6: Distill learnings
 
@@ -480,6 +504,8 @@ From the accepted and rejected comments **and from CI failures**, distill what w
 - Lint rules the developer wasn't aware of
 - Build constraints (e.g., build tags, Go version requirements)
 - Workflow-specific requirements (e.g., generated file checks, formatting rules)
+- Process issues (e.g., tests or linters weren't run locally before pushing)
+- Tooling gaps (e.g., local `golangci-lint` version or config differs from CI)
 
 ```
 ## Learnings
@@ -538,7 +564,7 @@ After all commits and thread resolutions, present a final summary:
 - CI-N: [what decision is needed]
 ```
 
-If there are no CI failures, omit the CI-related lines (the `**CI failures**` line, the `CI Failures Addressed` column, and the `**Blocked CI failures**` section).
+If there are no CI failures, omit the CI-related sections (the `**CI failures**` line and the `**Blocked CI failures**` section). Keep the `CI Failures Addressed` column in the commits table and use `—` in each cell for consistency.
 
 ## Conventional Commit Format
 
