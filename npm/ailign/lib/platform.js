@@ -23,15 +23,23 @@ function binaryName() {
 }
 
 function binaryPath() {
+  // First: check platform-specific optional dependency package.
   const pkg = packageName();
-  if (!pkg) return null;
-
-  try {
-    const pkgDir = require.resolve(`${pkg}/package.json`);
-    return join(pkgDir, "..", "bin", binaryName());
-  } catch {
-    return null;
+  if (pkg) {
+    try {
+      const pkgDir = require.resolve(`${pkg}/package.json`);
+      return join(pkgDir, "..", "bin", binaryName());
+    } catch {}
   }
+
+  // Fallback: check postinstall-downloaded binary.
+  return fallbackBinaryPath();
 }
 
-module.exports = { platformKey, packageName, binaryName, binaryPath, PLATFORMS };
+function fallbackBinaryPath() {
+  const { existsSync } = require("fs");
+  const p = join(__dirname, "..", ".cache", binaryName());
+  return existsSync(p) ? p : null;
+}
+
+module.exports = { platformKey, packageName, binaryName, binaryPath, fallbackBinaryPath, PLATFORMS };

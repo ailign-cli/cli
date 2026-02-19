@@ -1,10 +1,10 @@
 "use strict";
 
-const { existsSync, mkdirSync, writeFileSync, unlinkSync, createWriteStream, chmodSync } = require("fs");
+const { existsSync, mkdirSync, unlinkSync, createWriteStream, chmodSync } = require("fs");
 const { join } = require("path");
 const { execSync } = require("child_process");
 const https = require("https");
-const { platformKey, packageName, binaryName } = require("../lib/platform");
+const { platformKey, packageName, binaryName, fallbackBinaryPath } = require("../lib/platform");
 
 // If the platform package was already installed via optionalDependencies, skip.
 const pkg = packageName();
@@ -49,14 +49,15 @@ const ext = process.platform === "win32" ? "zip" : "tar.gz";
 const archiveName = `ailign_${version}_${os}_${arch}.${ext}`;
 const url = `https://github.com/ailign-cli/cli/releases/download/v${version}/${archiveName}`;
 
-const binDir = join(__dirname, "..", "bin");
-const binPath = join(binDir, binaryName());
+// Download into .cache/ directory to avoid colliding with the bin/ailign shim.
+const cacheDir = join(__dirname, "..", ".cache");
+const binPath = join(cacheDir, binaryName());
 
 if (existsSync(binPath)) {
   process.exit(0);
 }
 
-mkdirSync(binDir, { recursive: true });
+mkdirSync(cacheDir, { recursive: true });
 
 console.log(`ailign: downloading ${url}`);
 
@@ -88,7 +89,7 @@ function downloadAndExtract(downloadUrl, redirectCount) {
         return reject(new Error(`HTTP ${statusCode}`));
       }
 
-      const tmpArchive = join(binDir, archiveName);
+      const tmpArchive = join(cacheDir, archiveName);
       const fileStream = createWriteStream(tmpArchive);
       response.pipe(fileStream);
 
@@ -96,10 +97,10 @@ function downloadAndExtract(downloadUrl, redirectCount) {
         fileStream.close(() => {
           try {
             if (ext === "tar.gz") {
-              execSync(`tar xzf "${tmpArchive}" -C "${binDir}" ${binaryName()}`, { stdio: "pipe" });
+              execSync(`tar xzf "${tmpArchive}" -C "${cacheDir}" ${binaryName()}`, { stdio: "pipe" });
             } else {
               execSync(
-                `powershell -Command "Expand-Archive -Path '${tmpArchive}' -DestinationPath '${binDir}' -Force"`,
+                `powershell -Command "Expand-Archive -Path '${tmpArchive}' -DestinationPath '${cacheDir}' -Force"`,
                 { stdio: "pipe" }
               );
             }
