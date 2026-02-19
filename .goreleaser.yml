@@ -112,7 +112,7 @@ winget:
     publisher: "AIlign"
     publisher_url: "https://github.com/ailign-cli"
     short_description: "Instruction governance & distribution for engineering organizations"
-    license: mit
+    license: MIT
     license_url: "https://github.com/ailign-cli/cli/blob/main/LICENSE"
     repository:
       owner: ailign-cli
