@@ -1,5 +1,5 @@
 ---
-description: Analyze code review comments, decide validity, implement fixes, and commit grouped changes.
+description: Analyze code review comments and CI/CD check failures, decide validity, implement fixes, and commit grouped changes.
 ---
 
 ## User Input
@@ -50,8 +50,8 @@ When fetching from a PR:
    - **Still fetch and display** the review comments (continue through sub-steps 3–7 below as read-only) so the developer can see what was flagged.
    - After presenting the comments, provide a **brief summary** — e.g., how many comments, which authors, and a one-line characterization of the themes or patterns (e.g., "7 comments from @datadog-official — all about unpinned GitHub Actions in CI workflows").
    - After the summary, stop and report:
-     > "PR #N belongs to `OWNER/REPO`, but your current directory is linked to `LOCAL_OWNER/LOCAL_REPO`. I've listed the review comments above, but cannot read code or implement fixes from this directory. Navigate to a local clone of `OWNER/REPO` and re-run `/triage` to process them."
-   - **Do not** proceed to Step 1 (analysis) — the agent cannot read the referenced files.
+     > "PR #N belongs to `OWNER/REPO`, but your current directory is linked to `LOCAL_OWNER/LOCAL_REPO`. I've listed the review comments above, but cannot read code, fetch CI check logs, or implement fixes from this directory. Navigate to a local clone of `OWNER/REPO` and re-run `/triage` to process them."
+   - **Do not** proceed to Step 0b or Step 1 — the agent cannot read the referenced files or fetch CI logs for the correct repository.
 
 3. **Fetch review threads via GraphQL**:
    ```bash
@@ -97,7 +97,92 @@ When fetching from a PR:
 
 7. **Present the fetched comments** to the user before proceeding, showing which PR they came from and the number of unresolved threads found.
 
-Proceed to Step 1 with the resulting review comments (either inline or fetched).
+Proceed to Step 0b (CI checks) and then Step 1 with the resulting review comments (either inline or fetched).
+
+### Step 0b: Fetch CI/CD check statuses
+
+**Skip this step** if the input was inline review comments (no PR reference exists). Also skip if the PR belongs to a different repository (cross-repo case detected in Step 0).
+
+#### 1. Fetch all checks for the PR
+
+```bash
+gh pr checks "$PR_NUMBER" --repo "$OWNER/$REPO" \
+  --json name,state,bucket,link,workflow
+```
+
+Parse the JSON array. Filter to entries where `bucket` is `"fail"`. If no checks have `bucket == "fail"`, note "All CI checks pass" and skip the remaining sub-steps of Step 0b.
+
+#### 2. Extract run IDs from failed check links
+
+For each failed check, the `link` field contains a URL of the form:
+```
+https://github.com/OWNER/REPO/actions/runs/{run_id}/job/{job_id}
+```
+Extract `run_id` using the pattern `/actions/runs/(\d+)/`. Extract `job_id` from the trailing `/job/(\d+)` segment if present. Deduplicate run IDs — multiple failing jobs can share the same workflow run.
+
+#### 3. For each unique failed run, get job breakdown
+
+```bash
+gh run view "$RUN_ID" --repo "$OWNER/$REPO" --json jobs
+```
+
+From the `jobs` array, filter to jobs where `conclusion` is `"failure"` (or `"cancelled"` if it was cancelled mid-step). For each failing job, record:
+- `job_id` (the `databaseId` field)
+- `job_name`
+- `workflow_name` (from the outer run context or `gh pr checks` `workflow` field)
+- The list of steps — filter to steps where `conclusion` is `"failure"`; for each, record `name` and `number`
+
+#### 4. Fetch failed step logs
+
+For each failing run, fetch the failed-step log output:
+
+```bash
+gh run view "$RUN_ID" --repo "$OWNER/$REPO" --log-failed
+```
+
+This returns interleaved log lines for all failing steps in the run. Each log line is tab-separated:
+```
+<job_name>\t<step_name>\t<log_line>
+```
+
+Parse this output to associate log lines with their job+step. Capture up to **50 lines of relevant error output per failing step** — use the last 50 lines of each step's log section, which typically contain the actual error rather than setup noise. Note any truncation.
+
+**Fallback:** If `--log-failed` produces no output or fails, fetch per-job:
+```bash
+gh run view "$RUN_ID" --repo "$OWNER/$REPO" --job "$JOB_ID" --log-failed
+```
+
+#### 5. Optionally fetch annotations
+
+For additional structured error context (especially useful for linters and test reporters that emit annotations):
+
+```bash
+gh api "/repos/$OWNER/$REPO/check-runs/$CHECK_RUN_ID/annotations"
+```
+
+Where `CHECK_RUN_ID` is the numeric ID derived from the failed check. This returns structured annotation objects with `path`, `start_line`, `end_line`, `annotation_level`, and `message`. If annotations exist, they supplement the log output and can pinpoint specific files and lines to read.
+
+Skip this sub-step if no annotations are available or if the API returns an empty array.
+
+#### 6. Build the CI failure inventory
+
+Produce an internal data structure (used in Step 1 and Step 2) with one entry per failing step:
+
+```
+CI-N:
+  check_name:    <name field from gh pr checks>
+  workflow_name: <workflow name>
+  job_name:      <job name>
+  step_name:     <failing step name>
+  run_id:        <run_id>
+  job_id:        <job_id>
+  error_log:     <captured log lines, up to 50>
+  annotations:   <list of {path, line, message} if available>
+```
+
+Number the entries sequentially as `CI-1`, `CI-2`, etc. — distinct from the review comment numbering (`#1`, `#2`, ...) used throughout the workflow.
+
+If no failures are found after all fetching, note "All CI checks pass" and omit CI sections in subsequent steps.
 
 ### Step 1: Parse review comments
 
@@ -109,7 +194,21 @@ Extract each review comment into a structured list:
 - **Author**: the `author.login` from the review comment (e.g., `copilot-pull-request-reviewer`, a colleague's GitHub handle, or a bot name). Helps distinguish human vs. automated feedback.
 - **Thread**: a clickable link to the review comment on GitHub (e.g., `[view](url)`). Only populated when fetched from a PR; leave empty for inline input. The underlying `thread_id` is stored internally for GraphQL reply/resolve operations and does not need to be displayed in the table.
 
-If the input is empty or contains no actionable comments, stop and report: "No review comments provided."
+If the input is empty or contains no actionable comments, and no CI failures were collected in Step 0b, stop and report: "No review comments or CI failures found."
+
+If CI failures were collected in Step 0b, also present a **CI Failures** table:
+
+| # | Check | Workflow | Job | Step | Error Summary |
+|---|-------|----------|-----|------|---------------|
+
+- **#**: The `CI-N` identifier assigned in Step 0b
+- **Check**: The check name from `gh pr checks`
+- **Workflow**: The workflow name
+- **Job**: The job name within the workflow
+- **Step**: The specific failing step name
+- **Error Summary**: One-line characterization of the error (e.g., "exported function Foo lacks comment", "FAIL internal/sync: panic in TestSyncDry")
+
+If there are no CI failures, omit this table entirely.
 
 ### Step 2: Read and analyze each comment
 
@@ -128,6 +227,25 @@ For **every** comment, in order:
    - **Reject** — the concern is not valid or not worth changing (explain why)
    - **Unclear** — the comment is ambiguous, incomplete, or could be interpreted multiple ways. Formulate specific clarification questions.
 
+#### CI Failure Analysis
+
+For each CI failure (`CI-N`) from Step 0b:
+
+1. **Read the error log** captured in Step 0b
+2. **Identify the root cause** — what is the failing check actually reporting? Common cases:
+   - Lint violation: specific file, line, and rule
+   - Compilation error: file and line where it fails
+   - Test failure: test name, failure message, stack trace
+   - Missing file or dependency: build system error
+3. **Read relevant source files** — if the error references specific files and lines (from log parsing or annotations), read those files with ±20 lines of context, the same as for review comments
+4. **Propose a fix** — what change would make this check pass?
+5. **Classify**:
+   - **Fix** — the failure is clearly caused by something in this PR and can be addressed
+   - **Blocked** — the failure requires operator input: external flaky test, missing secret, infrastructure issue, or a situation where multiple valid fix approaches exist (list the options and ask the operator to choose)
+   - **Unclear** — the failure is ambiguous; formulate specific questions for the operator
+
+For **Blocked** items, be explicit: describe why you cannot proceed unilaterally and what the operator must decide or provide.
+
 ### Step 3: Present the analysis
 
 Present a verdict table summarizing all comments before making any changes:
@@ -142,10 +260,30 @@ Present a verdict table summarizing all comments before making any changes:
 | 3 | ❓ Unclear | @user | [what's ambiguous] | [clarification questions] | [link](url) |
 ```
 
+If CI failures exist, also present a **CI Check Analysis** table:
+
+```
+## CI Check Analysis
+
+| # | Verdict | Check | Job / Step | Root Cause Summary | Proposed Fix |
+|---|---------|-------|------------|--------------------|--------------|
+| CI-1 | 🔧 Fix | lint | golangci-lint / Run golangci-lint | Exported func Foo missing godoc | Add godoc comment to Foo |
+| CI-2 | 🚫 Blocked | test | unit-tests / Run tests | Panic in TestSyncDry — two valid approaches | Option A: ..., Option B: ... |
+| CI-3 | ❓ Unclear | build | compile / Build binary | Unrecognized import path | [clarification questions] |
+```
+
+**Verdicts for CI failures:**
+- **🔧 Fix** — will be addressed in Step 4 alongside review comment fixes
+- **🚫 Blocked** — cannot proceed without operator input. Clearly state what decision is needed. Do NOT implement anything for this item until the operator responds.
+- **❓ Unclear** — ask specific questions before proceeding
+
+**Key constraint:** Failed checks should NOT be dismissed or worked around (e.g., disabling a lint rule, skipping a test, adding `//nolint` directives) unless there is truly no other option. If dismissal is the only path, flag it explicitly to the operator and wait for approval before doing it.
+
 **Wait for user approval** before proceeding with implementation. The user may:
-- Approve all verdicts
-- Override specific verdicts (accept a rejection, reject an acceptance)
-- Ask for more detail on a specific comment
+- Approve all verdicts (review comments and CI failures)
+- Override specific verdicts (accept a rejection, reject an acceptance, resolve a blocked item)
+- Ask for more detail on a specific comment or CI failure
+- Provide direction for blocked or unclear CI items
 
 ### Step 3a: Reply and resolve rejected comments
 
@@ -229,6 +367,20 @@ For each accepted comment:
 - Keep changes minimal — don't refactor beyond what the comment requires
 - Update tests if the fix changes behavior or adds new error paths
 
+#### CI Fix Implementation
+
+After implementing review comment fixes, implement fixes for each CI failure marked as **Fix** (in order of `CI-N`):
+
+1. **Re-read the error log** and the relevant source files
+2. **Implement the targeted fix** — the same principles apply: fix the root cause, not just the symptom; keep changes minimal; if the same issue appears in multiple places, fix all occurrences
+3. **Verify** by re-running the failing check locally if possible:
+   - Lint: `golangci-lint run`
+   - Build: `go build ./...`
+   - Tests: `go test ./... -count=1`
+4. **For Blocked items**: do not implement anything. Record the item as pending operator input.
+
+CI fixes and review comment fixes may be grouped together in Step 5 if they are logically related (e.g., a review comment and a lint failure both touch the same function).
+
 ### Step 5: Group and commit
 
 After all fixes are implemented:
@@ -239,12 +391,17 @@ After all fixes are implemented:
 ```
 Proposed commits (in order):
 
-1. <type>: <description> (addresses comments #X, #Y)
+1. <type>: <description> (addresses #X, #Y, CI-1)
    Files: <file list>
 
-2. <type>: <description> (addresses comment #Z)
+2. <type>: <description> (addresses #Z)
+   Files: <file list>
+
+3. <type>: <description> (addresses CI-2)
    Files: <file list>
 ```
+
+CI fixes and review comment fixes may be combined in a single commit when they are logically cohesive (e.g., both address the same function). Keep them separate when they address distinct concerns.
 
 3. For each approved group, create a commit:
    - Stage only the relevant files: `git add <file1> <file2> ...`
@@ -310,13 +467,19 @@ After all commits are created:
 
 If the input was inline review comments (not fetched from a PR), skip the reply/resolve part and do not push unless explicitly requested.
 
+CI check failures resolved by the committed fixes will re-run automatically after the push — no explicit thread management is needed for CI items.
+
 ### Step 6: Distill learnings
 
 Extract actionable learnings from the review comments — patterns, mistakes, or conventions worth remembering for future work.
 
 #### 6.1 Identify new learnings
 
-From the accepted and rejected comments, distill what went wrong, what convention was missed, or what project-specific decisions were clarified. Accepted comments reveal gaps; rejected comments can reveal important conventions or architectural decisions worth documenting:
+From the accepted and rejected comments **and from CI failures**, distill what went wrong, what convention was missed, or what project-specific decisions were clarified. Accepted comments reveal gaps; rejected comments can reveal important conventions or architectural decisions worth documenting. CI failures often reveal:
+- Missing or incorrect test coverage
+- Lint rules the developer wasn't aware of
+- Build constraints (e.g., build tags, Go version requirements)
+- Workflow-specific requirements (e.g., generated file checks, formatting rules)
 
 ```
 ## Learnings
@@ -355,20 +518,27 @@ After all commits and thread resolutions, present a final summary:
 ## Review Complete
 
 **Comments**: N total — X accepted, Y rejected, Z unclear
+**CI failures**: C total — F fixed, B blocked, U unclear
 **Commits**: M created
 **Threads resolved**: R (X accepted + Y rejected)
 
-| Commit | Description | Comments Addressed |
-|--------|-------------|--------------------|
-| <hash> | <type>: <desc> | #1, #2 |
-| <hash> | <type>: <desc> | #3 |
+| Commit | Description | Comments Addressed | CI Failures Addressed |
+|--------|-------------|--------------------|-----------------------|
+| <hash> | <type>: <desc> | #1, #2 | CI-1 |
+| <hash> | <type>: <desc> | #3 | — |
+| <hash> | <type>: <desc> | — | CI-2 |
 
 **Rejected comments** (replied + resolved):
 - #Y: [brief reason]
 
 **Unclear comments** (questions posted, awaiting response):
 - #Z: @author — [summary of what was asked]
+
+**Blocked CI failures** (awaiting operator input):
+- CI-N: [what decision is needed]
 ```
+
+If there are no CI failures, omit the CI-related lines (the `**CI failures**` line, the `CI Failures Addressed` column, and the `**Blocked CI failures**` section).
 
 ## Conventional Commit Format
 
@@ -397,6 +567,9 @@ Use the `conventional-commits` skill for formatting. Most review fixes will be:
 - **Always** use `-F` flags for GraphQL variables — never inline *shell* variable references (e.g., `$THREAD_ID`) in the query string, as the shell will interpret `$` before `gh` sees it.
 - **Always** use heredoc (`cat <<'GQL' ... GQL`) for multi-line GraphQL queries to avoid Unicode curly quote corruption. Markdown renderers and AI tools silently convert ASCII `'` to `'`/`'`, causing `UNKNOWN_CHAR` parse errors. Heredoc quotes are immune to this.
 - **Always** batch multiple thread operations using GraphQL aliases (e.g., `r0: mutation(...)`, `r1: mutation(...)`) to minimize API calls. Batch replies first, then resolves, in two separate calls to ensure ordering.
+- **Always** fetch CI check statuses for PR-sourced triage runs before analysis (Step 0b)
+- **Never** dismiss or disable a failing check (lint rule, test skip, `//nolint` directive, etc.) without explicit operator approval and a concrete justification
+- **Always** label CI failure references as `CI-N` (distinct from review comment numbers `#N`) to avoid ambiguity throughout the workflow
 
 ## Thread Management Reference
 
