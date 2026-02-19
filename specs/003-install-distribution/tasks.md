@@ -59,7 +59,7 @@
 
 **Goal**: Extend GoReleaser to publish to Homebrew tap, Scoop bucket, and generate deb/rpm/apk packages
 
-**Independent Test**: Run `goreleaser check` to validate config. After release: `brew install ailign-cli/tap/ailign` works, Scoop manifest is pushed, nFPM packages appear as release assets.
+**Independent Test**: Run `goreleaser check` to validate config. After release: `brew install ailign-cli/distribution/ailign` works, Scoop manifest is pushed to ailign-cli/distribution, nFPM packages appear as release assets.
 
 ### BDD Scenarios
 
@@ -69,36 +69,31 @@
 
 ### Implementation
 
-- [ ] T015 [US1] Add Homebrew formula configuration (brews section) to .goreleaser.yml — tap repo ailign-cli/homebrew-tap, formula name ailign, dependencies, test block
-- [ ] T016 [P] [US3] Add Scoop manifest configuration (scoops section) to .goreleaser.yml — bucket repo ailign-cli/scoop-bucket, project name, license
+- [ ] T015 [US1] Add Homebrew cask configuration (homebrew_casks section) to .goreleaser.yml — tap repo ailign-cli/distribution (directory: Casks/), cask name ailign, depends_on, test block (brews is deprecated in favor of homebrew_casks). Use `pull_request.enabled: true` in repository config for audit trail.
+- [ ] T016 [P] [US3] Add Scoop manifest configuration (scoops section) to .goreleaser.yml — bucket repo ailign-cli/distribution (root directory — subdirectories break `scoop bucket list`), project name, license. Use `pull_request.enabled: true` in repository config for audit trail.
 - [ ] T017 [P] [US3] Add nFPM configuration (nfpms section) to .goreleaser.yml — generate deb, rpm, apk packages with package name, description, maintainer, license
-- [ ] T018 Update release workflow at .github/workflows/release.yml to pass HOMEBREW_TAP_TOKEN and SCOOP_BUCKET_TOKEN as environment variables to GoReleaser step
+- [ ] T018 Update release workflow at .github/workflows/release.yml to pass DISTRIBUTION_REPO_TOKEN as environment variable to GoReleaser step (single token for unified ailign-cli/distribution repo). Configure GoReleaser publishers with `skip_upload: auto` so missing tokens skip gracefully rather than failing the release.
 - [ ] T019 Validate extended GoReleaser config with `goreleaser check`
 
 **Checkpoint**: GoReleaser Tier 1 configured. Next release publishes to Homebrew, Scoop, and generates Linux packages. PR 2 can be merged independently.
 
 ---
 
-## Phase 4: GoReleaser Tier 2 — AUR, Nix, Docker, Chocolatey, WinGet, Snapcraft (PR 3) → US3
+## Phase 4: GoReleaser Tier 2 — Nix, Docker, WinGet (PR 3) → US3
 
-**Goal**: Extend GoReleaser to publish to all remaining distribution channels
+**Goal**: Extend GoReleaser to publish to Tier 2 channels that have credentials available (DISTRIBUTION_REPO_TOKEN or GITHUB_TOKEN)
 
-**Independent Test**: Run `goreleaser check` to validate config. After release: packages published to all Tier 2 channels (those with configured credentials).
-
-> **NOTE**: Tier 2 channels require external accounts and secrets. Channels without configured secrets will be skipped gracefully by GoReleaser. Each section can be commented out until the corresponding account is set up.
+**Independent Test**: Run `goreleaser check` to validate config. After release: packages published to configured Tier 2 channels.
 
 ### Implementation
 
-- [ ] T020 [P] [US3] Add AUR configuration (aurs section) to .goreleaser.yml — package name, description, maintainer, git URL, SSH key secret
-- [ ] T021 [P] [US3] Add Nix/NUR configuration (nix section) to .goreleaser.yml — NUR repo ailign-cli/nur-packages, package name, homepage, license
-- [ ] T022 [US3] Add Docker configuration (dockers section) to .goreleaser.yml — image ghcr.io/ailign-cli/ailign, tags (version + latest), build context. Create Dockerfile at repository root (FROM scratch or alpine, COPY binary, ENTRYPOINT)
-- [ ] T023 [P] [US3] Add Chocolatey configuration (chocolateys section) to .goreleaser.yml — package name, owners, title, project URL, license
-- [ ] T024 [P] [US3] Add WinGet configuration (winget section) to .goreleaser.yml — package identifier, publisher, short description, license
-- [ ] T025 [P] [US3] Add Snapcraft configuration (snapcrafts section) to .goreleaser.yml — snap name, summary, description, grade, confinement, apps
-- [ ] T026 [US3] Update release workflow at .github/workflows/release.yml — add docker login step (ghcr.io), pass all Tier 2 secrets (AUR_KEY, NUR_TOKEN, CHOCOLATEY_API_KEY, SNAPCRAFT_STORE_CREDENTIALS, WINGET_TOKEN) to GoReleaser step
-- [ ] T027 Validate extended GoReleaser config with `goreleaser check`
+- [ ] T020 [P] [US3] Add Nix/NUR configuration (nix section) to .goreleaser.yml — NUR repo ailign-cli/distribution (directory: nix/), package name, homepage, license. Use `pull_request.enabled: true` in repository config for audit trail.
+- [ ] T021 [US3] Add Docker configuration (dockers section) to .goreleaser.yml — image ghcr.io/ailign-cli/ailign, tags (version + latest), build context. Create Dockerfile at repository root (FROM scratch or alpine, COPY binary, ENTRYPOINT)
+- [ ] T022 [P] [US3] Add WinGet configuration (winget section) to .goreleaser.yml — repo ailign-cli/distribution (directory: winget/), package identifier, publisher, short description, license. Use `pull_request.enabled: true` in repository config for audit trail.
+- [ ] T023 [US3] Update release workflow at .github/workflows/release.yml — add docker login step (ghcr.io). DISTRIBUTION_REPO_TOKEN already configured in T018 for NUR/WinGet.
+- [ ] T024 Validate extended GoReleaser config with `goreleaser check`
 
-**Checkpoint**: GoReleaser Tier 2 configured. All distribution channels are ready (pending external account setup). PR 3 can be merged independently.
+**Checkpoint**: GoReleaser Tier 2 configured. Nix, Docker, and WinGet channels ready. PR 3 can be merged independently.
 
 ---
 
@@ -108,15 +103,20 @@
 
 **Independent Test**: `npx @ailign/cli --version` works. `npm install -g @ailign/cli` installs the binary.
 
+### Setup (done)
+
+- [x] T025 [US3] Publish placeholder packages (v0.0.0) to npm for all 6 packages (@ailign/cli + 5 platform packages) to enable OIDC configuration
+- [x] T026 [US3] Configure DISTRIBUTION_REPO_TOKEN (fine-grained PAT: Contents R/W, Pull requests R/W, Metadata RO) as GitHub Actions secret on ailign-cli/cli
+
 ### Implementation
 
-- [ ] T028 [US3] Create main wrapper package at npm/ailign/package.json — name @ailign/cli, version, bin entry, optionalDependencies for all 5 platform packages
-- [ ] T029 [US3] Create CLI shim at npm/ailign/bin/ailign — Node.js script that finds and executes the platform-specific binary
-- [ ] T030 [US3] Create platform detection module at npm/ailign/lib/platform.js — maps process.platform + process.arch to package name and binary path
-- [ ] T031 [US3] Create postinstall fallback downloader at npm/ailign/scripts/install.js — downloads binary from GitHub Releases if optionalDependencies failed (handles --ignore-scripts, custom registries)
-- [ ] T032 [P] [US3] Create platform-specific packages at npm/ailign-darwin-arm64/package.json, npm/ailign-darwin-x64/package.json, npm/ailign-linux-x64/package.json, npm/ailign-linux-arm64/package.json, npm/ailign-win32-x64/package.json — each with os/cpu fields and placeholder for binary
-- [ ] T033 [US3] Create npm publish workflow at .github/workflows/npm-publish.yml — triggered by release, copies binaries into platform packages, publishes all 6 packages to npm registry
-- [ ] T034 [US3] Validate npm packages with `npm pack --dry-run` for main and platform packages
+- [ ] T027 [US3] Update main wrapper package at npm/ailign/package.json — bump version, finalize bin entry, optionalDependencies for all 5 platform packages
+- [ ] T028 [US3] Create CLI shim at npm/ailign/bin/ailign — Node.js script that finds and executes the platform-specific binary
+- [ ] T029 [US3] Create platform detection module at npm/ailign/lib/platform.js — maps process.platform + process.arch to package name and binary path
+- [ ] T030 [US3] Create postinstall fallback downloader at npm/ailign/scripts/install.js — downloads binary from GitHub Releases if optionalDependencies failed (handles --ignore-scripts, custom registries)
+- [ ] T031 [P] [US3] Update platform-specific packages at npm/ailign-darwin-arm64/package.json, npm/ailign-darwin-x64/package.json, npm/ailign-linux-x64/package.json, npm/ailign-linux-arm64/package.json, npm/ailign-win32-x64/package.json — bump version, add placeholder for binary
+- [ ] T032 [US3] Add npm publish job to .github/workflows/release.yml — runs after GoReleaser job, copies binaries into platform packages, publishes all 6 packages to npm registry. <!-- TODO: add `environment: npm` for OIDC trust once npm OIDC is configured (requires security key) -->
+- [ ] T033 [US3] Validate npm packages with `npm pack --dry-run` for main and platform packages
 
 **Checkpoint**: NPM wrapper package complete. After next release + npm publish: `npx @ailign/cli` works. PR 4 can be merged independently.
 
@@ -132,16 +132,16 @@
 
 > **NOTE**: All documentation scenarios are testable locally by parsing README.md — no `@ci` tag needed.
 
-- [ ] T035 [P] [US4] Remove `@wip` tag from features/install-documentation.feature — all scenarios run locally via godog (no `@ci` needed)
-- [ ] T036 [US4] Write step definitions for documentation scenarios in features/steps/install_docs_steps_test.go — parse README.md, verify Installation section exists before usage, verify all methods documented, verify code blocks present, verify version verification shown (expect RED)
+- [ ] T034 [P] [US4] Remove `@wip` tag from features/install-documentation.feature — all scenarios run locally via godog (no `@ci` needed)
+- [ ] T035 [US4] Write step definitions for documentation scenarios in features/steps/install_docs_steps_test.go — parse README.md, verify Installation section exists before usage, verify all methods documented, verify code blocks present, verify version verification shown (expect RED)
 
 ### Implementation
 
-- [ ] T037 [US4] Add Installation section to README.md — position before any usage instructions, with sub-sections for: Homebrew, go install, install script, Scoop, NPM/npx, Docker, direct download, Linux packages (deb/rpm/apk)
-- [ ] T038 [US4] Add version verification instructions to README.md — show `ailign --version` expected output
-- [ ] T039 [US4] Verify all installation commands in README.md match actual package names, module paths, and URLs from GoReleaser config and npm packages
-- [ ] T040 [US4] Verify step definitions pass for documentation scenarios (GREEN)
-- [ ] T041 Create CI/CD post-release smoke test workflow at .github/workflows/smoke-test.yml — reusable workflow (`workflow_call`) called by release.yml after GoReleaser completes. Uses GitHub Actions matrix strategy: matrix of {os: [ubuntu-latest, macos-latest], method: [install-script, go-install, brew, npx, docker]} with exclude rules (brew only on macos, docker only on ubuntu). Each matrix entry: installs via that method, runs `ailign --version`, verifies output contains the release version. Maps to `@ci` tagged feature file scenarios.
+- [ ] T036 [US4] Add Installation section to README.md — position before any usage instructions, with sub-sections for: Homebrew, go install, install script, Scoop, NPM/npx, Docker, direct download, Linux packages (deb/rpm/apk)
+- [ ] T037 [US4] Add version verification instructions to README.md — show `ailign --version` expected output
+- [ ] T038 [US4] Verify all installation commands in README.md match actual package names, module paths, and URLs from GoReleaser config and npm packages
+- [ ] T039 [US4] Verify step definitions pass for documentation scenarios (GREEN)
+- [ ] T040 Create CI/CD post-release smoke test workflow at .github/workflows/smoke-test.yml — reusable workflow (`workflow_call`) called by release.yml after GoReleaser completes. Uses GitHub Actions matrix strategy: matrix of {os: [ubuntu-latest, macos-latest], method: [install-script, go-install, brew, npx, docker]} with exclude rules (brew only on macos, docker only on ubuntu). Each matrix entry: installs via that method, runs `ailign --version`, verifies output contains the release version. Maps to `@ci` tagged feature file scenarios.
 
 **Checkpoint**: Documentation complete, CI/CD smoke tests ready. All installation methods documented and will be automatically verified on each release. PR 5 can be merged independently.
 
@@ -151,11 +151,31 @@
 
 **Purpose**: Final validation and cleanup across all PRs
 
-- [ ] T042 Run `goreleaser check` to validate final .goreleaser.yml configuration
-- [ ] T043 [P] Run full test suite `go test ./...` and verify all tests pass (unit + BDD)
-- [ ] T044 [P] Validate quickstart.md at specs/003-install-distribution/quickstart.md against implemented commands and package names
-- [ ] T045 [P] Verify all secrets are documented in research.md and referenced in release workflow
-- [ ] T046 Mark all tasks complete in specs/003-install-distribution/tasks.md
+- [ ] T041 Run `goreleaser check` to validate final .goreleaser.yml configuration
+- [ ] T042 [P] Run full test suite `go test ./...` and verify all tests pass (unit + BDD)
+- [ ] T043 [P] Validate quickstart.md at specs/003-install-distribution/quickstart.md against implemented commands and package names
+- [ ] T044 [P] Verify all secrets are documented in research.md and referenced in release workflow
+- [ ] T045 Mark all tasks complete in specs/003-install-distribution/tasks.md
+
+---
+
+## Phase 8: DEFERRED — External Account Channels
+
+**Status**: DEFERRED — requires external account creation. Pick up when accounts are available.
+
+**Goal**: Enable distribution channels that require external service accounts (AUR, Chocolatey, Snapcraft) and configure npm OIDC.
+
+> **NOTE**: These tasks are independent of each other. Each can be enabled individually by creating the account, adding the secret, and uncommenting the GoReleaser config block.
+
+### External accounts
+
+- [ ] T046 [US3] Create AUR account, generate SSH key (passphrase-free), add AUR_KEY secret to ailign-cli/cli. Add AUR configuration (aurs section) to .goreleaser.yml — package name, description, maintainer, git URL.
+- [ ] T047 [P] [US3] Create Chocolatey account, generate API key, add CHOCOLATEY_API_KEY secret to ailign-cli/cli. Add Chocolatey configuration (chocolateys section) to .goreleaser.yml — package name, owners, title, project URL, license.
+- [ ] T048 [P] [US3] Create Snapcraft/Ubuntu One account, run `snapcraft export-login`, add SNAPCRAFT_STORE_CREDENTIALS secret to ailign-cli/cli. Add Snapcraft configuration (snapcrafts section) to .goreleaser.yml — snap name, summary, description, grade, confinement, apps.
+
+### npm OIDC
+
+- [ ] T049 [US3] Configure npm OIDC on all 6 @ailign packages (requires security key). Create GitHub Actions `npm` environment on ailign-cli/cli. Update T032 npm publish job to use `environment: npm` for OIDC trust.
 
 ---
 
@@ -170,6 +190,7 @@
 - **NPM Wrapper (Phase 5)**: Depends on Setup — can run in parallel with Phases 2-4 (separate files)
 - **Documentation + Smoke Tests (Phase 6)**: Depends on Phases 2-5 (needs all methods implemented to document and test accurately)
 - **Polish (Phase 7)**: Depends on all phases complete
+- **DEFERRED (Phase 8)**: Independent — can be picked up any time after Phase 3
 
 ### User Story Dependencies
 
@@ -191,25 +212,9 @@
 - Phase 2 (install script) and Phase 3 (GoReleaser Tier 1) can run in parallel
 - Phase 5 (NPM wrapper) can run in parallel with Phases 2-4 (entirely separate files)
 - Within Phase 3: Scoop (T016) and nFPM (T017) are parallel with each other
-- Within Phase 4: AUR (T020), Nix (T021), Chocolatey (T023), WinGet (T024), Snapcraft (T025) are all parallel
-- Within Phase 5: Platform-specific packages (T032) are parallel with each other
-
----
-
-## Parallel Example: Phase 4
-
-```bash
-# All GoReleaser Tier 2 sections are independent config blocks:
-Task: "Add AUR configuration to .goreleaser.yml"
-Task: "Add Nix/NUR configuration to .goreleaser.yml"
-Task: "Add Chocolatey configuration to .goreleaser.yml"
-Task: "Add WinGet configuration to .goreleaser.yml"
-Task: "Add Snapcraft configuration to .goreleaser.yml"
-
-# Then sequentially:
-Task: "Add Docker configuration + Dockerfile"  # creates new file
-Task: "Update release workflow with Tier 2 secrets"  # depends on knowing all secrets
-```
+- Within Phase 4: Nix (T020) and WinGet (T022) are parallel with each other
+- Within Phase 5: Platform-specific packages (T031) are parallel with each other
+- Within Phase 8: All tasks are independent — enable channels as accounts are created
 
 ---
 
@@ -226,20 +231,11 @@ Task: "Update release workflow with Tier 2 secrets"  # depends on knowing all se
 
 1. Phase 1 + Phase 2 → Install script + go install ready (PR 1)
 2. Phase 3 → Homebrew + Scoop + Linux packages (PR 2)
-3. Phase 4 → All remaining channels (PR 3)
+3. Phase 4 → Nix + Docker + WinGet (PR 3)
 4. Phase 5 → NPM ecosystem (PR 4)
 5. Phase 6 → Documentation + CI/CD smoke tests (PR 5)
 6. Each PR adds independently deployable distribution channels
-
-### External Account Setup
-
-Tier 2 channels can be stubbed (commented out in .goreleaser.yml) and enabled incrementally as accounts are created:
-1. Docker (GHCR) — usually available immediately via GITHUB_TOKEN
-2. Chocolatey — requires account + API key + manual review
-3. Snapcraft — requires Ubuntu One account + credentials export
-4. AUR — requires AUR account + SSH key
-5. WinGet — requires staging repo + PAT
-6. Nix/NUR — requires NUR repo + PAT
+7. Phase 8 → DEFERRED: AUR, Chocolatey, Snapcraft, npm OIDC (pick up when accounts/security key available)
 
 ---
 
@@ -249,7 +245,7 @@ Tier 2 channels can be stubbed (commented out in .goreleaser.yml) and enabled in
 - [Story] label maps task to specific user story for traceability
 - `@ci` tag on scenarios = executed by CI/CD smoke test workflow, excluded from local godog runs via `~@ci`
 - No tag on scenarios = executed locally by godog step definitions
-- CI/CD smoke test workflow (T041) uses GitHub Actions matrix strategy for multi-OS, multi-method verification
-- GoReleaser Tier 2 channels can be commented out and enabled incrementally as external accounts are set up
+- CI/CD smoke test workflow (T040) uses GitHub Actions matrix strategy for multi-OS, multi-method verification
+- DEFERRED channels can be enabled individually by creating the account, adding the secret, and uncommenting the GoReleaser config block
 - Commit after each task or logical group
 - Stop at any checkpoint to validate the PR independently
