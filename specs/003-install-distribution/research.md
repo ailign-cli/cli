@@ -60,13 +60,13 @@
 
 ## Decision 5: Docker Image Strategy
 
-**Decision**: Use `dockers` (not `dockers_v2` yet) with GHCR as the registry.
+**Decision**: Use `dockers` (not `dockers_v2` yet) with both GHCR and Docker Hub.
 
-**Image**: `ghcr.io/ailign-cli/ailign`
-**Tags**: `v{version}`, `latest`
+**Images**: `ghcr.io/ailign-cli/ailign`, `ailign/ailign`
+**Tags**: `{version}`, `latest`
 **Platforms**: linux/amd64 (single platform initially)
 
-**Rationale**: `dockers_v2` uses buildx for multi-arch but adds complexity. Start with single-platform image on GHCR (free for public repos, integrated with GitHub). Add multi-arch later.
+**Rationale**: `dockers_v2` uses buildx for multi-arch but adds complexity. Start with single-platform image on GHCR (free for public repos, integrated with GitHub) + Docker Hub (`ailign` personal account) for discoverability. Add multi-arch later.
 
 ## Decision 6: nFPM Package Formats
 
@@ -80,12 +80,14 @@
 
 | Secret | Used By | Notes |
 |--------|---------|-------|
-| `GITHUB_TOKEN` | GoReleaser releases | Auto-provided |
-| `DISTRIBUTION_REPO_TOKEN` | Homebrew/Scoop/NUR/WinGet push | PAT with `repo` scope on `ailign-cli/distribution` |
-| `CHOCOLATEY_API_KEY` | Chocolatey publish | From chocolatey.org account |
-| `SNAPCRAFT_STORE_CREDENTIALS` | Snapcraft publish | From `snapcraft export-login` |
-| `AUR_KEY` | AUR package push | SSH private key (no passphrase) |
-| `NPM_TOKEN` | npm publish | From npmjs.com account |
+| `GITHUB_TOKEN` | GoReleaser releases, GHCR push | Auto-provided |
+| `DISTRIBUTION_REPO_TOKEN` | Homebrew/Scoop/NUR/WinGet push | Fine-grained PAT (Contents R/W, Pull requests R/W, Metadata RO) on `ailign-cli/distribution` |
+| `DOCKERHUB_USERNAME` | Docker Hub login | Variable (not secret): `ailign` |
+| `DOCKERHUB_TOKEN` | Docker Hub push | Access token from hub.docker.com |
+| `CHOCOLATEY_API_KEY` | Chocolatey publish | From chocolatey.org account (deferred) |
+| `SNAPCRAFT_STORE_CREDENTIALS` | Snapcraft publish | From `snapcraft export-login` (deferred) |
+| `AUR_KEY` | AUR package push | SSH private key, no passphrase (deferred) |
+| `NPM_TOKEN` | npm publish | Granular token scoped to @ailign, bypass 2FA enabled |
 
 ## External Repositories Required
 

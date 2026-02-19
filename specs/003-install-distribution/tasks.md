@@ -87,11 +87,11 @@
 
 ### Implementation
 
-- [ ] T020 [P] [US3] Add Nix/NUR configuration (nix section) to .goreleaser.yml — NUR repo ailign-cli/distribution (directory: nix/), package name, homepage, license. Use `pull_request.enabled: true` in repository config for audit trail.
-- [ ] T021 [US3] Add Docker configuration (dockers section) to .goreleaser.yml — image ghcr.io/ailign-cli/ailign, tags (version + latest), build context. Create Dockerfile at repository root (FROM scratch or alpine, COPY binary, ENTRYPOINT)
-- [ ] T022 [P] [US3] Add WinGet configuration (winget section) to .goreleaser.yml — repo ailign-cli/distribution (directory: winget/), package identifier, publisher, short description, license. Use `pull_request.enabled: true` in repository config for audit trail.
-- [ ] T023 [US3] Update release workflow at .github/workflows/release.yml — add docker login step (ghcr.io). DISTRIBUTION_REPO_TOKEN already configured in T018 for NUR/WinGet.
-- [ ] T024 Validate extended GoReleaser config with `goreleaser check`
+- [x] T020 [P] [US3] Add Nix/NUR configuration (nix section) to .goreleaser.yml — NUR repo ailign-cli/distribution (directory: nix/), package name, homepage, license. Use `pull_request.enabled: true` in repository config for audit trail.
+- [x] T021 [US3] Add Docker configuration (dockers section) to .goreleaser.yml — image ghcr.io/ailign-cli/ailign, tags (version + latest), build context. Create Dockerfile at repository root (FROM scratch or alpine, COPY binary, ENTRYPOINT)
+- [x] T022 [P] [US3] Add WinGet configuration (winget section) to .goreleaser.yml — repo ailign-cli/distribution (directory: winget/), package identifier, publisher, short description, license. Use `pull_request.enabled: true` in repository config for audit trail.
+- [x] T023 [US3] Update release workflow at .github/workflows/release.yml — add docker login step (ghcr.io). DISTRIBUTION_REPO_TOKEN already configured in T018 for NUR/WinGet.
+- [x] T024 Validate extended GoReleaser config with `goreleaser check`
 
 **Checkpoint**: GoReleaser Tier 2 configured. Nix, Docker, and WinGet channels ready. PR 3 can be merged independently.
 
@@ -176,6 +176,10 @@
 ### npm OIDC
 
 - [ ] T049 [US3] Configure npm OIDC on all 6 @ailign packages (requires security key). Create GitHub Actions `npm` environment on ailign-cli/cli. Update T032 npm publish job to use `environment: npm` for OIDC trust.
+
+### Docker multi-arch
+
+- [ ] T050 [US3] Add multi-arch Docker images (amd64 + arm64) — migrate from `dockers` to `dockers_v2` with buildx, add `docker_manifests` for unified tags. Include both GHCR and Docker Hub image templates.
 
 ---
 
