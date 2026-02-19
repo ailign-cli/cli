@@ -1,6 +1,7 @@
-FROM alpine:3.21
-RUN apk add --no-cache ca-certificates \
-    && addgroup -S ailign && adduser -S -G ailign ailign
-COPY ailign /usr/local/bin/ailign
-USER ailign:ailign
-ENTRYPOINT ["ailign"]
+FROM alpine:3.21 AS certs
+RUN apk add --no-cache ca-certificates
+
+FROM scratch
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY ailign /ailign
+ENTRYPOINT ["/ailign"]
