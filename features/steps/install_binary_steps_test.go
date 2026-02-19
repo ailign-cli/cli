@@ -1,6 +1,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -18,10 +19,18 @@ type installScriptState struct {
 	scriptExit  int
 	archivePath string
 	checksumTxt string
+	tempDirs    []string // tracks temp dirs for cleanup
 }
 
 func registerInstallBinarySteps(ctx *godog.ScenarioContext, w *testWorld) {
-	is := &installScriptState{env: make(map[string]string)}
+	is := &installScriptState{env: make(map[string]string), tempDirs: []string{}}
+
+	ctx.After(func(ctx2 context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		for _, d := range is.tempDirs {
+			os.RemoveAll(d)
+		}
+		return ctx2, nil
+	})
 
 	// Given steps (past tense)
 	ctx.Given(`^the developer sets INSTALL_DIR to "([^"]*)"$`, is.setsInstallDir)
@@ -61,7 +70,12 @@ func (is *installScriptState) setsAilignVersion(version string) error {
 }
 
 func (is *installScriptState) setsInstallDirNotInPath() error {
-	is.env["INSTALL_DIR"] = "/tmp/ailign-test-not-in-path"
+	dir, err := os.MkdirTemp("", "ailign-test-not-in-path-*")
+	if err != nil {
+		return fmt.Errorf("creating temp install dir: %w", err)
+	}
+	is.tempDirs = append(is.tempDirs, dir)
+	is.env["INSTALL_DIR"] = dir
 	return nil
 }
 
@@ -77,6 +91,7 @@ func (is *installScriptState) aReleaseArchiveHasBeenDownloaded() error {
 	if err != nil {
 		return err
 	}
+	is.tempDirs = append(is.tempDirs, tmpDir)
 
 	binPath := filepath.Join(tmpDir, "ailign")
 	if err := os.WriteFile(binPath, []byte("#!/bin/sh\necho ailign v0.1.0"), 0755); err != nil {
@@ -93,22 +108,40 @@ func (is *installScriptState) aReleaseArchiveHasBeenDownloaded() error {
 	return nil
 }
 
+func detectChecksumTool() (string, []string, error) {
+	if _, err := exec.LookPath("sha256sum"); err == nil {
+		return "sha256sum", []string{}, nil
+	}
+	if _, err := exec.LookPath("shasum"); err == nil {
+		return "shasum", []string{"-a", "256"}, nil
+	}
+	return "", nil, fmt.Errorf("neither sha256sum nor shasum found in PATH")
+}
+
 func (is *installScriptState) theChecksumsTxtFileHasBeenDownloaded() error {
 	if is.archivePath == "" {
 		return fmt.Errorf("no archive path set")
 	}
 
-	// Generate checksum using sha256sum/shasum
-	cmd := exec.Command("shasum", "-a", "256", is.archivePath)
-	output, err := cmd.Output()
+	tool, baseArgs, err := detectChecksumTool()
 	if err != nil {
-		return fmt.Errorf("failed to compute checksum: %s", err)
+		return fmt.Errorf("selecting checksum tool: %w", err)
+	}
+
+	args := append(baseArgs, is.archivePath)
+	cmd := exec.Command(tool, args...)
+	output, cmdErr := cmd.Output()
+	if cmdErr != nil {
+		return fmt.Errorf("failed to compute checksum using %s: %w", tool, cmdErr)
 	}
 
 	// Write checksums.txt with the same format GoReleaser uses
 	checksumFile := filepath.Join(filepath.Dir(is.archivePath), "checksums.txt")
 	// Format: <hash>  <filename> (two spaces, basename only)
 	parts := strings.Fields(string(output))
+	if len(parts) == 0 {
+		return fmt.Errorf("failed to parse checksum output %q: expected '<hash>  <filename>' format", strings.TrimSpace(string(output)))
+	}
 	content := fmt.Sprintf("%s  %s\n", parts[0], filepath.Base(is.archivePath))
 	if writeErr := os.WriteFile(checksumFile, []byte(content), 0644); writeErr != nil {
 		return writeErr
@@ -161,8 +194,13 @@ func (is *installScriptState) theChecksumIsVerifiedAgainstTheArchive() error {
 		return fmt.Errorf("archive or checksums.txt not set")
 	}
 
-	// Verify using shasum -a 256 -c
-	cmd := exec.Command("shasum", "-a", "256", "-c", "--ignore-missing", is.checksumTxt)
+	tool, baseArgs, err := detectChecksumTool()
+	if err != nil {
+		return fmt.Errorf("selecting checksum tool: %w", err)
+	}
+
+	args := append(baseArgs, "-c", "--ignore-missing", is.checksumTxt)
+	cmd := exec.Command(tool, args...)
 	cmd.Dir = filepath.Dir(is.archivePath)
 	output, err := cmd.CombinedOutput()
 	is.scriptOut = string(output)
@@ -192,7 +230,14 @@ func (is *installScriptState) runningWillContain(w *testWorld, command, expected
 		}
 	}
 
-	cmd := exec.Command(binPath, "--version")
+	// Parse the command string into binary + args, substituting the resolved binary path
+	parts := strings.Fields(command)
+	var args []string
+	if len(parts) > 1 {
+		args = parts[1:]
+	}
+
+	cmd := exec.Command(binPath, args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to run %s: %s\n%s", command, err, output)
