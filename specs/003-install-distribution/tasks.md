@@ -65,15 +65,15 @@
 
 > **NOTE**: All Homebrew scenarios require a real tap and `brew` command — tagged `@ci`, verified by post-release smoke test workflow.
 
-- [ ] T014 [P] [US1] Tag all scenarios in features/install-via-homebrew.feature with `@ci`, remove `@wip` tag — all scenarios verified by CI/CD smoke tests post-release
+- [x] T014 [P] [US1] Tag all scenarios in features/install-via-homebrew.feature with `@ci`, remove `@wip` tag — all scenarios verified by CI/CD smoke tests post-release
 
 ### Implementation
 
-- [ ] T015 [US1] Add Homebrew cask configuration (homebrew_casks section) to .goreleaser.yml — tap repo ailign-cli/distribution (directory: Casks/), cask name ailign, depends_on, test block (brews is deprecated in favor of homebrew_casks). Use `pull_request.enabled: true` in repository config for audit trail.
-- [ ] T016 [P] [US3] Add Scoop manifest configuration (scoops section) to .goreleaser.yml — bucket repo ailign-cli/distribution (root directory — subdirectories break `scoop bucket list`), project name, license. Use `pull_request.enabled: true` in repository config for audit trail.
-- [ ] T017 [P] [US3] Add nFPM configuration (nfpms section) to .goreleaser.yml — generate deb, rpm, apk packages with package name, description, maintainer, license
-- [ ] T018 Update release workflow at .github/workflows/release.yml to pass DISTRIBUTION_REPO_TOKEN as environment variable to GoReleaser step (single token for unified ailign-cli/distribution repo). Configure GoReleaser publishers with `skip_upload: auto` so missing tokens skip gracefully rather than failing the release.
-- [ ] T019 Validate extended GoReleaser config with `goreleaser check`
+- [x] T015 [US1] Add Homebrew cask configuration (homebrew_casks section) to .goreleaser.yml — tap repo ailign-cli/distribution (directory: Casks/), cask name ailign, caveats for Gatekeeper workaround (brews is deprecated in favor of homebrew_casks; casks don't support depends_on or test blocks). Use `pull_request.enabled: true` in repository config for audit trail.
+- [x] T016 [P] [US3] Add Scoop manifest configuration (scoops section) to .goreleaser.yml — bucket repo ailign-cli/distribution (root directory — subdirectories break `scoop bucket list`), project name, license. Use `pull_request.enabled: true` in repository config for audit trail.
+- [x] T017 [P] [US3] Add nFPM configuration (nfpms section) to .goreleaser.yml — generate deb, rpm, apk packages with package name, description, maintainer, license
+- [x] T018 Update release workflow at .github/workflows/release.yml to pass DISTRIBUTION_REPO_TOKEN as environment variable to GoReleaser step (single token for unified ailign-cli/distribution repo). Configure GoReleaser publishers with `skip_upload: auto` so missing tokens skip gracefully rather than failing the release.
+- [x] T019 Validate extended GoReleaser config with `goreleaser check`
 
 **Checkpoint**: GoReleaser Tier 1 configured. Next release publishes to Homebrew, Scoop, and generates Linux packages. PR 2 can be merged independently.
 

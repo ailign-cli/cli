@@ -29,5 +29,51 @@ archives:
 checksum:
   name_template: "checksums.txt"
 
+homebrew_casks:
+  - name: ailign
+    homepage: "https://github.com/ailign-cli/cli"
+    description: "Instruction governance & distribution for engineering organizations"
+    directory: Casks
+    caveats: |
+      Unsigned binary — macOS may block on first run.
+      To allow, run: xattr -d com.apple.quarantine $(which ailign)
+    repository:
+      owner: ailign-cli
+      name: distribution
+      token: "{{ .Env.DISTRIBUTION_REPO_TOKEN }}"
+      pull_request:
+        enabled: true
+    skip_upload: auto
+    commit_author:
+      name: ailign-bot
+      email: noreply@ailign.dev
+
+scoops:
+  - name: ailign
+    description: "Instruction governance & distribution for engineering organizations"
+    license: MIT
+    homepage: "https://github.com/ailign-cli/cli"
+    repository:
+      owner: ailign-cli
+      name: distribution
+      token: "{{ .Env.DISTRIBUTION_REPO_TOKEN }}"
+      pull_request:
+        enabled: true
+    skip_upload: auto
+    commit_author:
+      name: ailign-bot
+      email: noreply@ailign.dev
+
+nfpms:
+  - package_name: ailign
+    description: "Instruction governance & distribution for engineering organizations"
+    maintainer: "AIlign <noreply@ailign.dev>"
+    license: MIT
+    homepage: "https://github.com/ailign-cli/cli"
+    formats:
+      - deb
+      - rpm
+      - apk
+
 changelog:
   disable: true
