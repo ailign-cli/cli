@@ -118,13 +118,16 @@ The project README includes an Installation section near the top listing all ava
 - **FR-005**: The `ailign --version` command MUST report the version matching the release tag (e.g., `ailign version 0.2.0`)
 - **FR-006**: The project README MUST include an Installation section with instructions for all supported methods
 - **FR-007**: The release process MUST be automated — tagging a version triggers building, packaging, and publishing without manual steps
-- **FR-008**: The Homebrew formula MUST be automatically updated when a new release is published
+- **FR-008**: The Homebrew cask MUST be automatically updated when a new release is published
 - **FR-009**: The project MUST provide a one-liner install script for CI/CD environments that downloads and verifies the correct binary
+- **FR-010**: The project MUST publish a Scoop manifest that installs the `ailign` binary on Windows (amd64)
+- **FR-011**: The project MUST publish a WinGet manifest that enables `winget install ailign` on Windows
+- **FR-012**: The project MUST publish an NPM wrapper package (`@ailign/cli`) that installs the correct platform binary via `npx @ailign/cli` or `npm install -g @ailign/cli`
 
 ### Key Entities
 
 - **Release**: A versioned distribution of the CLI binary (tag, version, platform archives, checksums)
-- **Homebrew Tap**: A repository containing the Homebrew formula for ailign, auto-updated on release
+- **Homebrew Tap**: The `ailign-cli/distribution` repository serving as Homebrew tap (Casks/ directory), auto-updated on release
 - **Platform Archive**: A compressed file containing the binary for a specific OS/architecture combination
 
 ## Success Criteria
@@ -136,7 +139,7 @@ The project README includes an Installation section near the top listing all ava
 - **SC-003**: Pre-built binaries are available for all 5 platform/architecture combinations within 5 minutes of tagging a release
 - **SC-004**: 100% of published archives match their published checksums
 - **SC-005**: A first-time visitor can find and follow installation instructions within 60 seconds of opening the README
-- **SC-006**: The Homebrew formula is automatically updated within 10 minutes of a new release being published
+- **SC-006**: The Homebrew cask is automatically updated within 10 minutes of a new release being published
 
 ## Scope
 
@@ -170,8 +173,7 @@ The project README includes an Installation section near the top listing all ava
 
 - GoReleaser is already configured and the release workflow exists — this feature extends it rather than building from scratch
 - GoReleaser natively supports all listed package managers via configuration
-- The Homebrew tap will be a separate GitHub repository (standard pattern: `ailign-cli/homebrew-tap`)
-- The Scoop bucket will be a separate GitHub repository (standard pattern: `ailign-cli/scoop-bucket`)
+- All distribution manifests (Homebrew cask, Scoop manifest, NUR package, WinGet manifest) are hosted in a single unified repository: `ailign-cli/distribution` with subdirectories per channel (Casks/, nix/, winget/). Scoop manifests are in the repo root (subdirectories break `scoop bucket list`).
 - `go install` builds from source and does not receive GoReleaser ldflags; the CLI MUST fall back to Go module build info (e.g., `runtime/debug.ReadBuildInfo`) when the compiled-in version is "dev", so that `ailign --version` still reports a meaningful version
 - External accounts/credentials are available for: Chocolatey, Snapcraft, AUR, Docker Hub/GHCR, npm
 - The install script will be a POSIX shell script hosted in the repository
@@ -182,6 +184,6 @@ The project README includes an Installation section near the top listing all ava
 - GoReleaser configuration (`.goreleaser.yml`) — already exists
 - GitHub Release workflow (`.github/workflows/release.yml`) — already exists
 - Version ldflags in build (`-X main.version={{.Version}}`) — already configured
-- External repositories: Homebrew tap, Scoop bucket
+- External repository: `ailign-cli/distribution` (unified: Homebrew cask, Scoop manifest, NUR package, WinGet staging)
 - External accounts: Chocolatey, Snapcraft, AUR, Docker registry, npm registry
 - GitHub Actions secrets for publishing credentials

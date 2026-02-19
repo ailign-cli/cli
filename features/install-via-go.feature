@@ -1,4 +1,3 @@
-@wip
 # Source: specs/003-install-distribution/spec.md - User Story 2
 
 Feature: Install via Go Toolchain
@@ -6,12 +5,14 @@ Feature: Install via Go Toolchain
   As a Go developer
   I want to run go install and have a working binary
 
+  @ci
   Scenario: Install latest version
     Given the developer has Go 1.24 or later installed
     When the developer runs "go install github.com/ailign/cli/cmd/ailign@latest"
     Then the ailign binary will be available in GOPATH/bin
     And running "ailign --version" will print a version string
 
+  @ci
   Scenario: Install specific version
     Given the developer has Go 1.24 or later installed
     When the developer runs "go install github.com/ailign/cli/cmd/ailign@v0.2.0"
