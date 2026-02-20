@@ -1,0 +1,83 @@
+name: Smoke Test
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Release tag (e.g., v0.2.0)"
+        required: true
+        type: string
+
+jobs:
+  smoke:
+    name: "${{ matrix.method }} on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        method: [install-script, go-install, brew, npx, docker]
+        exclude:
+          # Homebrew only on macOS (Linux Homebrew is slow and unreliable in CI)
+          - os: ubuntu-latest
+            method: brew
+          # Docker only on Linux
+          - os: macos-latest
+            method: docker
+    steps:
+      - name: Derive version
+        id: v
+        run: |
+          TAG="${{ inputs.version }}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "bare=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Install via install script
+        if: matrix.method == 'install-script'
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install via go install
+        if: matrix.method == 'go-install'
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Install via go install (run)
+        if: matrix.method == 'go-install'
+        run: go install github.com/ailign/cli/cmd/ailign@${{ steps.v.outputs.tag }}
+
+      - name: Install via Homebrew
+        if: matrix.method == 'brew'
+        run: |
+          brew tap ailign-cli/distribution
+          brew install ailign
+
+      - name: Install via npx
+        if: matrix.method == 'npx'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install via npx (run)
+        if: matrix.method == 'npx'
+        run: npx @ailign/cli@${{ steps.v.outputs.bare }} --version
+
+      - name: Install via Docker
+        if: matrix.method == 'docker'
+        run: docker pull ghcr.io/ailign-cli/ailign:${{ steps.v.outputs.bare }}
+
+      - name: Verify version (install-script, go-install, brew)
+        if: matrix.method != 'npx' && matrix.method != 'docker'
+        run: |
+          OUTPUT=$(ailign --version)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "${{ steps.v.outputs.bare }}"
+
+      - name: Verify version (docker)
+        if: matrix.method == 'docker'
+        run: |
+          OUTPUT=$(docker run --rm ghcr.io/ailign-cli/ailign:${{ steps.v.outputs.bare }} --version)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "${{ steps.v.outputs.bare }}"

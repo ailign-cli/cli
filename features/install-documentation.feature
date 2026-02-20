@@ -1,4 +1,3 @@
-@wip
 # Source: specs/003-install-distribution/spec.md - User Story 4
 
 Feature: Installation Documentation

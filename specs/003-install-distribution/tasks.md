@@ -132,16 +132,16 @@
 
 > **NOTE**: All documentation scenarios are testable locally by parsing README.md — no `@ci` tag needed.
 
-- [ ] T034 [P] [US4] Remove `@wip` tag from features/install-documentation.feature — all scenarios run locally via godog (no `@ci` needed)
-- [ ] T035 [US4] Write step definitions for documentation scenarios in features/steps/install_docs_steps_test.go — parse README.md, verify Installation section exists before usage, verify all methods documented, verify code blocks present, verify version verification shown (expect RED)
+- [x] T034 [P] [US4] Remove `@wip` tag from features/install-documentation.feature — all scenarios run locally via godog (no `@ci` needed)
+- [x] T035 [US4] Write step definitions for documentation scenarios in features/steps/install_docs_steps_test.go — parse README.md, verify Installation section exists before usage, verify all methods documented, verify code blocks present, verify version verification shown (expect RED)
 
 ### Implementation
 
-- [ ] T036 [US4] Add Installation section to README.md — position before any usage instructions, with sub-sections for: Homebrew, go install, install script, Scoop, NPM/npx, Docker, direct download, Linux packages (deb/rpm/apk)
-- [ ] T037 [US4] Add version verification instructions to README.md — show `ailign --version` expected output
-- [ ] T038 [US4] Verify all installation commands in README.md match actual package names, module paths, and URLs from GoReleaser config and npm packages
-- [ ] T039 [US4] Verify step definitions pass for documentation scenarios (GREEN)
-- [ ] T040 Create CI/CD post-release smoke test workflow at .github/workflows/smoke-test.yml — reusable workflow (`workflow_call`) called by release.yml after GoReleaser completes. Uses GitHub Actions matrix strategy: matrix of {os: [ubuntu-latest, macos-latest], method: [install-script, go-install, brew, npx, docker]} with exclude rules (brew only on macos, docker only on ubuntu). Each matrix entry: installs via that method, runs `ailign --version`, verifies output contains the release version. Maps to `@ci` tagged feature file scenarios.
+- [x] T036 [US4] Add Installation section to README.md — position before any usage instructions, with sub-sections for: Homebrew, go install, install script, Scoop, NPM/npx, Docker, direct download, Linux packages (deb/rpm/apk)
+- [x] T037 [US4] Add version verification instructions to README.md — show `ailign --version` expected output
+- [x] T038 [US4] Verify all installation commands in README.md match actual package names, module paths, and URLs from GoReleaser config and npm packages
+- [x] T039 [US4] Verify step definitions pass for documentation scenarios (GREEN)
+- [x] T040 Create CI/CD post-release smoke test workflow at .github/workflows/smoke-test.yml — reusable workflow (`workflow_call`) called by release.yml after GoReleaser completes. Uses GitHub Actions matrix strategy: matrix of {os: [ubuntu-latest, macos-latest], method: [install-script, go-install, brew, npx, docker]} with exclude rules (brew only on macos, docker only on ubuntu). Each matrix entry: installs via that method, runs `ailign --version`, verifies output contains the release version. Maps to `@ci` tagged feature file scenarios.
 
 **Checkpoint**: Documentation complete, CI/CD smoke tests ready. All installation methods documented and will be automatically verified on each release. PR 5 can be merged independently.
 

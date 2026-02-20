@@ -4,6 +4,93 @@
 
 One source of truth for AI coding assistant instructions across tools and repositories.
 
+## Installation
+
+### Homebrew (macOS / Linux)
+
+```bash
+brew install ailign-cli/distribution/ailign
+```
+
+### Go Install
+
+```bash
+go install github.com/ailign/cli/cmd/ailign@latest
+```
+
+### Install Script
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ailign-cli/cli/main/install.sh | sh
+```
+
+To install a specific version or to a custom directory:
+
+```bash
+AILIGN_VERSION=v0.2.0 curl -fsSL https://raw.githubusercontent.com/ailign-cli/cli/main/install.sh | sh
+```
+
+```bash
+INSTALL_DIR=/opt/bin curl -fsSL https://raw.githubusercontent.com/ailign-cli/cli/main/install.sh | sh
+```
+
+### Scoop (Windows)
+
+```powershell
+scoop bucket add ailign https://github.com/ailign-cli/distribution
+scoop install ailign
+```
+
+### NPM / npx
+
+```bash
+npm install -g @ailign/cli
+```
+
+Or run without installing:
+
+```bash
+npx @ailign/cli --version
+```
+
+### Docker
+
+```bash
+docker run --rm -v "$(pwd):/repo" -w /repo ghcr.io/ailign-cli/ailign sync
+```
+
+### Direct Download
+
+Download the latest release from [GitHub Releases](https://github.com/ailign-cli/cli/releases):
+
+```bash
+curl -Lo ailign.tar.gz https://github.com/ailign-cli/cli/releases/latest/download/ailign_0.2.0_darwin_arm64.tar.gz
+tar xzf ailign.tar.gz
+chmod +x ailign
+```
+
+### Linux Packages (deb/rpm/apk)
+
+Download packages from [GitHub Releases](https://github.com/ailign-cli/cli/releases):
+
+```bash
+sudo dpkg -i ailign_0.2.0_linux_amd64.deb
+```
+
+```bash
+sudo rpm -i ailign_0.2.0_linux_amd64.rpm
+```
+
+```bash
+sudo apk add --allow-untrusted ailign_0.2.0_linux_amd64.apk
+```
+
+### Verify Installation
+
+```bash
+ailign --version
+```
+
 ## Quick Navigation
 
 - **[Vision](vision.md)** - Problem statement, solution approach, and business value
