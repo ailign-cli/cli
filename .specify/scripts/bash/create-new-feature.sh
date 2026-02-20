@@ -276,13 +276,13 @@ SPEC_BRANCH="${BRANCH_NAME}/spec"
 if [ "$HAS_GIT" = true ]; then
     # Create and push the feature integration branch to reserve the number
     git checkout -b "$BRANCH_NAME"
-    if ! git push -u origin "$BRANCH_NAME" 2>/dev/null; then
+    if ! git push -u origin "$BRANCH_NAME"; then
         >&2 echo "[specify] Warning: Could not push feature branch to remote. Push manually to reserve the feature number."
     fi
 
     # Create and checkout the /spec sub-branch for specification work
     git checkout -b "$SPEC_BRANCH"
-    if ! git push -u origin "$SPEC_BRANCH" 2>/dev/null; then
+    if ! git push -u origin "$SPEC_BRANCH"; then
         >&2 echo "[specify] Warning: Could not push spec branch to remote. Push manually."
     fi
 else

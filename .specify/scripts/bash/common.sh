@@ -81,7 +81,7 @@ check_feature_branch() {
         echo "Feature branches should be named like:" >&2
         echo "  001-feature-name         (base)" >&2
         echo "  001-feature-name/spec    (specification)" >&2
-        echo "  001-feature-name/phase   (implementation phase)" >&2
+        echo "  001-feature-name/phase-slug   (implementation phase)" >&2
         return 1
     fi
 
@@ -104,7 +104,7 @@ find_feature_dir_by_prefix() {
 
     # Extract numeric prefix from branch (e.g., "004" from "004-whatever")
     if [[ ! "$base_branch" =~ ^([0-9]{3})- ]]; then
-        # If branch doesn't have numeric prefix, fall back to exact match
+        # If branch doesn't have numeric prefix, fall back to base branch (with any /suffix stripped)
         echo "$specs_dir/$base_branch"
         return
     fi
