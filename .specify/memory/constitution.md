@@ -22,11 +22,11 @@
     - .specify/templates/checklist-template.md ✅ compatible
       (Generic template, dynamically populated)
     - .specify/templates/agent-file-template.md ✅ compatible
-    - CLAUDE.md ⚠ pending — references updated to "10 core principles"
+    - CLAUDE.md ✅ updated — references updated to "10 core principles"
     - README.md ✅ compatible (links to constitution.md)
-    - features/steps/suite_test.go ⚠ pending — add @deprecated to
-      tag exclusion filter
-    - .specify/memory/deprecation.md ⚠ pending — new file to create
+    - features/steps/suite_test.go ✅ updated — added @deprecated and
+      @pending-deprecation to tag exclusion filter
+    - .specify/memory/deprecation.md ✅ created — deprecation tracker
   Follow-up TODOs: None
   === End Sync Impact Report ===
 -->
@@ -223,7 +223,7 @@ every increment is a verified, deliverable unit.
 
 ### X. Subtraction
 
-**Every change SHOULD consider what can be removed, not only
+**Every change MUST consider what can be removed, not only
 what needs to be added.**
 
 People have a natural bias toward addition. When designing,
@@ -396,22 +396,29 @@ being superseded:
    Gherkin free-form description below the scenario title
 4. A deprecation entry MUST be added to
    `.specify/memory/deprecation.md` under the heading:
-   `## <date> - <Deprecation title> (<current version>)`.
-   The entry MUST also list any `@pending-deprecation`
-   scenarios that need to be activated upon removal
+   `### <date> - <Deprecation title> (<current version>)`.
+   The entry MUST use the checklist format defined in
+   `.specify/memory/deprecation.md` and list any
+   `@pending-deprecation` scenarios that need to be activated
+   upon removal
 
 #### Deprecation Warnings
 
-All BDD scenarios tagged `@deprecate` MUST assert that a
-standard deprecation notice is emitted to the user. This
-notice MUST:
+All BDD scenarios tagged `@deprecate` MUST cause a standard
+deprecation notice to be emitted to the user. The test
+harness MUST provide a shared assertion — bound to the
+`@deprecate` tag via step definitions or a `Before` hook —
+that verifies this automatically without modifying the
+scenario's Given/When/Then steps. This notice MUST:
 
 - Clearly identify the capability being deprecated
 - Explain what replaces it (the new capability)
 - Reference the version in which deprecation was announced
 
-This assertion SHOULD be standardized and automatically
-executed for all scenarios carrying the `@deprecate` tag.
+A dedicated BDD scenario SHOULD exist to test the
+deprecation notice behavior itself (i.e., that the harness
+correctly emits and verifies the notice for tagged
+scenarios).
 
 #### Deprecation Timeline
 
