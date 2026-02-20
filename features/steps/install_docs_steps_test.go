@@ -60,7 +60,7 @@ func (ds *installDocsState) hasInstallSection() error {
 		if re.MatchString(line) {
 			ds.installSectionLine = i
 			// Extract from this heading to the next same-level or higher heading
-			level := len(strings.TrimRight(strings.Split(line, " ")[0], " "))
+			level := headingLevel(line)
 			var sb strings.Builder
 			sb.WriteString(line + "\n")
 			for j := i + 1; j < len(lines); j++ {
