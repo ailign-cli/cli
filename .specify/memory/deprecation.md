@@ -9,10 +9,10 @@ AIlign CLI. See the Deprecation Process in
 <!-- Entry template:
 ### <date> - <Deprecation title> (<current version>)
 
-* [ ] specs/<NNN-feature>/spec.md
-  * [ ] features/<feature-file>.feature
-    * [ ] <Scenario title> (`@deprecate`)
-    * [ ] <Replacement scenario title> (`@pending-deprecation`)
+- [ ] specs/<NNN-feature>/spec.md
+  - [ ] features/<feature-file>.feature
+    - [ ] <Scenario title> (`@deprecate`)
+    - [ ] <Replacement scenario title> (`@pending-deprecation`)
 -->
 
 *No pending deprecations.*
