@@ -7,7 +7,7 @@ AIlign CLI. See the Deprecation Process in
 ## Pending Deprecations
 
 <!-- Entry template:
-### <date> - <Deprecation title> (<current version>)
+### <YYYY-MM-DD> - <Deprecation title> (<current version>)
 
 - [ ] specs/<NNN-feature>/spec.md
   - [ ] features/<feature-file>.feature
@@ -19,4 +19,14 @@ AIlign CLI. See the Deprecation Process in
 
 ## Completed Deprecations
 
+<!-- Completed entry template:
+### <original deprecation date> - <Deprecation title> (<introduced in version> → removed in <removal version> on <removal date>)
+
+- Spec: specs/<NNN-feature>/spec.md
+- Features:
+  - features/<feature-file>.feature
+    - <Scenario title> (`@deprecate`)
+    - <Replacement scenario title> (`@pending-deprecation` → `@default`)
+- Status: Removed in <removal version> on <removal date> per constitution.md Deprecation Process
+-->
 *No completed deprecations.*
