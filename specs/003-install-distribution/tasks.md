@@ -175,7 +175,7 @@
 
 ### npm OIDC
 
-- [ ] T049 [US3] Configure npm OIDC on all 6 @ailign packages (requires security key). Create GitHub Actions `npm` environment on ailign-cli/cli. Update T032 npm publish job to use `environment: npm` for OIDC trust.
+- [x] T049 [US3] Configure npm OIDC on all 6 @ailign packages (requires security key). Create GitHub Actions `npm` environment on ailign-cli/cli. Update T032 npm publish job to use `environment: npm` for OIDC trust. <!-- Done: OIDC trusted publishing configured, environment gate deferred -->
 
 ### Docker multi-arch
 
