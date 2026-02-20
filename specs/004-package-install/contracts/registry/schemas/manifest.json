@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://registry.ailign.dev/schemas/manifest.json",
+  "title": "AIlign Package Manifest",
+  "description": "Schema for ailign-pkg.yml — the package manifest file that declares a package's identity, type, version, and content structure.",
+  "type": "object",
+  "required": ["name", "type", "version", "description", "content"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+      "description": "Scoped package name in the format scope/name (e.g., 'company/security')"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["instructions"],
+      "description": "Package content type. Only 'instructions' is supported initially."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$",
+      "description": "Semantic version (MAJOR.MINOR.PATCH)"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable description of the package"
+    },
+    "content": {
+      "type": "object",
+      "required": ["main"],
+      "additionalProperties": false,
+      "properties": {
+        "main": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/]",
+          "description": "Relative path to the primary content file (e.g., 'instructions.md')"
+        }
+      }
+    }
+  }
+}

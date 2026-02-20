@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://registry.ailign.dev/schemas/lock-file.json",
+  "title": "AIlign Lock File",
+  "description": "Schema for ailign-lock.yml — records exact versions and checksums of installed packages for reproducibility.",
+  "type": "object",
+  "required": ["lockfileVersion", "packages"],
+  "additionalProperties": false,
+  "properties": {
+    "lockfileVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Lock file schema version"
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["reference", "version", "resolved", "integrity"],
+        "additionalProperties": false,
+        "properties": {
+          "reference": {
+            "type": "string",
+            "pattern": "^[a-z]+/[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+            "description": "Type-scoped package reference without version (e.g., 'instructions/company/security')"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$",
+            "description": "Exact resolved semver version"
+          },
+          "resolved": {
+            "type": "string",
+            "format": "uri",
+            "description": "Full URL from which the package was fetched"
+          },
+          "integrity": {
+            "type": "string",
+            "pattern": "^sha256-[A-Za-z0-9+/]+=*$",
+            "description": "SRI-format SHA-256 checksum of the content file"
+          }
+        }
+      },
+      "description": "List of installed packages, sorted by reference ascending"
+    }
+  }
+}
