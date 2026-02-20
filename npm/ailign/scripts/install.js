@@ -4,7 +4,7 @@ const { existsSync, mkdirSync, unlinkSync, createWriteStream, chmodSync } = requ
 const { join } = require("path");
 const { execSync } = require("child_process");
 const https = require("https");
-const { platformKey, packageName, binaryName, fallbackBinaryPath } = require("../lib/platform");
+const { platformKey, packageName, binaryName } = require("../lib/platform");
 
 // If the platform package was already installed via optionalDependencies, skip.
 const pkg = packageName();
