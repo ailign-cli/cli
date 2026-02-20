@@ -13,7 +13,7 @@
 **As a** developer working in an organization with multiple repositories
 **I want to** run `ailign install` and have the declared instruction packages fetched and rendered to my configured tool formats
 
-A developer has a `.ailign.yml` configuration that declares one or more instruction packages (e.g., `instructions/company/security@1.3.0`). They run `ailign install` and the CLI fetches each package from the registry, composes the content with any local overlays, and renders the result to the configured target formats (Claude, Cursor, Copilot). The developer sees a summary of what was installed and can verify the output with `ailign status`.
+A developer has a `.ailign.yml` configuration that declares one or more instruction packages (e.g., `instructions/company/security@1.3.0`). They run `ailign install` and the CLI fetches each package from the registry, composes the content with any local overlays, and renders the result to the configured target formats (Claude, Cursor, Copilot). The developer sees a summary of what was installed.
 
 **Why this priority**: This is the core value proposition — fetching and applying shared instruction packages. Without this, the tool only supports local overlays (feature 002). This enables the central-baseline-plus-repo-overlay model that is the product's reason for being.
 
@@ -108,7 +108,7 @@ When `ailign install` runs, it records the exact resolved version and content ch
 
 **In order to** develop the CLI and registry independently
 **As a** developer of either the CLI or the registry
-**I want to** a well-defined contract between CLI and registry that both sides test against
+**I want** a well-defined contract between CLI and registry that both sides test against
 
 The registry API contract defines how the CLI discovers and fetches packages. The contract lives in the CLI repository (under `contracts/registry/`) as an OpenAPI spec, JSON schemas for the manifest format, and fixture files with example request/response pairs. The CLI tests against a stub registry that implements this contract. The future registry service fetches the same contract artifacts and validates conformance against them. This consumer-driven approach enables the CLI to develop first while providing a clear specification for the registry to implement against.
 

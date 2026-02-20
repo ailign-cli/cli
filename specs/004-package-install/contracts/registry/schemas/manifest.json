@@ -9,7 +9,7 @@
   "properties": {
     "name": {
       "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$",
+      "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
       "description": "Scoped package name in the format scope/name (e.g., 'company/security')"
     },
     "type": {

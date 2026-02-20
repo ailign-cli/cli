@@ -18,7 +18,7 @@
 **Purpose**: Project initialization — new packages, test fixtures, contract artifacts
 
 - [ ] T001 Create `internal/registry/` package directory and `internal/install/` package directory
-- [ ] T002 [P] Create test fixture directory `testdata/registry/packages/` with sample package content for `instructions-company-security-1.3.0/` (manifest.yml + instructions.md) and `instructions-company-typescript-2.1.0/` (manifest.yml + instructions.md)
+- [ ] T002 [P] Create test fixture directory `testdata/registry/packages/` with sample package content for `instructions-company-security-1.3.0/` (ailign-pkg.yml + instructions.md) and `instructions-company-typescript-2.1.0/` (ailign-pkg.yml + instructions.md)
 - [ ] T003 [P] Copy contract artifacts from `specs/004-package-install/contracts/registry/` to project root `contracts/registry/` (openapi.yaml, schemas/manifest.json, schemas/lock-file.json)
 - [ ] T004 [P] Add `contracts/` and `testdata/` to `.gitignore` exclusion list if needed (ensure they are tracked, not ignored)
 
@@ -35,7 +35,7 @@
 - [ ] T007 [P] Define `Manifest` type with `Name`, `Type`, `Version`, `Description`, `Content.Main` fields in `internal/registry/types.go`
 - [ ] T008 [P] Define `LockedPackage` type with `Reference`, `Version`, `Resolved`, `Integrity` fields and `LockFile` type with `LockfileVersion`, `Packages` fields in `internal/registry/types.go`
 - [ ] T009 Extend `Config` struct in `internal/config/config.go` to add `Packages []string` field with `yaml:"packages"` tag
-- [ ] T010 [P] Update JSON Schema in `internal/config/schema.json` to add `packages` property — array of strings matching pattern `^[a-z]+/[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*@\d+\.\d+\.\d+$`
+- [ ] T010 [P] Update JSON Schema in `internal/config/schema.json` to add `packages` property — array of strings matching pattern `^[a-z]+/[a-z][a-z0-9-]*/[a-z][a-z0-9-]*@\d+\.\d+\.\d+$`
 - [ ] T011 [P] Add `"packages"` to `knownSchemaProperties` map in `internal/config/validator.go`
 - [ ] T012 Write unit tests for config parsing with packages field — valid packages, empty packages, duplicate detection in `internal/config/loader_test.go`
 
@@ -234,7 +234,6 @@ Phase 3 (US2)  Phase 4 (US3)  Phase 6 (US4)
 
 - **Phase 2**: T006, T007, T008, T010, T011 can run in parallel (different files)
 - **Phase 3**: T015 can run in parallel with T014 (test file vs implementation file)
-- **Phase 4**: T020 can run in parallel with T019
 - **Phase 5**: T024, T025, T027 can run in parallel
 - **Phase 6**: T031, T032 can run in parallel
 - **Phase 7**: T036, T038, T039, T041 can run in parallel (different files)

@@ -26,7 +26,7 @@ Implement `ailign install` to fetch instruction packages from a registry, compos
 | Principle | Status | Notes |
 |-----------|--------|-------|
 | I. CLI-First | PASS | `ailign install` is a CLI command with `--format json` and `--format human` output. Exit codes: 0=success, 2=error. No interactive prompts. |
-| II. Transparency | PASS | Install shows summary of what was installed. `ailign status` shows current vs desired state. `ailign explain` can trace package origin. |
+| II. Transparency | PASS | Install shows summary of what was installed. Lock file records exact versions and resolved URLs for traceability. |
 | III. Fail Safe | PASS | Atomic file operations (temp+rename). Checksum verification. Lock file prevents unexpected changes. Hard error on mismatch. |
 | IV. Test-First | PASS | BDD scenarios per user story. Stub registry for testing. TDD for all domain logic. |
 | V. Composition | PASS | Packages composed with local overlays. Independent renderers unaffected. Modular package structure. |
@@ -115,10 +115,10 @@ testdata/                  # NEW: test fixtures
 └── registry/
     └── packages/
         ├── instructions-company-security-1.3.0/
-        │   ├── manifest.yml
+        │   ├── ailign-pkg.yml
         │   └── instructions.md
         └── instructions-company-typescript-2.1.0/
-            ├── manifest.yml
+            ├── ailign-pkg.yml
             └── instructions.md
 ```
 

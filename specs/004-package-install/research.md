@@ -29,7 +29,6 @@
 | HTTP Status | Domain Error | Retry? |
 |-------------|-------------|--------|
 | 404 | `ErrPackageNotFound` | No |
-| 401/403 | `ErrUnauthorized` | No |
 | 429 | `ErrRateLimited` | Yes (Retry-After) |
 | 5xx | `ErrServerError` | Yes (3 attempts, exponential backoff) |
 | Network error | `ErrRegistryUnreachable` | Yes |
