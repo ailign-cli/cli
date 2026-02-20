@@ -1,15 +1,16 @@
 <!--
   === Sync Impact Report ===
-  Version change: 1.0.0 -> 1.1.0
-  Bump rationale: MINOR — new principle added (IX. Working Software)
-  Modified principles: None (existing I-VIII unchanged)
+  Version change: 1.1.0 -> 1.2.0
+  Bump rationale: MINOR — new principle added (X. Subtraction),
+    new Deprecation Process section added
+  Modified principles: None (existing I-IX unchanged)
   Added sections:
-    - Principle IX: Working Software
+    - Principle X: Subtraction
+    - Deprecation Process (under Versioning & Breaking Changes)
   Removed sections: None
   Updated sections:
-    - Values Hierarchy: added Working Software at position 3
-    - Decision Framework: added question 9 (Working Software)
-    - Prohibited Patterns: added two entries for IX violations
+    - Decision Framework: added question 10 (Subtraction)
+    - Prohibited Patterns: added one entry for X violations
   Templates requiring updates:
     - .specify/templates/plan-template.md ✅ compatible
       (Constitution Check section uses dynamic "[Gates determined based on
@@ -21,8 +22,11 @@
     - .specify/templates/checklist-template.md ✅ compatible
       (Generic template, dynamically populated)
     - .specify/templates/agent-file-template.md ✅ compatible
-    - CLAUDE.md ✅ updated — references updated to "9 core principles"
+    - CLAUDE.md ⚠ pending — references updated to "10 core principles"
     - README.md ✅ compatible (links to constitution.md)
+    - features/steps/suite_test.go ⚠ pending — add @deprecated to
+      tag exclusion filter
+    - .specify/memory/deprecation.md ⚠ pending — new file to create
   Follow-up TODOs: None
   === End Sync Impact Report ===
 -->
@@ -217,6 +221,49 @@ A commit or PR that does not validate or build is not progress —
 it is technical debt. Keeping code and tests together ensures
 every increment is a verified, deliverable unit.
 
+### X. Subtraction
+
+**Every change SHOULD consider what can be removed, not only
+what needs to be added.**
+
+People have a natural bias toward addition. When designing,
+implementing, or specifying changes, removal MUST always be
+evaluated as an option alongside addition. This applies to:
+
+- **Code:** Previously written code that can be rewritten more
+  simply in light of new development SHOULD be replaced, not
+  preserved alongside the new approach
+- **Features:** Capabilities that are superseded by new ones
+  SHOULD follow the Deprecation Process (see below) rather
+  than accumulating indefinitely
+- **Specifications:** Existing specs in `specs/` and existing
+  BDD scenarios are immutable records. However, `@deprecate`
+  and `@deprecated` tags MAY be added to existing scenarios.
+  New replacement scenarios MAY be added to the same feature
+  file, tagged `@pending-deprecation` (excluded from test
+  execution) and referencing the scenario they replace in the
+  Gherkin free-form description below the scenario title
+- **Dependencies:** Unused or redundant dependencies SHOULD
+  be removed when new work makes them unnecessary
+
+This principle does not mandate removal in every change. It
+mandates that removal is *considered* as an option during every
+specification and implementation decision.
+
+**Anti-patterns:**
+- Adding new code alongside old code that serves the same
+  purpose without evaluating removal
+- Accumulating features without ever deprecating superseded ones
+- Keeping dead code, unused imports, or orphaned files out of
+  habit
+- Treating existing code as untouchable when new development
+  offers a simpler path
+
+**Rationale:** Codebases grow in complexity over time. Without
+a deliberate counter-pressure toward simplicity, accidental
+complexity accumulates and slows development. Subtraction is
+the antidote to entropy.
+
 ## Performance Standards
 
 ### Speed Requirements
@@ -310,6 +357,84 @@ Start text-only, add security later.
 **Rationale:** Developers depend on stable interfaces. Breaking
 changes without warning kill trust.
 
+### Deprecation Process
+
+This process governs the removal of capabilities that were
+previously possible. It MUST be followed after v1.0.0 is
+released. Below v1.0.0, breaking changes can be expected
+without formal deprecation.
+
+Existing specs in `specs/` are immutable records and MUST NOT
+be modified. Existing BDD scenarios are also immutable — their
+Given/When/Then steps MUST NOT be changed. However:
+
+- `@deprecate` and `@deprecated` tags MAY be added to
+  existing scenarios
+- New replacement scenarios MAY be added to the same feature
+  file, tagged `@pending-deprecation` (excluded from test
+  execution until the deprecation is enacted), referencing the
+  scenario they replace in the Gherkin free-form description
+  below the scenario title
+
+#### Identifying Deprecations
+
+When the specification process (`/speckit.specify`,
+`/speckit.plan`, `/speckit.tasks`) determines that an existing
+user-facing capability (command, flag, config option, or any
+interface through which the user interacts with the CLI) is
+being superseded:
+
+1. The `spec.md` of the new feature MUST reference the
+   existing specs and feature files (including specific
+   scenarios if applicable) that are superseded
+2. The superseded feature file(s) and/or specific scenario(s)
+   MUST receive the `@deprecate` tag
+3. If the new feature includes replacement behavior for the
+   deprecated capability, a new scenario MUST be added to the
+   same feature file tagged `@pending-deprecation`. This
+   scenario MUST reference the scenario it replaces in the
+   Gherkin free-form description below the scenario title
+4. A deprecation entry MUST be added to
+   `.specify/memory/deprecation.md` under the heading:
+   `## <date> - <Deprecation title> (<current version>)`.
+   The entry MUST also list any `@pending-deprecation`
+   scenarios that need to be activated upon removal
+
+#### Deprecation Warnings
+
+All BDD scenarios tagged `@deprecate` MUST assert that a
+standard deprecation notice is emitted to the user. This
+notice MUST:
+
+- Clearly identify the capability being deprecated
+- Explain what replaces it (the new capability)
+- Reference the version in which deprecation was announced
+
+This assertion SHOULD be standardized and automatically
+executed for all scenarios carrying the `@deprecate` tag.
+
+#### Deprecation Timeline
+
+- The operator determines when actual removal is warranted
+- The operator SHOULD be notified after 5-10 minor/patch
+  releases (depending on scope of the deprecation)
+- If any specification results in a MAJOR (breaking change)
+  release, all open deprecations MUST be implemented in that
+  release as a dedicated phase
+
+#### Executing Removal
+
+When the actual removal takes place:
+
+1. The `@deprecate` tag on affected scenarios MUST be
+   replaced with the `@deprecated` tag
+2. The `@pending-deprecation` tag on replacement scenarios
+   MUST be removed, activating them for test execution
+3. Scenarios tagged `@deprecated` are excluded from test
+   execution (alongside `@wip` and `@ci`)
+4. The deprecation entry in `.specify/memory/deprecation.md`
+   MUST be updated with the removal version and date
+
 ## Decision Framework
 
 When evaluating new features or design choices, ask:
@@ -325,6 +450,8 @@ When evaluating new features or design choices, ask:
 7. **Testing:** Can we test this reliably?
 8. **Performance:** Does this meet speed requirements?
 9. **Working Software:** Does every increment validate and build?
+10. **Subtraction:** Have we considered what can be removed or
+    simplified instead of only adding?
 
 **If the answer to any question is "no" or "unclear," revisit the
 design.**
@@ -366,6 +493,9 @@ These are explicitly forbidden as they violate core principles:
   (implementation and tests MUST ship together)
 - **PRs that do not build** - Violates working software
   (every PR MUST be a validated, buildable increment)
+- **Adding without considering removal** - Violates subtraction
+  (every change MUST evaluate whether existing code, features,
+  or dependencies can be removed or simplified)
 
 ## Governance
 
@@ -391,4 +521,4 @@ These are explicitly forbidden as they violate core principles:
 - Changes follow same rigor as code changes
 - Track amendments with version history
 
-**Version**: 1.1.0 | **Ratified**: 2025-02-13 | **Last Amended**: 2026-02-17
+**Version**: 1.2.0 | **Ratified**: 2025-02-13 | **Last Amended**: 2026-02-20
