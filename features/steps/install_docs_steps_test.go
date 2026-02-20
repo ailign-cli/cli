@@ -60,8 +60,7 @@ func (ds *installDocsState) hasInstallSection() error {
 		if re.MatchString(line) {
 			ds.installSectionLine = i
 			// Extract from this heading to the next same-level or higher heading
-			level := strings.Count(strings.TrimLeft(line, " "), "#")
-			level = len(strings.TrimRight(strings.Split(line, " ")[0], " "))
+			level := len(strings.TrimRight(strings.Split(line, " ")[0], " "))
 			var sb strings.Builder
 			sb.WriteString(line + "\n")
 			for j := i + 1; j < len(lines); j++ {
@@ -151,6 +150,9 @@ func (ds *installDocsState) eachMethodHasCodeBlock() error {
 		if strings.HasPrefix(strings.TrimSpace(line), "```") {
 			hasCodeBlock = true
 		}
+	}
+	if inSubSection && !hasCodeBlock && subSectionName != "" {
+		return fmt.Errorf("installation method %q has no code block", subSectionName)
 	}
 	return nil
 }

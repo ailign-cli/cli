@@ -8,6 +8,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   smoke:
     name: "${{ matrix.method }} on ${{ matrix.os }}"
@@ -35,7 +38,8 @@ jobs:
       - name: Install via install script
         if: matrix.method == 'install-script'
         run: |
-          curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | sh
+          AILIGN_VERSION=${{ steps.v.outputs.tag }} \
+            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/${{ steps.v.outputs.tag }}/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Install via go install
@@ -62,7 +66,10 @@ jobs:
 
       - name: Install via npx (run)
         if: matrix.method == 'npx'
-        run: npx @ailign/cli@${{ steps.v.outputs.bare }} --version
+        run: |
+          OUTPUT=$(npx @ailign/cli@${{ steps.v.outputs.bare }} --version)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "${{ steps.v.outputs.bare }}"
 
       - name: Install via Docker
         if: matrix.method == 'docker'
