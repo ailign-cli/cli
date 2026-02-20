@@ -271,8 +271,20 @@ if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
     >&2 echo "[specify] Truncated to: $BRANCH_NAME (${#BRANCH_NAME} bytes)"
 fi
 
+SPEC_BRANCH="${BRANCH_NAME}/spec"
+
 if [ "$HAS_GIT" = true ]; then
+    # Create and push the feature integration branch to reserve the number
     git checkout -b "$BRANCH_NAME"
+    if ! git push -u origin "$BRANCH_NAME" 2>/dev/null; then
+        >&2 echo "[specify] Warning: Could not push feature branch to remote. Push manually to reserve the feature number."
+    fi
+
+    # Create and checkout the /spec sub-branch for specification work
+    git checkout -b "$SPEC_BRANCH"
+    if ! git push -u origin "$SPEC_BRANCH" 2>/dev/null; then
+        >&2 echo "[specify] Warning: Could not push spec branch to remote. Push manually."
+    fi
 else
     >&2 echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME"
 fi
@@ -288,9 +300,10 @@ if [ -f "$TEMPLATE" ]; then cp "$TEMPLATE" "$SPEC_FILE"; else touch "$SPEC_FILE"
 export SPECIFY_FEATURE="$BRANCH_NAME"
 
 if $JSON_MODE; then
-    printf '{"BRANCH_NAME":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s"}\n' "$BRANCH_NAME" "$SPEC_FILE" "$FEATURE_NUM"
+    printf '{"BRANCH_NAME":"%s","SPEC_BRANCH":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s"}\n' "$BRANCH_NAME" "$SPEC_BRANCH" "$SPEC_FILE" "$FEATURE_NUM"
 else
     echo "BRANCH_NAME: $BRANCH_NAME"
+    echo "SPEC_BRANCH: $SPEC_BRANCH"
     echo "SPEC_FILE: $SPEC_FILE"
     echo "FEATURE_NUM: $FEATURE_NUM"
     echo "SPECIFY_FEATURE environment variable set to: $BRANCH_NAME"

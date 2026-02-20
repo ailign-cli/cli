@@ -133,11 +133,23 @@ specs/[###-feature-name]/
 ## Development Workflow
 
 1. **Spec first** - Write feature spec in `specs/[name]/spec.md`
-2. **Constitution check** - Verify alignment with 9 principles
+2. **Constitution check** - Verify alignment with 10 principles
 3. **Task breakdown** - Create `tasks.md` for complex features
 4. **TDD cycle** - Write tests -> get approval -> implement
 5. **Integration test** - Verify feature works end-to-end
 6. **Documentation** - Update user docs and examples
+
+### Branching Strategy
+
+Feature development uses hierarchical branches:
+
+- `NNN-FEATURENAME` — integration branch (merges to `main`)
+- `NNN-FEATURENAME/spec` — specification work
+- `NNN-FEATURENAME/PHASE` — implementation phases
+
+Phase PRs target the feature branch. Only the feature
+branch targets `main`. See
+`.specify/spec/branching-strategy/spec.md` for details.
 
 ### Pull Request Size Limits
 
