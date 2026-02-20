@@ -251,8 +251,8 @@ FEATURE_NUM=$(printf "%03d" "$((10#$BRANCH_NUMBER))")
 BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
 
 # GitHub enforces a 244-byte limit on branch names.
-# Reserve 5 bytes for the longest sub-branch suffix ("/spec") so that
-# derived branches (e.g., NNN-name/spec) also stay within the limit.
+# Reserve 5 bytes for sub-branch suffixes ("/base" and "/spec", both
+# 5 bytes) so that derived branches also stay within the limit.
 MAX_BRANCH_LENGTH=239
 if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
     # Calculate how much we need to trim from suffix
