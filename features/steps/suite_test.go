@@ -71,4 +71,5 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	registerPreviewSteps(ctx, w)
 	registerInstallGoSteps(ctx, w)
 	registerInstallBinarySteps(ctx, w)
+	registerInstallDocsSteps(ctx, w)
 }

@@ -183,3 +183,11 @@ jobs:
         run: |
           cd npm/ailign
           npm publish --access public --provenance
+
+  smoke-test:
+    name: Smoke Test
+    needs: [release, npm]
+    if: always() && needs.release.result == 'success'
+    uses: ./.github/workflows/smoke-test.yml
+    with:
+      version: ${{ github.event.release.tag_name }}
