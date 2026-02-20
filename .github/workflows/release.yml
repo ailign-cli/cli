@@ -92,3 +92,94 @@ jobs:
             reports/test-results.xml \
             reports/cucumber-report.json \
             --clobber
+
+  npm:
+    name: Publish NPM Packages
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p /tmp/release-assets
+          gh release download "${{ github.event.release.tag_name }}" \
+            --pattern "ailign_${VERSION}_*.tar.gz" \
+            --pattern "ailign_${VERSION}_*.zip" \
+            --dir /tmp/release-assets
+
+      - name: Copy binaries into platform packages
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          copy_binary() {
+            local pkg_dir="$1" os="$2" arch="$3" ext="$4" bin_name="$5"
+            local archive="ailign_${VERSION}_${os}_${arch}.${ext}"
+            mkdir -p "${pkg_dir}/bin"
+            if [ "$ext" = "tar.gz" ]; then
+              tar xzf "/tmp/release-assets/${archive}" -C "${pkg_dir}/bin" "${bin_name}"
+            else
+              unzip -o "/tmp/release-assets/${archive}" "${bin_name}" -d "${pkg_dir}/bin"
+            fi
+            chmod +x "${pkg_dir}/bin/${bin_name}"
+          }
+
+          copy_binary npm/ailign-darwin-arm64 darwin arm64 tar.gz ailign
+          copy_binary npm/ailign-darwin-x64   darwin amd64 tar.gz ailign
+          copy_binary npm/ailign-linux-x64    linux  amd64 tar.gz ailign
+          copy_binary npm/ailign-linux-arm64  linux  arm64 tar.gz ailign
+          copy_binary npm/ailign-win32-x64    windows amd64 zip  ailign.exe
+
+      - name: Set package versions
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          for pkg_dir in npm/ailign npm/ailign-darwin-arm64 npm/ailign-darwin-x64 \
+                         npm/ailign-linux-x64 npm/ailign-linux-arm64 npm/ailign-win32-x64; do
+            cd "$pkg_dir"
+            npm version "$VERSION" --no-git-tag-version --allow-same-version
+            cd "${{ github.workspace }}"
+          done
+
+          # Update optionalDependencies versions in main package
+          cd npm/ailign
+          node -e '
+            const fs = require("fs");
+            const pkg = require("./package.json");
+            const version = process.env.VERSION;
+            for (const dep of Object.keys(pkg.optionalDependencies || {})) {
+              pkg.optionalDependencies[dep] = version;
+            }
+            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
+          '
+
+      - name: Publish platform packages
+        run: |
+          for pkg_dir in npm/ailign-darwin-arm64 npm/ailign-darwin-x64 \
+                         npm/ailign-linux-x64 npm/ailign-linux-arm64 npm/ailign-win32-x64; do
+            cd "$pkg_dir"
+            npm publish --access public --provenance
+            cd "${{ github.workspace }}"
+          done
+
+      - name: Publish main package
+        run: |
+          cd npm/ailign
+          npm publish --access public --provenance
