@@ -36,42 +36,30 @@ Given that feature description, do this:
      - "Create a dashboard for analytics" → "analytics-dashboard"
      - "Fix payment processing timeout bug" → "fix-payment-timeout"
 
-2. **Check for existing branches before creating new one**:
+2. **Create feature branch and spec sub-branch**:
 
-   a. First, fetch all remote branches to ensure we have the latest information:
+   Run the script `.specify/scripts/bash/create-new-feature.sh --json` with the short-name:
+   - Pass `--short-name "your-short-name"` along with the feature description
+   - Optionally pass `--number N` to override auto-detected numbering
+   - Example: `.specify/scripts/bash/create-new-feature.sh --json --short-name "user-auth" "Add user authentication"`
 
-      ```bash
-      git fetch --all --prune
-      ```
+   The script handles all branch operations automatically:
+   1. Fetches remote branches and scans `specs/` directories to find the next available feature number
+   2. Creates the feature integration branch (`NNN-NAME/base`) and pushes it to reserve the number
+   3. Creates and checks out the `/spec` sub-branch (`NNN-NAME/spec`) for specification work
+   4. Creates the spec directory and copies the template
 
-   b. Find the highest feature number across all sources for the short-name:
-      - Remote branches: `git ls-remote --heads origin | grep -E 'refs/heads/[0-9]+-<short-name>$'`
-      - Local branches: `git branch | grep -E '^[* ]*[0-9]+-<short-name>$'`
-      - Specs directories: Check for directories matching `specs/[0-9]+-<short-name>`
+   All branches nest under the same `NNN-NAME/` prefix to avoid git ref conflicts:
+   - `NNN-NAME/base` — integration branch (merges to `main`)
+   - `NNN-NAME/spec` — specification work (this workflow)
+   - `NNN-NAME/<phase-slug>` — implementation phases (created during `/speckit.implement`)
 
-   c. Determine the next available number:
-      - Extract all numbers from all three sources
-      - Find the highest number N
-      - Use N+1 for the new branch number
-
-   d. Run the script `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS"` with the calculated number and short-name:
-      - Pass `--number N+1` and `--short-name "your-short-name"` along with the feature description
-      - Bash example: `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" --json --number 5 --short-name "user-auth" "Add user authentication"`
-      - PowerShell example: `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" -Json -Number 5 -ShortName "user-auth" "Add user authentication"`
-
-   e. Rename the branch to add `/spec` suffix for PR-based workflow. Use the BRANCH_NAME value from the script's JSON output:
-      ```bash
-      git branch -m $BRANCH_NAME/spec
-      ```
-      This creates a sub-branch (e.g., `002-local-instruction-sync/spec`) for all specification work. The `/spec` branch is used for the entire speckit workflow: specify, clarify, plan, tasks, analyze, and checklists. After the spec PR is merged, implementation phases get their own branches (e.g., `<feature>/schema-target-refactor`). The `specs/` directory retains the base feature name (e.g., `specs/002-local-instruction-sync/`).
+   The `/spec` branch is used for the entire speckit workflow: specify, clarify, plan, tasks, analyze, and checklists. After the spec PR is merged into `NNN-NAME/base`, implementation phases get their own branches off the integration branch (e.g., `<feature>/schema-target-refactor`). The `specs/` directory retains the base feature name (e.g., `specs/002-local-instruction-sync/`).
 
    **IMPORTANT**:
-   - Check all three sources (remote branches, local branches, specs directories) to find the highest number
-   - Only match branches/directories with the exact short-name pattern
-   - If no existing branches/directories found with this short-name, start with number 1
    - You must only ever run this script once per feature
    - The JSON is provided in the terminal as output - always refer to it to get the actual content you're looking for
-   - The JSON output will contain BRANCH_NAME and SPEC_FILE paths
+   - The JSON output will contain BRANCH_NAME, INTEGRATION_BRANCH, SPEC_BRANCH, SPEC_FILE, and FEATURE_NUM
    - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot")
 
 3. Load `.specify/templates/spec-template.md` to understand required sections.

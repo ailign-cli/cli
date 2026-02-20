@@ -250,9 +250,10 @@ fi
 FEATURE_NUM=$(printf "%03d" "$((10#$BRANCH_NUMBER))")
 BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
 
-# GitHub enforces a 244-byte limit on branch names
-# Validate and truncate if necessary
-MAX_BRANCH_LENGTH=244
+# GitHub enforces a 244-byte limit on branch names.
+# Reserve 5 bytes for sub-branch suffixes ("/base" and "/spec", both
+# 5 bytes) so that derived branches also stay within the limit.
+MAX_BRANCH_LENGTH=239
 if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
     # Calculate how much we need to trim from suffix
     # Account for: feature number (3) + hyphen (1) = 4 chars
@@ -271,8 +272,21 @@ if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
     >&2 echo "[specify] Truncated to: $BRANCH_NAME (${#BRANCH_NAME} bytes)"
 fi
 
+INTEGRATION_BRANCH="${BRANCH_NAME}/base"
+SPEC_BRANCH="${BRANCH_NAME}/spec"
+
 if [ "$HAS_GIT" = true ]; then
-    git checkout -b "$BRANCH_NAME"
+    # Create and push the feature integration branch to reserve the number
+    git checkout -b "$INTEGRATION_BRANCH"
+    if ! git push -u origin "$INTEGRATION_BRANCH"; then
+        >&2 echo "[specify] Warning: Could not push feature branch to remote. Push manually to reserve the feature number."
+    fi
+
+    # Create and checkout the /spec sub-branch for specification work
+    git checkout -b "$SPEC_BRANCH"
+    if ! git push -u origin "$SPEC_BRANCH"; then
+        >&2 echo "[specify] Warning: Could not push spec branch to remote. Push manually."
+    fi
 else
     >&2 echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME"
 fi
@@ -288,9 +302,11 @@ if [ -f "$TEMPLATE" ]; then cp "$TEMPLATE" "$SPEC_FILE"; else touch "$SPEC_FILE"
 export SPECIFY_FEATURE="$BRANCH_NAME"
 
 if $JSON_MODE; then
-    printf '{"BRANCH_NAME":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s"}\n' "$BRANCH_NAME" "$SPEC_FILE" "$FEATURE_NUM"
+    printf '{"BRANCH_NAME":"%s","INTEGRATION_BRANCH":"%s","SPEC_BRANCH":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s"}\n' "$BRANCH_NAME" "$INTEGRATION_BRANCH" "$SPEC_BRANCH" "$SPEC_FILE" "$FEATURE_NUM"
 else
     echo "BRANCH_NAME: $BRANCH_NAME"
+    echo "INTEGRATION_BRANCH: $INTEGRATION_BRANCH"
+    echo "SPEC_BRANCH: $SPEC_BRANCH"
     echo "SPEC_FILE: $SPEC_FILE"
     echo "FEATURE_NUM: $FEATURE_NUM"
     echo "SPECIFY_FEATURE environment variable set to: $BRANCH_NAME"

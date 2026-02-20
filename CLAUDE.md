@@ -142,6 +142,22 @@ specs/[###-feature-name]/
 5. **Integration test** - Verify feature works end-to-end
 6. **Documentation** - Update user docs and examples
 
+### Branching Strategy
+
+Feature development uses branches that share a
+`NNN-FEATURENAME/` naming prefix (these are independent
+branches, not git parent-child relationships):
+
+- `NNN-FEATURENAME/base` — integration branch (merges to `main`)
+- `NNN-FEATURENAME/spec` — specification work
+- `NNN-FEATURENAME/<phase-slug>` — implementation phases
+
+There is no bare `NNN-FEATURENAME` branch — all branches
+include a suffix to avoid git ref conflicts. Phase PRs
+target `NNN-FEATURENAME/base`.
+Only the integration branch targets `main`. See
+`.specify/spec/branching-strategy/spec.md` for details.
+
 ### Pull Request Size Limits
 
 PRs are enforced by CI to stay small and independently

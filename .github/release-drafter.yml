@@ -11,6 +11,13 @@ categories:
   - title: "Bug Fixes"
     labels:
       - "version:patch"
+  - title: "Specification"
+    labels:
+      - "type:specification"
+  - title: "Testing"
+    labels:
+      - "type:bdd"
+      - "type:test"
   - title: "Documentation"
     labels:
       - "type:docs"

@@ -77,3 +77,8 @@ The Go module path and GitHub organization are different names. This is intentio
 - When a PR accumulates features beyond the original description,
   update the PR body to list all changes. Reviewers (human and bot)
   judge scope against the description.
+- **Worktree branch isolation**: Worktree branches accumulate all
+  commits made in that worktree. When creating a focused PR, check
+  `git diff main...HEAD --stat` and consider cherry-picking only the
+  relevant commit(s) onto a clean branch to avoid scope complaints
+  from reviewers.

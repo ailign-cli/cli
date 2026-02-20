@@ -25,6 +25,25 @@ jobs:
 
   pr-size:
     name: PR Size Check
+    # Skip size check for feature integration branches (NNN-*/base) merging to main
+    # (NNN-feature/base → main aggregates all phases, expected to be large)
+    if: >-
+      !(
+        github.event.pull_request.base.ref == 'main' &&
+        endsWith(github.event.pull_request.head.ref, '/base') &&
+        (
+          startsWith(github.event.pull_request.head.ref, '0') ||
+          startsWith(github.event.pull_request.head.ref, '1') ||
+          startsWith(github.event.pull_request.head.ref, '2') ||
+          startsWith(github.event.pull_request.head.ref, '3') ||
+          startsWith(github.event.pull_request.head.ref, '4') ||
+          startsWith(github.event.pull_request.head.ref, '5') ||
+          startsWith(github.event.pull_request.head.ref, '6') ||
+          startsWith(github.event.pull_request.head.ref, '7') ||
+          startsWith(github.event.pull_request.head.ref, '8') ||
+          startsWith(github.event.pull_request.head.ref, '9')
+        )
+      )
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write

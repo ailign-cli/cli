@@ -12,20 +12,43 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
-1. Run `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+1. **Determine the feature to implement**:
+
+   The command can be invoked from different starting points:
+   - **From `NNN-FEATURE/base`** (typical — spec branch already merged into integration branch): Auto-detect the feature from the branch name. This is the recommended starting point.
+   - **From `NNN-FEATURE/phase-slug`**: Already on a phase branch — auto-detect feature and continue implementation.
+   - **From `main`** (less common): Detect the feature from context. Look at recent specs directories (`specs/NNN-*`) or let the user specify via arguments. Pass `--feature <NNN-feature-name>` to the prerequisites script.
+
+   Run the prerequisites check:
+   ```bash
+   # From a feature branch (NNN-FEATURE or NNN-FEATURE/slug) — auto-detected:
+   .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
+
+   # From main — pass explicit feature:
+   .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks --feature <NNN-feature-name>
+   ```
+   Parse FEATURE_DIR and AVAILABLE_DOCS from the JSON output. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+
+   **Detecting the feature when on `main`**: If the user didn't specify a feature name in their arguments, look at `specs/` directories to find candidates. If there's only one feature with a complete tasks.md, use it automatically. If multiple candidates exist, ask the user which feature to implement.
 
 2. **Branch strategy — one branch per phase/PR**:
    - **Spec branch**: All speckit workflow steps (specify, clarify, plan, tasks, analyze, checklists) use `<feature>/spec` (e.g., `002-local-instruction-sync/spec`). This is created by `/speckit.specify` and merged as a single PR before implementation starts.
-   - **Phase branches**: Each implementation phase that maps to a PR gets its own branch off `main`
+   - **Integration branch**: `<feature>/base` (e.g., `002-local-instruction-sync/base`) — the merge target for all phase PRs
+   - **Phase branches**: Each implementation phase that maps to a PR gets its own branch off the **integration branch** (`<feature>/base`)
    - Branch naming: `<feature>/<phase-slug>` (e.g., `002-local-instruction-sync/schema-target-refactor`)
    - Derive the slug from the phase title in tasks.md (kebab-case, 2-4 words)
    - Before starting a phase:
-     1. Ensure `main` is up to date: `git checkout main && git pull`
-     2. Create the phase branch: `git checkout -b <feature>/<phase-slug>`
+     1. Checkout the integration branch and update it:
+        `git checkout <feature>/base && git pull origin <feature>/base`
+     2. Keep the integration branch current with main:
+        `git merge main`
+     3. Create the phase branch: `git checkout -b <feature>/<phase-slug>`
    - After completing a phase:
      1. Commit all changes, push the branch
-     2. Create a PR for the phase
+     2. Create a PR targeting the **integration branch** (`<feature>/base`, NOT `main`)
      3. **STOP** — wait for user to approve/merge before starting the next phase
+   - After all phases are merged into the integration branch:
+     1. Create a final PR from `<feature>/base` → `main` to complete the feature
    - Phase 1 (Setup) is a verification-only step — run it on whatever branch is current, no dedicated branch needed unless it produces changes
 
 3. **Check checklists status** (if `FEATURE_DIR/checklists/` exists):
