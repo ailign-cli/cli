@@ -396,9 +396,9 @@ being superseded:
    Gherkin free-form description below the scenario title
 4. A deprecation entry MUST be added to
    `.specify/memory/deprecation.md` under the heading:
-   `### <date> - <Deprecation title> (<current version>)`.
-   The entry MUST use the checklist format defined in
-   `.specify/memory/deprecation.md` and list any
+   `### <YYYY-MM-DD> - <Deprecation title> (<current version>)`.
+   The date MUST use the ISO 8601 format `YYYY-MM-DD`. The entry MUST use
+   the checklist format defined in `.specify/memory/deprecation.md` and list any
    `@pending-deprecation` scenarios that need to be activated
    upon removal
 
