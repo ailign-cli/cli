@@ -151,11 +151,11 @@
 
 **Purpose**: Final validation and cleanup across all PRs
 
-- [ ] T041 Run `goreleaser check` to validate final .goreleaser.yml configuration
-- [ ] T042 [P] Run full test suite `go test ./...` and verify all tests pass (unit + BDD)
-- [ ] T043 [P] Validate quickstart.md at specs/003-install-distribution/quickstart.md against implemented commands and package names
-- [ ] T044 [P] Verify all secrets are documented in research.md and referenced in release workflow
-- [ ] T045 Mark all tasks complete in specs/003-install-distribution/tasks.md
+- [x] T041 Run `goreleaser check` to validate final .goreleaser.yml configuration
+- [x] T042 [P] Run full test suite `go test ./...` and verify all tests pass (unit + BDD)
+- [x] T043 [P] Validate quickstart.md at specs/003-install-distribution/quickstart.md against implemented commands and package names
+- [x] T044 [P] Verify all secrets are documented in research.md and referenced in release workflow
+- [x] T045 Mark all tasks complete in specs/003-install-distribution/tasks.md
 
 ---
 
