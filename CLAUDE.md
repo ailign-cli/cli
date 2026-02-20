@@ -264,6 +264,8 @@ Exception: Security vulnerabilities get immediate fixes.
 - File system — reads overlay files, writes `.ailign/instructions.md`, creates symlinks (002-local-instruction-sync)
 - Go 1.24+ (existing), POSIX shell (install script), Node.js (NPM wrapper) + GoReleaser v2.13+ (existing), GitHub Actions (003-install-distribution)
 - N/A (distribution only — no data persistence) (003-install-distribution)
+- Go 1.24+ (targeting Go 1.26) + Cobra (CLI), goccy/go-yaml (YAML), santhosh-tekuri/jsonschema v6 (validation), net/http (registry client), crypto/sha256 (checksums) (004-package-install/spec)
+- File system — reads `.ailign.yml`, fetches packages via HTTPS, writes composed instructions + lock file (004-package-install/spec)
 
 ## Recent Changes
 - 001-config-parsing: Added godog (BDD) for executable Gherkin feature files alongside existing TDD

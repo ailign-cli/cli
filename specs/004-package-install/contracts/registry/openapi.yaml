@@ -1,0 +1,161 @@
+openapi: "3.1.0"
+info:
+  title: AIlign Package Registry API
+  version: "1.0.0"
+  description: |
+    API contract for the AIlign package registry. Defines how the CLI discovers
+    and fetches packages. This contract is consumer-driven: owned by the CLI
+    repository, validated by both CLI (via stub) and registry (via conformance tests).
+
+servers:
+  - url: https://registry.ailign.dev
+    description: Production registry
+
+paths:
+  /v1/packages/{type}/{scope}/{name}/versions/{version}:
+    get:
+      operationId: getPackageVersion
+      summary: Fetch a specific package version
+      description: |
+        Returns the package manifest and a URL to download the content.
+        The manifest includes metadata (name, type, version, description)
+        and a content section pointing to the primary content file.
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [instructions]
+          description: Package content type
+        - name: scope
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z0-9][a-z0-9-]*$"
+          description: Organization/team scope
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z0-9][a-z0-9-]*$"
+          description: Package name within scope
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^\\d+\\.\\d+\\.\\d+$"
+          description: Exact semver version (MAJOR.MINOR.PATCH)
+      responses:
+        "200":
+          description: Package version found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackageVersionResponse"
+        "404":
+          description: Package or version not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/packages/{type}/{scope}/{name}/versions:
+    get:
+      operationId: listPackageVersions
+      summary: List available versions for a package
+      description: |
+        Returns a list of all published versions for the specified package,
+        sorted by semver in descending order (newest first).
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [instructions]
+        - name: scope
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z0-9][a-z0-9-]*$"
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z0-9][a-z0-9-]*$"
+      responses:
+        "200":
+          description: Version list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionListResponse"
+        "404":
+          description: Package not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    PackageVersionResponse:
+      type: object
+      required: [manifest, content_url, integrity]
+      properties:
+        manifest:
+          $ref: "schemas/manifest.json"
+        content_url:
+          type: string
+          format: uri
+          description: URL to download the package content file
+        integrity:
+          type: string
+          pattern: "^sha256-[A-Za-z0-9+/]+=*$"
+          description: SRI-format checksum of the content file
+
+    VersionListResponse:
+      type: object
+      required: [versions]
+      properties:
+        versions:
+          type: array
+          items:
+            type: object
+            required: [version, published_at]
+            properties:
+              version:
+                type: string
+                pattern: "^\\d+\\.\\d+\\.\\d+$"
+              published_at:
+                type: string
+                format: date-time
+
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - package_not_found
+            - version_not_found
+            - invalid_request
+            - server_error
+        message:
+          type: string
+          description: Human-readable error description
+        available_versions:
+          type: array
+          items:
+            type: string
+          description: |
+            Included when error is "version_not_found" to help users
+            discover available versions
