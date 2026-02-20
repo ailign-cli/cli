@@ -440,7 +440,9 @@ When the actual removal takes place:
 3. Scenarios tagged `@deprecated` are excluded from test
    execution (alongside `@wip` and `@ci`)
 4. The deprecation entry in `.specify/memory/deprecation.md`
-   MUST be updated with the removal version and date
+   MUST be updated with the removal version and date and
+   moved from `## Pending Deprecations` to
+   `## Completed Deprecations`
 
 ## Decision Framework
 
