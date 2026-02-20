@@ -100,6 +100,12 @@ source "$SCRIPT_DIR/common.sh"
 
 # Get feature paths and validate branch
 if [[ -n "$EXPLICIT_FEATURE" ]]; then
+    # Validate --feature value against strict branch naming pattern
+    # to prevent command injection via eval below
+    if [[ ! "$EXPLICIT_FEATURE" =~ ^[0-9]{3}-[A-Za-z0-9-]+(/[A-Za-z0-9-]+)?$ ]]; then
+        echo "ERROR: Invalid feature name '$EXPLICIT_FEATURE'. Expected pattern: NNN-name or NNN-name/suffix" >&2
+        exit 1
+    fi
     # Explicit feature: set SPECIFY_FEATURE so get_feature_paths uses it
     # instead of the current git branch. This allows running from main.
     export SPECIFY_FEATURE="$EXPLICIT_FEATURE"
