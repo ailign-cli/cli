@@ -15,7 +15,7 @@ Implement `ailign install` to fetch instruction packages from a registry, compos
 **Testing**: godog (BDD) + go test + testify (TDD), httptest.Server (stub registry)
 **Target Platform**: Cross-platform (Linux, macOS, Windows) — single binary
 **Project Type**: Single CLI project (existing structure)
-**Performance Goals**: `ailign install` with 3 packages < 30 seconds; `ailign status` < 1 second
+**Performance Goals**: `ailign install` with 3 packages < 30 seconds
 **Constraints**: Binary < 50MB, memory < 100MB, graceful offline degradation
 **Scale/Scope**: MVP — exact versions only, `instructions` type only, text-only packages
 

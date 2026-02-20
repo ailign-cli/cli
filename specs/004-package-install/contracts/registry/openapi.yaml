@@ -47,7 +47,7 @@ paths:
           required: true
           schema:
             type: string
-            pattern: "^\\d+\\.\\d+\\.\\d+$"
+            pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
           description: Exact semver version (MAJOR.MINOR.PATCH)
       responses:
         "200":
@@ -132,7 +132,7 @@ components:
             properties:
               version:
                 type: string
-                pattern: "^\\d+\\.\\d+\\.\\d+$"
+                pattern: "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
               published_at:
                 type: string
                 format: date-time
