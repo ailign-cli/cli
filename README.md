@@ -64,7 +64,7 @@ docker run --rm -v "$(pwd):/repo" -w /repo ghcr.io/ailign-cli/ailign sync
 Download the latest release from [GitHub Releases](https://github.com/ailign-cli/cli/releases):
 
 ```bash
-curl -Lo ailign.tar.gz https://github.com/ailign-cli/cli/releases/latest/download/ailign_0.2.0_darwin_arm64.tar.gz
+curl -Lo ailign.tar.gz https://github.com/ailign-cli/cli/releases/download/v0.2.0/ailign_0.2.0_darwin_arm64.tar.gz
 tar xzf ailign.tar.gz
 chmod +x ailign
 ```

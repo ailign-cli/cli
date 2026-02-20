@@ -38,8 +38,8 @@ jobs:
       - name: Install via install script
         if: matrix.method == 'install-script'
         run: |
-          AILIGN_VERSION=${{ steps.v.outputs.tag }} \
-            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/${{ steps.v.outputs.tag }}/install.sh | sh
+          export AILIGN_VERSION=${{ steps.v.outputs.tag }}
+          curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/${{ steps.v.outputs.tag }}/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Install via go install
