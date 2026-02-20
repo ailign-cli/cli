@@ -1,0 +1,14 @@
+{
+  "name": "@ailign/cli-linux-x64",
+  "version": "0.0.0",
+  "description": "AIlign CLI binary for Linux x64",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ailign-cli/cli.git",
+    "directory": "npm/ailign-linux-x64"
+  },
+  "os": ["linux"],
+  "cpu": ["x64"],
+  "files": ["bin/"]
+}

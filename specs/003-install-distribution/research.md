@@ -5,7 +5,7 @@
 **Decision**: Split distribution targets into three tiers based on infrastructure complexity.
 
 **Tier 1 — GoReleaser OSS (GitHub-only credentials)**:
-- Homebrew (brews) — needs tap repo + PAT
+- Homebrew (homebrew_casks) — needs tap repo + PAT
 - Scoop (scoops) — needs bucket repo + PAT
 - nFPM (nfpms) — local artifact generation (deb, rpm, apk)
 
@@ -15,7 +15,7 @@
 - Docker (dockers) — needs registry credentials + `docker login`
 - Snapcraft (snapcrafts) — needs snapcraft.io account + credentials
 - Chocolatey (chocolateys) — needs chocolatey.org account + API key
-- WinGet (winget) — needs staging repo + PAT
+- WinGet (winget) — uses DISTRIBUTION_REPO_TOKEN (staging repo), PRs to microsoft/winget-pkgs
 
 **Tier 3 — GoReleaser Pro required**:
 - DMG (dmgs) — requires Pro license + `mkisofs` on non-macOS runners
@@ -24,9 +24,9 @@
 
 ## Decision 2: Homebrew — brews vs homebrew_casks
 
-**Decision**: Use `brews` (formulas) for now.
+**Decision**: Use `homebrew_casks` (the current recommended section).
 
-**Rationale**: `homebrew_casks` was introduced in GoReleaser v2.10 and is the recommended path for pre-compiled binaries. However, `brews` is stable, widely used, and not deprecated. Casks add macOS Gatekeeper complications (unsigned binaries require `xattr` workaround). Start with formulas; migrate to casks when code signing is implemented.
+**Rationale**: `brews` (formulas) is deprecated in GoReleaser and will be removed in v3. `homebrew_casks` was introduced in v2.10 as the recommended replacement for pre-compiled binaries. Note: unsigned binaries may trigger macOS Gatekeeper; users need `xattr -d com.apple.quarantine` workaround until code signing is implemented.
 
 ## Decision 3: NPM Distribution Pattern
 
@@ -60,13 +60,13 @@
 
 ## Decision 5: Docker Image Strategy
 
-**Decision**: Use `dockers` (not `dockers_v2` yet) with GHCR as the registry.
+**Decision**: Use `dockers` (not `dockers_v2` yet) with both GHCR and Docker Hub.
 
-**Image**: `ghcr.io/ailign-cli/ailign`
-**Tags**: `v{version}`, `latest`
+**Images**: `ghcr.io/ailign-cli/ailign`, `ailign/ailign`
+**Tags**: `{version}`, `latest`
 **Platforms**: linux/amd64 (single platform initially)
 
-**Rationale**: `dockers_v2` uses buildx for multi-arch but adds complexity. Start with single-platform image on GHCR (free for public repos, integrated with GitHub). Add multi-arch later.
+**Rationale**: `dockers_v2` uses buildx for multi-arch but adds complexity. Start with single-platform image on GHCR (free for public repos, integrated with GitHub) + Docker Hub (`ailign` personal account) for discoverability. Add multi-arch later.
 
 ## Decision 6: nFPM Package Formats
 
@@ -80,23 +80,20 @@
 
 | Secret | Used By | Notes |
 |--------|---------|-------|
-| `GITHUB_TOKEN` | GoReleaser releases | Auto-provided |
-| `HOMEBREW_TAP_TOKEN` | Homebrew formula push | PAT with `repo` scope on tap repo |
-| `SCOOP_BUCKET_TOKEN` | Scoop manifest push | PAT with `repo` scope on bucket repo |
-| `CHOCOLATEY_API_KEY` | Chocolatey publish | From chocolatey.org account |
-| `SNAPCRAFT_STORE_CREDENTIALS` | Snapcraft publish | From `snapcraft export-login` |
-| `AUR_KEY` | AUR package push | SSH private key (no passphrase) |
-| `NUR_TOKEN` | Nix NUR push | PAT with `repo` scope on NUR repo |
-| `WINGET_TOKEN` | WinGet manifest PR | PAT with `repo` scope |
-| `NPM_TOKEN` | npm publish | From npmjs.com account |
+| `GITHUB_TOKEN` | GoReleaser releases, GHCR push | Auto-provided |
+| `DISTRIBUTION_REPO_TOKEN` | Homebrew/Scoop/NUR/WinGet push | Fine-grained PAT (Contents R/W, Pull requests R/W, Metadata RO) on `ailign-cli/distribution` |
+| `DOCKERHUB_USERNAME` | Docker Hub login | Variable (not secret): `ailign` |
+| `DOCKERHUB_TOKEN` | Docker Hub push | Access token from hub.docker.com |
+| `CHOCOLATEY_API_KEY` | Chocolatey publish | From chocolatey.org account (deferred) |
+| `SNAPCRAFT_STORE_CREDENTIALS` | Snapcraft publish | From `snapcraft export-login` (deferred) |
+| `AUR_KEY` | AUR package push | SSH private key, no passphrase (deferred) |
+| `NPM_TOKEN` | npm publish | Granular token scoped to @ailign, bypass 2FA enabled |
 
 ## External Repositories Required
 
 | Repository | Purpose |
 |------------|---------|
-| `ailign-cli/homebrew-tap` | Homebrew formula hosting |
-| `ailign-cli/scoop-bucket` | Scoop manifest hosting |
-| `ailign-cli/nur-packages` | Nix NUR package hosting |
+| `ailign-cli/distribution` | Unified distribution repo: Homebrew formula (Formula/), Scoop manifest (scoop/), NUR package (nix/), WinGet manifest (winget/) |
 
 ## Limitations & Gotchas
 
@@ -104,6 +101,7 @@
 - **Snapcraft cannot be built inside Docker** — needs native snapcraft on CI runner
 - **Chocolatey packages are manually reviewed** — first publish takes time
 - **WinGet PRs may fail** — not a blocking issue, just a warning
+- **Scoop manifests must be in repo root** — `scoop bucket list` shows 0 manifests if they are in a subdirectory. In the unified `ailign-cli/distribution` repo, Scoop manifests go in root (not a `scoop/` subdirectory)
 - **AUR SSH key must be passphrase-free**
 - **nix-hash must be on CI PATH** for Nix packages
 - **NPM platform packages must have identical versions** — automate from single source

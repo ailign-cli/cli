@@ -1,0 +1,14 @@
+{
+  "name": "@ailign/cli-darwin-arm64",
+  "version": "0.0.0",
+  "description": "AIlign CLI binary for macOS ARM64 (Apple Silicon)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ailign-cli/cli.git",
+    "directory": "npm/ailign-darwin-arm64"
+  },
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "files": ["bin/"]
+}

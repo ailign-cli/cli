@@ -17,7 +17,7 @@ func TestFeatures(t *testing.T) {
 		format = "junit:" + output
 	}
 
-	tags := "~@wip"
+	tags := "~@wip && ~@ci && ~@deprecated && ~@pending-deprecation"
 	if envTags := os.Getenv("GODOG_TAGS"); envTags != "" {
 		tags = envTags
 	}
@@ -69,4 +69,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	registerSchemaValidationSteps(ctx, w)
 	registerSyncSteps(ctx, w)
 	registerPreviewSteps(ctx, w)
+	registerInstallGoSteps(ctx, w)
+	registerInstallBinarySteps(ctx, w)
+	registerInstallDocsSteps(ctx, w)
 }

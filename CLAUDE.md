@@ -14,7 +14,7 @@ across all features.
 
 - `vision.md` - Problem statement, solution approach, business value
 - `scope.md` - MVP scope, key decisions, what's in/out
-- `.specify/memory/constitution.md` - Design principles (9 core
+- `.specify/memory/constitution.md` - Design principles (10 core
   principles, governance rules, prohibited patterns)
 - `.specify/memory/soul.md` - Agent culture and working style
 - `README.md` - Quick navigation and project overview
@@ -44,6 +44,9 @@ principles. When in conflict, follow the values hierarchy
    handle tool quirks. No tool is primary. No lock-in.
 9. **Working Software** - Commits and PRs MUST include both code
    and tests. Every commit MUST validate. Every PR MUST build.
+10. **Subtraction** - Always consider what can be removed or
+    simplified, not only what needs to be added. Evaluate removal
+    of old code, unused dependencies, and superseded features.
 
 ### Prohibited Patterns
 

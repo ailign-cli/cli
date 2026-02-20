@@ -55,6 +55,7 @@ jobs:
       - name: Run unit and BDD tests
         env:
           JUNIT_REPORT: ${{ github.workspace }}/bdd-results.xml
+          GITHUB_TOKEN: ${{ github.token }}
         run: gotestsum --junitfile test-results.xml -- ./... -count=1
 
       - name: Unit test report

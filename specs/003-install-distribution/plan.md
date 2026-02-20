@@ -87,8 +87,7 @@ npm/
 
 # CI/CD (existing, extended)
 .github/workflows/
-├── release.yml                    # Extended with docker login + npm publish
-└── npm-publish.yml                # New: publish npm packages from release
+└── release.yml                    # Extended with docker login + npm publish job
 
 # Documentation (existing, updated)
 README.md                          # Updated with installation section
@@ -102,7 +101,7 @@ README.md                          # Updated with installation section
 |-----|-----------------------------------------|-----------|---------------------------|
 | PR 1 | Version command + install script        | ~200       | Yes — `ailign --version` works, install.sh functional |
 | PR 2 | GoReleaser Tier 1 (Homebrew, Scoop, nFPM) | ~150    | Yes — packages published on next release |
-| PR 3 | GoReleaser Tier 2 (AUR, Nix, Docker, Chocolatey, WinGet, Snapcraft) | ~200 | Yes — additional channels on next release |
+| PR 3 | GoReleaser Tier 2 (Nix, Docker, WinGet) | ~150 | Yes — additional channels on next release (AUR, Chocolatey, Snapcraft deferred to Phase 8) |
 | PR 4 | NPM wrapper package + publish workflow  | ~300       | Yes — `npx @ailign/cli` works |
 | PR 5 | README installation documentation       | ~150       | Yes — docs complete |
 
