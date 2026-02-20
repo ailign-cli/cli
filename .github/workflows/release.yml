@@ -97,13 +97,15 @@ jobs:
     name: Publish NPM Packages
     needs: release
     runs-on: ubuntu-latest
-    if: secrets.NPM_TOKEN != ''
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
       - name: Extract version
@@ -169,19 +171,15 @@ jobs:
           '
 
       - name: Publish platform packages
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           for pkg_dir in npm/ailign-darwin-arm64 npm/ailign-darwin-x64 \
                          npm/ailign-linux-x64 npm/ailign-linux-arm64 npm/ailign-win32-x64; do
             cd "$pkg_dir"
-            npm publish --access public
+            npm publish --access public --provenance
             cd "${{ github.workspace }}"
           done
 
       - name: Publish main package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd npm/ailign
-          npm publish --access public
+          npm publish --access public --provenance
