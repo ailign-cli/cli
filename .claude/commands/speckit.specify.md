@@ -45,16 +45,21 @@ Given that feature description, do this:
 
    The script handles all branch operations automatically:
    1. Fetches remote branches and scans `specs/` directories to find the next available feature number
-   2. Creates the feature integration branch (`NNN-NAME`) and pushes it to reserve the number
+   2. Creates the feature integration branch (`NNN-NAME/base`) and pushes it to reserve the number
    3. Creates and checks out the `/spec` sub-branch (`NNN-NAME/spec`) for specification work
    4. Creates the spec directory and copies the template
 
-   The `/spec` branch is used for the entire speckit workflow: specify, clarify, plan, tasks, analyze, and checklists. After the spec PR is merged, implementation phases get their own branches off the feature integration branch (e.g., `<feature>/schema-target-refactor`). The `specs/` directory retains the base feature name (e.g., `specs/002-local-instruction-sync/`).
+   All branches nest under the same `NNN-NAME/` prefix to avoid git ref conflicts:
+   - `NNN-NAME/base` — integration branch (merges to `main`)
+   - `NNN-NAME/spec` — specification work (this workflow)
+   - `NNN-NAME/<phase-slug>` — implementation phases (created during `/speckit.implement`)
+
+   The `/spec` branch is used for the entire speckit workflow: specify, clarify, plan, tasks, analyze, and checklists. After the spec PR is merged into `NNN-NAME/base`, implementation phases get their own branches off the integration branch (e.g., `<feature>/schema-target-refactor`). The `specs/` directory retains the base feature name (e.g., `specs/002-local-instruction-sync/`).
 
    **IMPORTANT**:
    - You must only ever run this script once per feature
    - The JSON is provided in the terminal as output - always refer to it to get the actual content you're looking for
-   - The JSON output will contain BRANCH_NAME, SPEC_BRANCH, SPEC_FILE, and FEATURE_NUM
+   - The JSON output will contain BRANCH_NAME, INTEGRATION_BRANCH, SPEC_BRANCH, SPEC_FILE, and FEATURE_NUM
    - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot")
 
 3. Load `.specify/templates/spec-template.md` to understand required sections.

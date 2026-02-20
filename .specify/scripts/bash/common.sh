@@ -73,14 +73,14 @@ check_feature_branch() {
     fi
 
     # Accept branches matching:
-    #   NNN-feature-name           (base feature branch)
-    #   NNN-feature-name/spec      (spec branch)
+    #   NNN-feature-name/base       (integration branch)
+    #   NNN-feature-name/spec       (spec branch)
     #   NNN-feature-name/phase-slug (phase/implementation branch)
     if [[ ! "$branch" =~ ^[0-9]{3}- ]]; then
         echo "ERROR: Not on a feature branch. Current branch: $branch" >&2
         echo "Feature branches should be named like:" >&2
-        echo "  001-feature-name         (base)" >&2
-        echo "  001-feature-name/spec    (specification)" >&2
+        echo "  001-feature-name/base         (integration)" >&2
+        echo "  001-feature-name/spec         (specification)" >&2
         echo "  001-feature-name/phase-slug   (implementation phase)" >&2
         return 1
     fi

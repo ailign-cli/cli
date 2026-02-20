@@ -23,7 +23,8 @@ merged to `main`.
 
 ```
 main
-  └─ NNN-FEATURENAME                    (feature integration branch)
+  └─ NNN-FEATURENAME/
+       ├─ NNN-FEATURENAME/base          (integration branch)
        ├─ NNN-FEATURENAME/spec          (specification phase)
        ├─ NNN-FEATURENAME/PHASENAME     (implementation phase 1)
        ├─ NNN-FEATURENAME/PHASENAME     (implementation phase 2)
@@ -32,10 +33,13 @@ main
 
 ### Branch Lifecycle
 
-#### Feature Integration Branch (`NNN-FEATURENAME`)
+#### Feature Integration Branch (`NNN-FEATURENAME/base`)
 
 - Created from `main` by `speckit.specify` (via
   `create-new-feature.sh`)
+- Uses `/base` suffix to avoid git ref conflicts (a bare
+  `NNN-FEATURENAME` cannot coexist with `NNN-FEATURENAME/spec`
+  as both a file and directory in `refs/heads/`)
 - MUST be pushed to remote immediately after creation to
   reserve the feature number
 - Serves as the integration point for all phase branches
@@ -47,20 +51,20 @@ main
 
 #### Specification Branch (`NNN-FEATURENAME/spec`)
 
-- Created from `NNN-FEATURENAME`
+- Created from `NNN-FEATURENAME/base`
 - Used for: `speckit.specify`, `speckit.plan`, `speckit.tasks`,
   `speckit.analyze`, `speckit.clarify`, `speckit.checklist`
-- PR merges into `NNN-FEATURENAME` (not `main`)
+- PR merges into `NNN-FEATURENAME/base` (not `main`)
 - Contains: `specs/NNN-FEATURENAME/spec.md`, `plan.md`,
   `tasks.md`, `research.md`, `data-model.md`, `contracts/`,
   feature files, and step definition scaffolds
 
 #### Implementation Phase Branches (`NNN-FEATURENAME/PHASENAME`)
 
-- Created from `NNN-FEATURENAME` after spec branch is merged
+- Created from `NNN-FEATURENAME/base` after spec branch is merged
 - Used for: `speckit.implement` (one branch per phase from
   `tasks.md`)
-- PR merges into `NNN-FEATURENAME` (not `main`)
+- PR merges into `NNN-FEATURENAME/base` (not `main`)
 - Phase names correspond to phases in `tasks.md` (e.g.,
   `setup`, `foundational`, `user-story-1`, `user-story-2`,
   `polish`)
@@ -71,15 +75,15 @@ main
 
 | Command | Branch | Merges Into |
 |---------|--------|-------------|
-| `speckit.specify` | Creates `NNN-FEATURENAME` + `NNN-FEATURENAME/spec` | — |
+| `speckit.specify` | Creates `NNN-FEATURENAME/base` + `NNN-FEATURENAME/spec` | — |
 | `speckit.plan` | `NNN-FEATURENAME/spec` | — |
 | `speckit.tasks` | `NNN-FEATURENAME/spec` | — |
 | `speckit.analyze` | `NNN-FEATURENAME/spec` | — |
 | `speckit.clarify` | `NNN-FEATURENAME/spec` | — |
 | `speckit.checklist` | `NNN-FEATURENAME/spec` | — |
-| Spec PR | `NNN-FEATURENAME/spec` | `NNN-FEATURENAME` |
-| `speckit.implement` | `NNN-FEATURENAME/PHASENAME` | `NNN-FEATURENAME` |
-| Feature PR | `NNN-FEATURENAME` | `main` |
+| Spec PR | `NNN-FEATURENAME/spec` | `NNN-FEATURENAME/base` |
+| `speckit.implement` | `NNN-FEATURENAME/PHASENAME` | `NNN-FEATURENAME/base` |
+| Feature PR | `NNN-FEATURENAME/base` | `main` |
 
 ### Feature Number Race Condition
 
@@ -98,14 +102,14 @@ scanned.
 4. Push the feature branch immediately after creation to
    reserve the number
 
-**Current state**: This risk control is already implemented in
-`create-new-feature.sh` (`check_existing_branches` function).
-The only missing piece is the immediate push after branch
-creation.
+**Current state**: Fully implemented in `create-new-feature.sh`.
+The `check_existing_branches` function scans remotes and specs.
+The integration branch (`NNN-name/base`) is pushed immediately
+after creation to reserve the number.
 
 ### Keeping Feature Branches Current
 
-Feature integration branches (`NNN-FEATURENAME`) that live for
+Feature integration branches (`NNN-FEATURENAME/base`) that live for
 multiple development cycles MUST be kept current with `main`:
 
 - Use `git merge main` (merge commits), not `git rebase`
@@ -119,10 +123,10 @@ multiple development cycles MUST be kept current with `main`:
 ### PR Flow
 
 ```
-NNN-FEATURENAME/spec  ──PR──>  NNN-FEATURENAME
-NNN-FEATURENAME/phase-1  ──PR──>  NNN-FEATURENAME
-NNN-FEATURENAME/phase-2  ──PR──>  NNN-FEATURENAME
-NNN-FEATURENAME  ──PR──>  main
+NNN-FEATURENAME/spec     ──PR──>  NNN-FEATURENAME/base
+NNN-FEATURENAME/phase-1  ──PR──>  NNN-FEATURENAME/base
+NNN-FEATURENAME/phase-2  ──PR──>  NNN-FEATURENAME/base
+NNN-FEATURENAME/base     ──PR──>  main
 ```
 
 Each phase PR stays within CI size limits (500/750 lines).
@@ -137,7 +141,7 @@ complete, tested feature.
   branch to remote immediately after creation
 - **FR-002**: `check_feature_branch()` in `common.sh` MUST
   accept the hierarchical branch pattern:
-  `NNN-name`, `NNN-name/spec`, `NNN-name/slug`
+  `NNN-name/base`, `NNN-name/spec`, `NNN-name/slug`
   (already implemented)
 - **FR-003**: `find_feature_dir_by_prefix()` MUST resolve
   spec directories from any branch in the hierarchy
@@ -170,19 +174,16 @@ complete, tested feature.
 - `check_existing_branches()` scans remote branches +
   local specs ✅
 
-### Needs Implementation
+### Implemented
 
-1. **`create-new-feature.sh`**: Add `git push -u origin
-   $BRANCH_NAME` after branch creation
-2. **`create-new-feature.sh`**: Also create and checkout
-   the `/spec` sub-branch after pushing the feature branch
-3. **CI (`pull-request.yml`)**: Update to support PRs
-   targeting feature branches (currently may only trigger
-   for PRs to `main`)
-4. **Speckit commands**: Add branch-type validation (e.g.,
-   `speckit.implement` warns if on a `/spec` branch)
-5. **CLAUDE.md / constitution**: Document the branching
-   strategy in the development workflow section
+1. **`create-new-feature.sh`**: Creates `NNN-name/base`
+   integration branch and `NNN-name/spec` sub-branch,
+   pushes both to remote ✅
+2. **CI (`pull-request.yml`)**: PR-size check skips
+   `NNN-*/base` → `main` PRs ✅
+3. **Speckit commands**: Updated `speckit.specify.md` and
+   `speckit.implement.md` with `/base` integration branch ✅
+4. **CLAUDE.md**: Branching strategy documented ✅
 
 ## Success Criteria
 

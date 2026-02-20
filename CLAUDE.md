@@ -144,14 +144,16 @@ specs/[###-feature-name]/
 
 ### Branching Strategy
 
-Feature development uses hierarchical branches:
+Feature development uses hierarchical branches under a
+shared `NNN-FEATURENAME/` prefix:
 
-- `NNN-FEATURENAME` — integration branch (merges to `main`)
+- `NNN-FEATURENAME/base` — integration branch (merges to `main`)
 - `NNN-FEATURENAME/spec` — specification work
-- `NNN-FEATURENAME/PHASE` — implementation phases
+- `NNN-FEATURENAME/<phase-slug>` — implementation phases
 
-Phase PRs target the feature branch. Only the feature
-branch targets `main`. See
+All sub-branches nest under the same prefix to avoid git
+ref conflicts. Phase PRs target `NNN-FEATURENAME/base`.
+Only the integration branch targets `main`. See
 `.specify/spec/branching-strategy/spec.md` for details.
 
 ### Pull Request Size Limits

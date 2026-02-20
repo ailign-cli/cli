@@ -15,7 +15,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 1. **Determine the feature to implement**:
 
    The command can be invoked from different starting points:
-   - **From `NNN-FEATURE`** (typical — spec branch already merged into feature branch): Auto-detect the feature from the branch name. This is the recommended starting point.
+   - **From `NNN-FEATURE/base`** (typical — spec branch already merged into integration branch): Auto-detect the feature from the branch name. This is the recommended starting point.
    - **From `NNN-FEATURE/phase-slug`**: Already on a phase branch — auto-detect feature and continue implementation.
    - **From `main`** (less common): Detect the feature from context. Look at recent specs directories (`specs/NNN-*`) or let the user specify via arguments. Pass `--feature <NNN-feature-name>` to the prerequisites script.
 
@@ -33,21 +33,22 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 2. **Branch strategy — one branch per phase/PR**:
    - **Spec branch**: All speckit workflow steps (specify, clarify, plan, tasks, analyze, checklists) use `<feature>/spec` (e.g., `002-local-instruction-sync/spec`). This is created by `/speckit.specify` and merged as a single PR before implementation starts.
-   - **Phase branches**: Each implementation phase that maps to a PR gets its own branch off the **feature integration branch** (`<feature>`, e.g., `002-local-instruction-sync`)
+   - **Integration branch**: `<feature>/base` (e.g., `002-local-instruction-sync/base`) — the merge target for all phase PRs
+   - **Phase branches**: Each implementation phase that maps to a PR gets its own branch off the **integration branch** (`<feature>/base`)
    - Branch naming: `<feature>/<phase-slug>` (e.g., `002-local-instruction-sync/schema-target-refactor`)
    - Derive the slug from the phase title in tasks.md (kebab-case, 2-4 words)
    - Before starting a phase:
-     1. Checkout the feature integration branch and update it:
-        `git checkout <feature> && git pull origin <feature>`
-     2. Keep the feature branch current with main:
+     1. Checkout the integration branch and update it:
+        `git checkout <feature>/base && git pull origin <feature>/base`
+     2. Keep the integration branch current with main:
         `git merge main`
      3. Create the phase branch: `git checkout -b <feature>/<phase-slug>`
    - After completing a phase:
      1. Commit all changes, push the branch
-     2. Create a PR targeting the **feature integration branch** (NOT `main`)
+     2. Create a PR targeting the **integration branch** (`<feature>/base`, NOT `main`)
      3. **STOP** — wait for user to approve/merge before starting the next phase
-   - After all phases are merged into the feature branch:
-     1. Create a final PR from `<feature>` → `main` to complete the feature
+   - After all phases are merged into the integration branch:
+     1. Create a final PR from `<feature>/base` → `main` to complete the feature
    - Phase 1 (Setup) is a verification-only step — run it on whatever branch is current, no dedicated branch needed unless it produces changes
 
 3. **Check checklists status** (if `FEATURE_DIR/checklists/` exists):
