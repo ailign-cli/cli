@@ -34,7 +34,7 @@ jobs:
         run: go test ./features/steps/... -count=1
 
       - name: Upload test reports
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-reports
