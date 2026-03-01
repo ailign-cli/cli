@@ -59,7 +59,7 @@ jobs:
         run: gotestsum --junitfile test-results.xml -- ./... -count=1
 
       - name: Unit test report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Unit Test Results
@@ -67,7 +67,7 @@ jobs:
           reporter: java-junit
 
       - name: BDD test report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: BDD Test Results
