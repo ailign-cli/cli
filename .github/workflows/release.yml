@@ -34,7 +34,7 @@ jobs:
         run: go test ./features/steps/... -count=1
 
       - name: Upload test reports
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-reports
@@ -56,7 +56,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Download test reports
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: test-reports
           path: reports/
@@ -76,7 +76,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: "~> v2.13"
           args: release --clean
